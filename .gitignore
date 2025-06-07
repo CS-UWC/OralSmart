@@ -1,3 +1,39 @@
 superuserDetails.txt
-create_objects_example.txt
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.db
+db.sqlite3
+media/
+*.sqlite3
+
+# Secrets
+.env
+
+# Virtual environment
+venv/
+.venv/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# VS Code / PyCharm
 .vscode/
+.idea/
+
+#other stuff
+src/oralsmart/__pycache__/settings.cpython-311.pyc
+src/products/__pycache__/models.cpython-311.pyc
+src/pages/__pycache__/views.cpython-311.pyc
+src/oralsmart/__pycache__/urls.cpython-311.pyc
+src/oralsmart/__pycache__/settings.cpython-311.pyc
+src/db.sqlite3

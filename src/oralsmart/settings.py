@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     #own
     'products.apps.ProductsConfig',
     'patient.apps.PatientConfig',
+    'userauth', #or userauth.apps.UserauthConfig
+
 ]
 
 MIDDLEWARE = [

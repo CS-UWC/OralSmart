@@ -7,12 +7,19 @@ from django.shortcuts import render
 
 def home_view(request, *args, **kwargs): # *args **kwargs
 
-    print(request)
-    print("The current user is :", request.user)
+    user_name = request.user
+
+    context = {
+
+        "page_name": "Home",
+        "description": "Professional users can login/sign-up, community members can get tips",
+        "user_name": str(user_name)
+        
+    }
 
     #return HttpResponse("<h1>Hello World</h1>") #String of HTML Code
 
-    return render(request, "home.html", {})
+    return render(request, "home.html", context)
 
 def login_view(request, *args, **kwargs): # *args **kwargs
 
