@@ -14,32 +14,32 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
-from pages.views import home_view, registration_view, patient_view, report_view, hospital_booking_view, confirmation_view, dental_screening_view, dietary_screening_view, my_referrals_view, history_view
-from products.views import product_detail_view, product_create_view
-from patient.views import create_patient_view, patient_detail_view
-from userauth.views import login_user, logout_user
+from django.urls import path
+from pages.views import home_view, patient_view
+from products.views import product_detail_view, product_create_view, dynamic_product_view
+from patient.views import create_patient_view, patient_detail_view, create_patient
+from userauth.views import login_user, logout_user,register_user
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('home/', home_view, name='Home'),
-    path('register/', registration_view),
-    path('patient/', patient_view, name='patient'),
-    path('report/', report_view, name='report'),
-    path('hospital/', hospital_booking_view, name='hospital'),
-    path('confirmation/', confirmation_view, name='confirmation'),
-    path('dental_screen/', dental_screening_view, name='dental'),
-    path('dietary_screen/', dietary_screening_view, name='nutritional'),
-    path('my_referrals/', my_referrals_view, name='my_referrals'),
-    path('history/', history_view, name='history'),
+    path('home/', home_view, name='home'),
+
+    #for product
     path('product/', product_detail_view),
     path('create_product/', product_create_view),
-    path('create_patient/', create_patient_view),
+    path('product/<int:id>/', dynamic_product_view, name='product'),
+
+    #for patient
+    #path('create_patient/', create_patient_view),
     path('patient_detail/', patient_detail_view),
+    path('patient/', patient_view, name='patient'),
+    path('create_patient/', create_patient, name='create_patient'),
+    
 
     #for userauth
-    path('login_user/', login_user, name='Login'),
-    path('logout_user/', logout_user, name="Logout"),  # type: ignore
+    path('login_user/', login_user, name='login'),
+    path('logout_user/', logout_user, name='logout'),
+    path('register_user/', register_user, name='register_user'),
 
 ]

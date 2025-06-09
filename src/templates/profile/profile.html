@@ -2,16 +2,16 @@
 
 {% block content %}
 
-    {% if message %}
-            
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <strong>{{ messages }}</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
     {% endif %}
 
-    <form action="{% url 'Logout' %}" method="POST"> 
+    <form action="{% url 'logout' %}" method="POST"> 
 
         {% csrf_token %}
         <button type="submit" class="btn btn-primary">Log out</button>

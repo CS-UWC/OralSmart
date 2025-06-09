@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     #own
     'products.apps.ProductsConfig',
     'patient.apps.PatientConfig',
-    'userauth', #or userauth.apps.UserauthConfig
+    'userauth',
+    'userprofile',
 
 ]
 
@@ -81,8 +82,12 @@ WSGI_APPLICATION = 'oralsmart.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'oralsmart',
+        'USER': 'root',                # Default XAMPP user
+        'PASSWORD': '',                # Default is blank (no password)
+        'HOST': '127.0.0.1',           # Localhost
+        'PORT': '3306',                # Default MySQL port
     }
 }
 
@@ -129,3 +134,5 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'login'

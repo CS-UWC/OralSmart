@@ -6,7 +6,7 @@ class ProductForm(forms.ModelForm):
     # <<begin variables - These variables override the normal model variables and add basic validation
     title = forms.CharField()
     description = forms.CharField()
-    price = forms.DecimalField()
+    price = forms.DecimalField(max_digits=10, decimal_places=2)
     summary = forms.CharField(required=True, widget=forms.Textarea(
         attrs={
             'placeholder': "Your summary",

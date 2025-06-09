@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>REGISTRATION PAGE</h1>
+
+    {% if error %}
+            
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>{{ error }}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+    {% endif %}
+
+    <!--{{ form.as_p }}-->
+
+    <form action="{% url 'register_user' %}" method="POST"> 
+
+        {% csrf_token %}
+        <!--{{ form.as_p }}-->
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Name" required>
+            <label for="name">Name</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="surname" name='surname' placeholder="Surname" required>
+            <label for="name">Surname</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="Number" class="form-control" id="id_number" name="id_number" placeholder="id_number" required>
+            <label for="id_number">ID Number</label>
+        </div>
+
+<!--
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name">
+            <label for="name">Enter Child Name</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name">
+            <label for="name">Enter Child Name</label>
+        </div>
+    -->
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
+            <label for="floatingInput">Email address</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <select class="form-select" id="profession" name="profession" required>
+                <option value="">Select your profession</option>
+                <option value="0">Dentist</option>
+                <option value="1">Dietician</option>
+                <option value="2">Nurse</option>
+                <option value="3">Oral Hygienist</option>
+                <option value="4">Occupational Therapist</option>
+            </select>
+            <label for="profession">Profession</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control form-control-sm" id="password1" placeholder="password1" name="password1">
+            <label for="exampleInputPassword1" >Password</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control form-control-sm" id="password2" placeholder="password2" name="password2">
+            <label for="exampleInputPassword2" >Confirm Password</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Register</button>
+
+        <div class="text-center">
+            <p>Already a user? <a href="{% url 'login' %}">Login</a></p>
+        </div>
+    </form>
+
+{% endblock %}
