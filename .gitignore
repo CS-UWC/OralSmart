@@ -1,3 +1,15 @@
 superuserDetails.txt
 create_objects_example.txt
 .vscode/
+
+src/staticfiles
+src/oralsmart/__pycache__
+
+src/pages/__pycache__
+src/patient/__pycache__
+src/products/__pycache__
+src/userauth/__pycache__
+src/userprofile/__pycache__
+
+venv/
+src/db.sqlite3
