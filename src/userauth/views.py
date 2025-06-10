@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.contrib.auth.forms import UserCreationForm
@@ -41,7 +42,7 @@ def login_user(request):
     else:
         return render(request, 'authentication/login.html', {})
     
-
+@login_required
 def logout_user(request: HttpRequest)->HttpResponse:
 
     if request.method == "POST":
@@ -50,13 +51,13 @@ def logout_user(request: HttpRequest)->HttpResponse:
         messages.success(request, 'You have been successfully logged out.')
         print('logout successful')
 
-        return redirect('home')
+        return redirect('login')
     else:
 
         print('logout unsuccessful')
         messages.success(request, 'Log out was unsuccessful.')
 
-        return redirect('home')
+        return redirect('login')
 
 
 def register_user(request):
@@ -77,7 +78,7 @@ def register_user(request):
             Profile.objects.create(user=user, id_number=id_number, profession=profession)
             login(request, user)
 
-            return redirect('patient/')
+            return redirect('create_patient')
     else:
         form = UserCreationForm()
 

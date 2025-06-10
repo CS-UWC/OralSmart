@@ -19,6 +19,7 @@ from pages.views import home_view, patient_view
 from products.views import product_detail_view, product_create_view, dynamic_product_view
 from patient.views import create_patient_view, patient_detail_view, create_patient
 from userauth.views import login_user, logout_user,register_user
+from userprofile.views import profile_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -41,5 +42,8 @@ urlpatterns = [
     path('login_user/', login_user, name='login'),
     path('logout_user/', logout_user, name='logout'),
     path('register_user/', register_user, name='register_user'),
+
+    #for profile
+    path('profile_view/', profile_view, name='profile')
 
 ]

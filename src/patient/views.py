@@ -15,7 +15,8 @@ def create_patient_view(request):
         form = PatientForm()
 
     context = {
-        'form': form
+        'form': form,
+        'show_navbar': True,
     }
 
     return render(request, "patient/create_patient.html", context)
@@ -25,7 +26,8 @@ def patient_detail_view(request):
     obj = Patient.objects.get(id=1) #contains the patient object and all it's variables
 
     context = {
-        'object': obj
+        'object': obj,
+        'show_navbar': True,
     }
 
     return render(request, "patient/patient_detail.html", context)
@@ -47,7 +49,7 @@ def create_patient(request):
             # Validate required fields
             if not all([name, surname, gender, age, parent_id, parent_contact]):
                 messages.error(request, 'All fields are required.')
-                return render(request, 'patient/create_patient.html')
+                return render(request, 'patient/create_patient.html', {'show_navbar': True})
             
             # Create new patient
             patient = Patient.objects.create(
@@ -73,7 +75,7 @@ def create_patient(request):
             
         except Exception as e:
             messages.error(request, f'Error creating patient: {str(e)}')
-            return render(request, 'patient/create_patient.html')
+            return render(request, 'patient/create_patient.html', {'show_navbar': True})
     
     # If GET request, render the form
-    return render(request, 'patient/create_patient.html')
+    return render(request, 'patient/create_patient.html', {'show_navbar': True})

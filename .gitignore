@@ -33,8 +33,17 @@ Thumbs.db
 #other stuff
 src/oralsmart/__pycache__/settings.cpython-311.pyc
 src/products/__pycache__/models.cpython-311.pyc
-src/pages/__pycache__/views.cpython-311.pyc
+src/pages/__pycache__/
 src/oralsmart/__pycache__/urls.cpython-311.pyc
 src/oralsmart/__pycache__/settings.cpython-311.pyc
 src/db.sqlite3
 src/oralsmart/__pycache__/urls.cpython-311.pyc
+
+# Ignore Django collected static files
+/staticfiles/
+src/staticfiles/
+
+#cache
+src/oralsmart/__pycache__/
+src/products/__pycache__/
+src/patient/__pycache__/
