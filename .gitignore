@@ -1,5 +1,32 @@
 superuserDetails.txt
-create_objects_example.txt
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.db
+db.sqlite3
+media/
+*.sqlite3
+
+# Secrets
+.env
+
+# Virtual environment
+venv/
+.venv/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# VS Code / PyCharm
 .vscode/
 
 src/staticfiles

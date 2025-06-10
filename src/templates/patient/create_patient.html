@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form action="{% url 'create_patient' %}" method="POST"> 
+        {% csrf_token %}
+
+<!--Div for entering child name-->
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name" required>
+            <label for="name">Enter Child Name</label>
+        </div>
+
+<!--Div for entering child surname-->
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="surname" name='surname' placeholder="Enter Child Surname" required>
+            <label for="surname">Enter Child Surname</label>
+        </div>
+
+<!--
+    Dropdown Div for choosing the child gender
+        <div class="dropdown mb-3 d-flex justify-content-center">
+            <button type="button" id="genderDropdown" class="btn btn-secondary dropdown-toggle px-5" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Choose Child Gender
+            </button>
+
+            <input type="hidden" id="genderInput" name="gender" value="" required>
+
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="setGender('0', 'Male')">Male</a></li>
+                <li><a class="dropdown-item" href="#" onclick="setGender('1', 'Female')">Female</a></li>
+            </ul>
+        </div>
+-->
+
+<!--Div for choosing the child age-->
+        <div class="form-floating mb-3">
+            <select class="form-select" id="gender" name="gender" required>
+                <option value="">Choose Gender</option>
+                <option value="0">Male</option>
+                <option value="1">Female</option>
+            </select>
+            <label for="gender">Child Gender</label>  <!-- Changed from "age" to "gender" -->
+        </div>
+
+<!--Div for choosing the child age-->
+        <div class="form-floating mb-3">
+            <select class="form-select" id="age" name="age" required>
+                <option value="">Choose Age</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+            <label for="age">Child Age</label>
+        </div>
+
+<!--Div for entering the child's parent or guardian ID-->
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="parent_id" name="parent_id" placeholder="Enter Parent ID" required>
+            <label for="parent_id">Enter Parent ID</label>
+        </div>
+
+<!--Div for entering the child's parent or guardian contact number-->
+        <div class="form-floating mb-3">
+            <input type="tel" class="form-control" id="parent_contact" name="parent_contact" placeholder="Enter Parent Contact Number" required>
+            <label for="parent_contact">Enter Parent Contact Number</label>
+        </div>
+
+<!--Div for saving the child's details-->
+<!--
+        <div class="d-flex justify-content-center mb-3">
+            <button type="submit" class="btn btn-success px-4 py-2">Save Patient Information</button>
+        </div>
+-->
+        
+<!--submit info-->
+        <div class="d-flex justify-content-center" style="gap: 2rem;">
+            <button type="button" class="btn btn-primary px-4 py-2" onclick="submitAndRedirect('dental')">Start Dental Screening</button>
+            <button type="button" class="btn btn-primary px-4 py-2" onclick="submitAndRedirect('dietary')">Start Dietary Screening</button>
+        </div>
+
+    <script>
+
+        // function setGender(value, display) {
+        //     document.getElementById('genderDropdown').textContent = display;
+        //     document.getElementById('genderInput').value = value;
+        // }
+
+        function submitAndRedirect(screeningType) {
+            // First validate the form
+            const form = document.querySelector('form');
+            if (form.checkValidity()) {
+                // Create a hidden input to indicate the screening type
+                const screeningInput = document.createElement('input');
+                screeningInput.type = 'hidden';
+                screeningInput.name = 'screening_type';
+                screeningInput.value = screeningType;
+                form.appendChild(screeningInput);
+                
+                // Submit the form
+                form.submit();
+            } else {
+                // Show validation errors
+                form.reportValidity();
+            }
+        }
+    </script>
+
+{% endblock %}

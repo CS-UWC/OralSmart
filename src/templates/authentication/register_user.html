@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>REGISTRATION PAGE</h1>
+
+    {% if error %}
+            
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>{{ error }}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+    {% endif %}
+
+    <!--{{ form.as_p }}-->
+
+    <form action="{% url 'register_user' %}" method="POST"> 
+
+        {% csrf_token %}
+        <!--{{ form.as_p }}-->
+        
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="username" name="username" placeholder="Username" required>
+            <label for="username">Username</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Name" required>
+            <label for="name">Name</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="surname" name='surname' placeholder="Surname" required>
+            <label for="name">Surname</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="Number" class="form-control" id="id_number" name="id_number" placeholder="id_number" required>
+            <label for="id_number">ID Number</label>
+        </div>
+
+<!--
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name">
+            <label for="name">Enter Child Name</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name">
+            <label for="name">Enter Child Name</label>
+        </div>
+    -->
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
+            <label for="floatingInput">Email address</label>
+        </div>
+
+        <div class="form-floating mb-3">
+        <select class="form-select" id="profession" name="profession" required>
+            <option value="">Select your profession</option>
+            <option value="medical_doctor">Medical Doctor</option>
+            <option value="dentist">Dentist</option>
+            <option value="psychologist">Psychologist</option>
+            <option value="physiotherapist">Physiotherapist</option>
+            <option value="radiographer">Radiographer</option>
+            <option value="occupational_therapist">Occupational Therapist</option>
+            <option value="biokineticist">Biokineticist</option>
+            <option value="clinical_technologist">Clinical Technologist</option>
+            <option value="dietitian">Dietitian</option>
+            <option value="audiologist">Audiologist</option>
+            <option value="optometrist">Optometrist</option>
+            <option value="emergency_care_practitioner">Emergency Care Practitioner</option>
+            <option value="registered_nurse">Registered Nurse</option>
+            <option value="enrolled_nurse">Enrolled Nurse</option>
+            <option value="nursing_assistant">Nursing Assistant</option>
+            <option value="midwife">Midwife</option>
+            <option value="pharmacist">Pharmacist</option>
+            <option value="pharmacy_assistant">Pharmacy Assistant</option>
+            <option value="pharmacist_intern">Pharmacist Intern</option>
+            <option value="dental_technician">Dental Technician</option>
+            <option value="dental_technologist">Dental Technologist</option>
+            <option value="chiropractor">Chiropractor</option>
+            <option value="homeopath">Homeopath</option>
+            <option value="naturopath">Naturopath</option>
+            <option value="osteopath">Osteopath</option>
+            <option value="acupuncturist">Acupuncturist</option>
+            <option value="traditional_health_practitioner">Traditional Health Practitioner</option>
+        </select>
+        <label for="profession">Profession</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control form-control-sm" id="password1" placeholder="password1" name="password1">
+            <label for="exampleInputPassword1" >Password</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control form-control-sm" id="password2" placeholder="password2" name="password2">
+            <label for="exampleInputPassword2" >Confirm Password</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Register</button>
+
+        <div class="text-center">
+            <p>Already a user? <a href="{% url 'login' %}">Login</a></p>
+        </div>
+    </form>
+
+{% endblock %}
