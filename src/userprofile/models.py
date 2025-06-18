@@ -11,9 +11,9 @@ class Profile(models.Model):
     HEALTH_BODIES = [
         ('HPCSA', 'Health Professions Council of South Africa'),
         ('SANC', 'South African Nursing Council'),
-        ('SAPC', 'South African Pharmacy Council'),
-        ('SADTC', 'South African Dental Technicians Council'),
-        ('AHPCSA', 'Allied Health Professions Council of South African'),
+        # ('SAPC', 'South African Pharmacy Council'),
+        # ('SADTC', 'South African Dental Technicians Council'),
+        # ('AHPCSA', 'Allied Health Professions Council of South African'),
     ]
 
     PROFESSIONS = [
@@ -36,27 +36,10 @@ class Profile(models.Model):
         ('enrolled_nurse', 'Enrolled Nurse'),
         ('nursing_assistant', 'Nursing Assistant'),
         ('midwife', 'Midwife'),
-        
-        # SAPC - South African Pharmacy Council
-        ('pharmacist', 'Pharmacist'),
-        ('pharmacy_assistant', 'Pharmacy Assistant'),
-        ('pharmacist_intern', 'Pharmacist Intern'),
-        
-        # SADTC - South African Dental Technicians Council
-        ('dental_technician', 'Dental Technician'),
-        ('dental_technologist', 'Dental Technologist'),
-        
-        # AHPCSA - Allied Health Professions Council of South Africa
-        ('chiropractor', 'Chiropractor'),
-        ('homeopath', 'Homeopath'),
-        ('naturopath', 'Naturopath'),
-        ('osteopath', 'Osteopath'),
-        ('acupuncturist', 'Acupuncturist'),
-        ('traditional_health_practitioner', 'Traditional Health Practitioner'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    id_number = models.CharField(max_length=64)
+
     profession = models.CharField(
         max_length=64,
         choices=PROFESSIONS,
@@ -68,6 +51,14 @@ class Profile(models.Model):
         choices=HEALTH_BODIES,
         default='HPCSA'
     )
+
+    reg_num = models.CharField(
+        max_length=64,
+        default="0",
+    )
+
     email = models.CharField(max_length=64, null=True)
+
     address = models.CharField(max_length=64, null=True)
+    
     tel = models.CharField(max_length=64, null=True)

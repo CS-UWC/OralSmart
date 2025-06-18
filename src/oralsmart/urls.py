@@ -20,6 +20,8 @@ from products.views import product_detail_view, product_create_view, dynamic_pro
 from patient.views import create_patient_view, patient_detail_view, create_patient
 from userauth.views import login_user, logout_user,register_user
 from userprofile.views import profile_view
+from assessments.views import dental_screening
+from reports.views import view_report
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -44,6 +46,13 @@ urlpatterns = [
     path('register_user/', register_user, name='register_user'),
 
     #for profile
-    path('profile_view/', profile_view, name='profile')
+    path('profile_view/', profile_view, name='profile'),
+
+    #for screening assessments
+    path('assessments/dental_screening/<int:patient_id>/', dental_screening, name='dental_screening'),
+
+    #for reports
+    path('reports/report', view_report, name='report'),
+
 
 ]

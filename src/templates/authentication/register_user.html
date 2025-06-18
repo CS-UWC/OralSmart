@@ -35,10 +35,10 @@
             <label for="name">Surname</label>
         </div>
 
-        <div class="form-floating mb-3">
+        <!-- <div class="form-floating mb-3">
             <input type="Number" class="form-control" id="id_number" name="id_number" placeholder="id_number" required>
             <label for="id_number">ID Number</label>
-        </div>
+        </div> -->
 
 <!--
         <div class="form-floating mb-3">
@@ -54,6 +54,15 @@
         <div class="form-floating mb-3">
             <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
             <label for="floatingInput">Email address</label>
+        </div>
+
+        <div class="form-floating mb-3">
+        <select class="form-select" id="health_professional_body" name="health_professional_body" required>
+            <option value="">Select Your Council</option>
+            <option value="HPCSA">Health Professions Council of South Africa</option>
+            <option value="SANC">South African Nursing Council</option>
+        </select>
+        <label for="profession">Choose your Authority Council/Body</label>
         </div>
 
         <div class="form-floating mb-3">
@@ -75,19 +84,13 @@
             <option value="enrolled_nurse">Enrolled Nurse</option>
             <option value="nursing_assistant">Nursing Assistant</option>
             <option value="midwife">Midwife</option>
-            <option value="pharmacist">Pharmacist</option>
-            <option value="pharmacy_assistant">Pharmacy Assistant</option>
-            <option value="pharmacist_intern">Pharmacist Intern</option>
-            <option value="dental_technician">Dental Technician</option>
-            <option value="dental_technologist">Dental Technologist</option>
-            <option value="chiropractor">Chiropractor</option>
-            <option value="homeopath">Homeopath</option>
-            <option value="naturopath">Naturopath</option>
-            <option value="osteopath">Osteopath</option>
-            <option value="acupuncturist">Acupuncturist</option>
-            <option value="traditional_health_practitioner">Traditional Health Practitioner</option>
         </select>
         <label for="profession">Profession</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="reg_num" placeholder="Enter Council Registration Number" required>
+            <label for="floatingInput">Enter Council Registration Number</label>
         </div>
 
         <div class="form-floating mb-3">

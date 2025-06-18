@@ -11,12 +11,12 @@ class Patient(models.Model):
     ]
 
     name = models.CharField(
-        max_length=100,
+        max_length=64,
         blank=False,
         null=False
     )
     surname = models.CharField(
-        max_length=100,
+        max_length=64,
         blank=False,
         null=False
     )
@@ -29,6 +29,18 @@ class Patient(models.Model):
         max_length=1,
         choices = CHILD_AGE,
         default ='6'
+    )
+    parent_name = models.CharField(
+        max_length=64,
+        blank=False,
+        null=False,
+        default='',
+    )
+    parent_surname = models.CharField(
+        max_length=64,
+        blank=False,
+        null=False,
+        default=''
     )
     parent_id = models.CharField(
         max_length=13,

@@ -45,9 +45,11 @@
 <!--Div for choosing the child age-->
         <div class="form-floating mb-3">
             <select class="form-select" id="gender" name="gender" required>
-                <option value="">Choose Gender</option>
+                <option value="0">Choose Gender</option>
                 <option value="0">Male</option>
                 <option value="1">Female</option>
+                <option value="0">Other</option> <!--rather chooses the male as the default-->
+                <option value="0">Prefer Not To Say</option> <!--rather chooses the male as the default-->
             </select>
             <label for="gender">Child Gender</label>  <!-- Changed from "age" to "gender" -->
         </div>
@@ -65,6 +67,17 @@
                 <option value="6">6</option>
             </select>
             <label for="age">Child Age</label>
+        </div>
+<!--Div for entering the child's parent or guardian ID-->
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="parent_name" name="parent_name" placeholder="Enter Parent First Name" required>
+            <label for="parent_name">Enter Parent First Name</label>
+        </div>
+
+<!--Div for entering the child's parent or guardian ID-->
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="parent_surname" name="parent_surname" placeholder="Enter Parent Surname" required>
+            <label for="parent_surname">Enter Parent Surname</label>
         </div>
 
 <!--Div for entering the child's parent or guardian ID-->
