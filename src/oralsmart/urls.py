@@ -21,7 +21,8 @@ from patient.views import create_patient_view, patient_detail_view, create_patie
 from userauth.views import login_user, logout_user,register_user
 from userprofile.views import profile_view
 from assessments.views import dental_screening
-from reports.views import view_report
+from reports.views import view_report, generate_pdf
+from userauth.views import activate
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -53,6 +54,8 @@ urlpatterns = [
 
     #for reports
     path('reports/report', view_report, name='report'),
+    path('report/<int:patient_id>', generate_pdf, name='generate_pdf'),
 
-
+    #for activating account
+    path('activate/<uidb64>/<token>/', activate, name='activate'),
 ]

@@ -4,12 +4,22 @@
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
                 <strong>{{ message }}</strong>
                 <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endfor %}
     {% endif %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 3000); //3 seconds
+    });
+    </script>
 
     <section style="background-color: #eee;">
     <div class="container py-5">

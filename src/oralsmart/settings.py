@@ -146,3 +146,13 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"  # Where Django will collect them to
+
+#email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_FROM =  'vhutalitsanwani01@gmail.com'
+EMAIL_HOST_USER =  'vhutalitsanwani01@gmail.com'
+EMAIL_HOST_PASSWORD = 'lgci mhgn elka jmpi'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+PASSWORD_RESET_TIMEOUT = 14400

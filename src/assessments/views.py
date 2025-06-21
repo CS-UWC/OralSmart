@@ -52,7 +52,7 @@ def dental_screening(request, patient_id):
             missing_teeth=request.POST.get('missing_teeth', ''),
             teeth_data=teeth_fields,
         )
-        return redirect('report', patient_id)  #redirects to report page and sends patient_id for identification
+        return redirect('report')  #redirects to report page and sends patient_id for identification
 
     return render(request, 'assessments/dental_screening.html', {
         'permanent_upper': permanent_upper,

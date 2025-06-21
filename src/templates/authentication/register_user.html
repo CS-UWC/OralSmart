@@ -4,21 +4,28 @@
 
     <h1>REGISTRATION PAGE</h1>
 
-    {% if error %}
-            
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <strong>{{ error }}</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
     {% endif %}
-
-    <!--{{ form.as_p }}-->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 3000); //3 seconds
+    });
+    </script>
 
     <form action="{% url 'register_user' %}" method="POST"> 
 
         {% csrf_token %}
-        <!--{{ form.as_p }}-->
         
         <div class="form-floating mb-3">
             <input type="text" class="form-control form-control-sm" id="username" name="username" placeholder="Username" required>
@@ -35,24 +42,8 @@
             <label for="name">Surname</label>
         </div>
 
-        <!-- <div class="form-floating mb-3">
-            <input type="Number" class="form-control" id="id_number" name="id_number" placeholder="id_number" required>
-            <label for="id_number">ID Number</label>
-        </div> -->
-
-<!--
         <div class="form-floating mb-3">
-            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name">
-            <label for="name">Enter Child Name</label>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name">
-            <label for="name">Enter Child Name</label>
-        </div>
-    -->
-        <div class="form-floating mb-3">
-            <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
+            <input type="email" name="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
             <label for="floatingInput">Email address</label>
         </div>
 
@@ -89,19 +80,40 @@
         </div>
 
         <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="reg_num" placeholder="Enter Council Registration Number" required>
+            <input type="text" name= "reg_num" class="form-control" id="reg_num" placeholder="Enter Council Registration Number" required>
             <label for="floatingInput">Enter Council Registration Number</label>
         </div>
 
         <div class="form-floating mb-3">
-            <input type="password" class="form-control form-control-sm" id="password1" placeholder="password1" name="password1">
+            <input type="password"
+            class="form-control form-control-sm" id="password1" 
+            placeholder="password1" 
+            name="password1"
+            required
+            minlength="8"
+            pattern='^(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$'
+            title="Password must be at least 8 characters, include a number and a special character.">
             <label for="exampleInputPassword1" >Password</label>
         </div>
 
         <div class="form-floating mb-3">
-            <input type="password" class="form-control form-control-sm" id="password2" placeholder="password2" name="password2">
+            <input type="password" 
+            class="form-control form-control-sm" 
+            id="password2" 
+            placeholder="password2" 
+            name="password2"
+            required
+            minlength="8"
+            pattern='^(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$'
+            title="Password must be at least 8 characters, include a number and a special character.">
             <label for="exampleInputPassword2" >Confirm Password</label>
         </div>
+
+        <!-- <style>
+            input:invalid, select:invalid {
+            border: 2px solid red;
+        }
+        </style> -->
 
         <button type="submit" class="btn btn-primary">Register</button>
 
@@ -109,5 +121,18 @@
             <p>Already a user? <a href="{% url 'login' %}">Login</a></p>
         </div>
     </form>
+
+    <!-- <style>
+        .was-validated input:invalid,
+        .was-validated select:invalid {
+        border: 2px solid red;
+        }
+        </style>
+
+        <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+        this.classList.add('was-validated');
+        });
+    </script> -->
 
 {% endblock %}
