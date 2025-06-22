@@ -22,7 +22,7 @@ from userauth.views import login_user, logout_user,register_user
 from userprofile.views import profile_view
 from assessments.views import dental_screening
 from reports.views import view_report, generate_pdf
-from userauth.views import activate
+from userauth.views import activate, change_password, req_password_reset, confirm_password_reset
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -58,4 +58,11 @@ urlpatterns = [
 
     #for activating account
     path('activate/<uidb64>/<token>/', activate, name='activate'),
+
+    #for password reset
+    path('change_password', change_password, name='change_password'),
+    path('reset_password', req_password_reset, name='reset_password'),
+    path('reset/<uidb64>/<token>', confirm_password_reset, name='confirm_password_reset'),
+    
+
 ]

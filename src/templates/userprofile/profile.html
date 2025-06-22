@@ -50,7 +50,7 @@
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary">Log out</button>
                     </form>
-                <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-primary ms-1">Edit</button>
+                <a href="{% url 'change_password' %}" class="btn btn-outline-primary ms-1" data-mdb-button-init data-mdb-ripple-init>Change Password</a>
                 </div>
             </div>
             </div>

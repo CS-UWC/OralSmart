@@ -16,6 +16,9 @@ from .tokens import account_activation_token
 from .decorators import user_not_authenticated
 from django.contrib.sites.shortcuts import get_current_site
 
+from .forms import CustomSetPasswordForm, CustomPasswordResetForm
+from django.contrib.auth.tokens import default_token_generator
+
 # Create your views here.
 
 #For login and logout
@@ -165,3 +168,61 @@ def register_user(request):
     return render(request, 'authentication/register_user.html', {
         'form': form,
     })
+
+@login_required
+def change_password(request):
+    user = request.user
+    if request.method == 'POST':
+        form = CustomPasswordResetForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your password was successfully updated!")
+            return redirect('login')
+        else:
+            for error_list in form.errors.values():
+                for error in error_list:
+                    messages.error(request, str(error))
+    else:
+        form = CustomSetPasswordForm(user)
+    return render(request, 'authentication/reset_password_confirm.html', {
+        'form': form,
+        'show_navbar': True,
+        })
+
+@user_not_authenticated
+def req_password_reset(request):
+    if request.method == 'POST':
+        form = CustomPasswordResetForm(request.POST)
+        if form.is_valid():
+            form.save(
+                request=request,
+                use_https=request.is_secure(),
+                email_template_name='authentication/template_reset_password.html'
+            )
+            messages.success(request, "Password reset email sent.")
+            return redirect('login')
+    else:
+        form = CustomPasswordResetForm()
+    return render(request, 'authentication/reset_password.html', {'form': form})
+
+def confirm_password_reset(request, uidb64, token):
+    UserModel = get_user_model()
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = UserModel.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, UserModel.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            form = CustomSetPasswordForm(user, request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Your password has been set. You may log in now.")
+                return redirect('login')
+        else:
+            form = CustomSetPasswordForm(user)
+        return render(request, 'authentication/reset_password_confirm.html', {'form': form})
+    else:
+        messages.error(request, "The password reset link is invalid, possibly because it has already been used. Please request a new password reset.")
+        return redirect('reset_password')
