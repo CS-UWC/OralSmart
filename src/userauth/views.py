@@ -82,6 +82,7 @@ def logout_user(request: HttpRequest)->HttpResponse:
         messages.success(request, 'Log out was unsuccessful.')
         return redirect('login')
 
+@user_not_authenticated
 def activate(request, uidb64, token):
 
     User = get_user_model()
@@ -210,6 +211,7 @@ def req_password_reset(request):
         form = CustomPasswordResetForm()
     return render(request, 'authentication/reset_password.html', {'form': form})
 
+@user_not_authenticated
 def confirm_password_reset(request, uidb64, token):
     UserModel = get_user_model()
     try:
