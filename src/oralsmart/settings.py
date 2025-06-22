@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     #own
-    'products.apps.ProductsConfig',
     'patient.apps.PatientConfig',
     'userauth',
     'userprofile',

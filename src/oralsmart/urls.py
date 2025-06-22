@@ -15,10 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from pages.views import home_view, patient_view
-from products.views import product_detail_view, product_create_view, dynamic_product_view
-from patient.views import create_patient_view, patient_detail_view, create_patient
-from userauth.views import login_user, logout_user,register_user
+from patient.views import patient_detail_view, create_patient
+from userauth.views import login_user, logout_user,register_user, home_view
 from userprofile.views import profile_view
 from assessments.views import dental_screening
 from reports.views import view_report, generate_pdf
@@ -27,19 +25,12 @@ from userauth.views import activate, change_password, req_password_reset, confir
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    #for home page
     path('home/', home_view, name='home'),
 
-    #for product
-    path('product/', product_detail_view),
-    path('create_product/', product_create_view),
-    path('product/<int:id>/', dynamic_product_view, name='product'),
-
     #for patient
-    #path('create_patient/', create_patient_view),
     path('patient_detail/', patient_detail_view),
-    path('patient/', patient_view, name='patient'),
     path('create_patient/', create_patient, name='create_patient'),
-    
 
     #for userauth
     path('login_user/', login_user, name='login'),
