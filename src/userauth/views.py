@@ -49,13 +49,11 @@ def login_user(request):
             return redirect('create_patient') #redirects to patient page
         else:
             print("Login unsuccessful")
+            messages.error(request, "Invalid username or password.")
 
             return render(
                 request,
                 'authentication/login.html',
-                {
-                    'error': 'Invalid username or password'
-                }
             )
     else:
         return render(request, 'authentication/login.html', {})
@@ -165,7 +163,9 @@ def register_user(request):
                 print(f"Registration error {e}") #prints on the terminal
 
         else:
-            messages.error(request, "There are some errors.")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}.")
 
     else:
 

@@ -17,7 +17,7 @@
                 var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
                 bsAlert.close();
             });
-        }, 3000); //3 seconds
+        }, 3000); //5 seconds
     });
     </script>
 
@@ -80,7 +80,7 @@
                         name="password1"
                         required
                         minlength="8"
-                        pattern='^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$'
+                        pattern='^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$'
                         title="Password must be at least 8 characters, include a number and a special character.">
                         <label for="exampleInputPassword1" >Password</label>
                     </div>
@@ -112,6 +112,18 @@
     </div>
 
     <script>
+
+    //Automatically dismisses the the message alerts 
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 5000); //10 seconds
+    });
+
+    //For the dependent dropdown
     document.addEventListener('DOMContentLoaded', function() {
     const authoritySelect = document.getElementById('health_professional_body');
     const professionSelect = document.getElementById('profession');
@@ -136,6 +148,19 @@
         }
     });
     });
+
+    //Checks if the passwords Match
+    const form = document.querySelector('form');
+    const password1 = document.getElementById('password1');
+    const password2 = document.getElementById('password2');
+
+    form.addEventListener('submit', function(e) {
+        if (password1.value !== password2.value) {
+            e.preventDefault();
+            alert("Passwords do not match!");
+            password2.focus();
+        }
+    });
     
 </script>
 
@@ -145,11 +170,6 @@
         border: 2px solid red;
         }
         </style>
-
-        <script>
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-        this.classList.add('was-validated');
-        });
     </script> -->
 
 {% endblock %}
