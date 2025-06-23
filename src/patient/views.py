@@ -42,12 +42,14 @@ def create_patient(request):
             surname = request.POST.get('surname')
             gender = request.POST.get('gender')
             age = request.POST.get('age')
+            parent_name = request.POST.get('parent_name')
+            parent_surname = request.POST.get('parent_surname')
             parent_id = request.POST.get('parent_id')
             parent_contact = request.POST.get('parent_contact')
             screening_type = request.POST.get('screening_type')
             
             # Validate required fields
-            if not all([name, surname, gender, age, parent_id, parent_contact]):
+            if not all([name, surname, gender, age, parent_name, parent_surname, parent_id, parent_contact]):
                 messages.error(request, 'All fields are required.')
                 return render(request, 'patient/create_patient.html', {'show_navbar': True})
             
@@ -57,6 +59,8 @@ def create_patient(request):
                 surname=surname,
                 gender=gender,
                 age=age,
+                parent_name=parent_name,
+                parent_surname=parent_surname,
                 parent_id=parent_id,
                 parent_contact=parent_contact
             )
@@ -71,7 +75,7 @@ def create_patient(request):
                     return redirect('dietary_screening', patient_id=patient.id) #type: ignore
             
             # If no screening, redirect to success page or patient list
-            return redirect('patient_list')  # or wherever you want to redirect
+            return redirect('create_patient')  # or wherever you want to redirect
             
         except Exception as e:
             messages.error(request, f'Error creating patient: {str(e)}')

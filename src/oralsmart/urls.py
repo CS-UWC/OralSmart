@@ -15,28 +15,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from pages.views import home_view, patient_view
-from products.views import product_detail_view, product_create_view, dynamic_product_view
-from patient.views import create_patient_view, patient_detail_view, create_patient
-from userauth.views import login_user, logout_user,register_user
+from patient.views import patient_detail_view, create_patient
+from userauth.views import login_user, logout_user,register_user, home_view
 from userprofile.views import profile_view
+from assessments.views import dental_screening
+from reports.views import view_report, generate_pdf
+from userauth.views import activate, change_password, req_password_reset, confirm_password_reset
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    #for home page
     path('home/', home_view, name='home'),
 
-    #for product
-    path('product/', product_detail_view),
-    path('create_product/', product_create_view),
-    path('product/<int:id>/', dynamic_product_view, name='product'),
-
     #for patient
-    #path('create_patient/', create_patient_view),
     path('patient_detail/', patient_detail_view),
-    path('patient/', patient_view, name='patient'),
     path('create_patient/', create_patient, name='create_patient'),
-    
 
     #for userauth
     path('login_user/', login_user, name='login'),
@@ -44,6 +38,22 @@ urlpatterns = [
     path('register_user/', register_user, name='register_user'),
 
     #for profile
-    path('profile_view/', profile_view, name='profile')
+    path('profile_view/', profile_view, name='profile'),
+
+    #for screening assessments
+    path('assessments/dental_screening/<int:patient_id>/', dental_screening, name='dental_screening'),
+
+    #for reports
+    path('reports/report', view_report, name='report'),
+    path('report/<int:patient_id>', generate_pdf, name='generate_pdf'),
+
+    #for activating account
+    path('activate/<uidb64>/<token>/', activate, name='activate'),
+
+    #for password reset
+    path('change_password', change_password, name='change_password'),
+    path('reset_password', req_password_reset, name='reset_password'),
+    path('reset/<uidb64>/<token>', confirm_password_reset, name='confirm_password_reset'),
+    
 
 ]

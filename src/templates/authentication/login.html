@@ -2,36 +2,70 @@
 
 {% block content %}
 
-    <h1>LOGIN</h1>
-
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
                 <strong>{{ message }}</strong>
                 <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endfor %}
     {% endif %}
-
-    <!--{{ form.as_p }}-->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 5000); //5 seconds
+    });
+    </script>
 
     <form action="{% url 'login' %}" method="POST"> 
 
         {% csrf_token %}
-        <!--{{ form.as_p }}-->
+        <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+            <div class="card shadow" style="width: 100%; max-width: 850px;">
+                
+                <h1 class="pt-3 text-center">Log In To OralSmart</h1>
 
-        <div class="mb-3">
-            <label for="exampleInputUsername1" class="form-label">Username</label>
-            <input type="text" class="form-control" name="username" aria-describedby="emailHelp">
-            <!--<div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>-->
+                <div class="card-body">
+
+                    <div class="form-floating mb-3 pt-3">
+                        <label for="exampleInputUsername1" class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" aria-describedby="emailHelp">
+                    </div>
+
+                    <div class="form-floating mb-3 pt-3">
+                        <label for="exampleInputPassword1" class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password">
+                    </div>
+
+                    <!-- <div class="mb-3 pt-3">
+                        <label for="exampleInputUsername1" class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" aria-describedby="emailHelp">
+                    </div> -->
+
+                    <!-- <div class="mb-3 pt-3">
+                        <label for="exampleInputPassword1" class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password">
+                    </div> -->
+
+                    <div class="pt-3 text-center">
+                        <button type="submit" class="btn btn-primary w-100" style="max-width:450px;">Log In To OralSmart</button>
+                    </div>
+
+                    <div class="pt-3 text-center">
+                        <small class="text-muted">
+                            Don't Have An Account? <a class="ml-2" href="{% url 'register_user' %}">Register Now</a>
+                        </small><br>
+                        <small class="text-muted">
+                            Forgot Your Password? <a class="ml-2" href="{% url 'reset_password' %}">Reset Password</a>
+                        </small><br>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label for="exampleInputPassword1" class="form-label">Password</label>
-            <input type="password" class="form-control" name="password">
-        </div>
-
-        <button type="submit" class="btn btn-primary">Log in</button>
     </form>
 
 {% endblock %}

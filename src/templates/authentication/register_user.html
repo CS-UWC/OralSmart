@@ -2,109 +2,142 @@
 
 {% block content %}
 
-    <h1>REGISTRATION PAGE</h1>
-
-    {% if error %}
-            
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <strong>{{ error }}</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
     {% endif %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 3000); //3 seconds
+    });
+    </script>
 
-    <!--{{ form.as_p }}-->
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+        <div class="card shadow" style="width: 100%; max-width: 1000px;">
+            <div class="card-body p-4">
+                <form action="{% url 'register_user' %}" method="POST"> 
 
-    <form action="{% url 'register_user' %}" method="POST"> 
+                    {% csrf_token %}
 
-        {% csrf_token %}
-        <!--{{ form.as_p }}-->
-        
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control form-control-sm" id="username" name="username" placeholder="Username" required>
-            <label for="username">Username</label>
+                    <div class="pt-3 text-center">
+                        <h1>Register To Use OralSmart</h1>
+                    </div>
+                    
+                    <div class="form-floating mb-3 pt-3">
+                        <input type="text" class="form-control form-control-sm" id="username" name="username" placeholder="Username" required>
+                        <label for="username">Username</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Name" required>
+                        <label for="name">Name</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control form-control-sm" id="surname" name='surname' placeholder="Surname" required>
+                        <label for="name">Surname</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="email" name="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
+                        <label for="floatingInput">Email address</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="health_professional_body" name="health_professional_body" required>
+                            <option value="">Select Your Council</option>
+                            <option value="HPCSA">Health Professions Council of South Africa</option>
+                            <option value="SANC">South African Nursing Council</option>
+                        </select>
+                        <label for="profession">Choose your Authority Council/Body</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="profession" name="profession" required>
+                            <option value="">Select your profession</option>
+                            <option value="medical_doctor">Medical Doctor</option>
+                            <option value="dentist">Dentist</option>
+                            <option value="psychologist">Psychologist</option>
+                            <option value="physiotherapist">Physiotherapist</option>
+                            <option value="radiographer">Radiographer</option>
+                            <option value="occupational_therapist">Occupational Therapist</option>
+                            <option value="biokineticist">Biokineticist</option>
+                            <option value="clinical_technologist">Clinical Technologist</option>
+                            <option value="dietitian">Dietitian</option>
+                            <option value="audiologist">Audiologist</option>
+                            <option value="optometrist">Optometrist</option>
+                            <option value="emergency_care_practitioner">Emergency Care Practitioner</option>
+                            <option value="registered_nurse">Registered Nurse</option>
+                            <option value="enrolled_nurse">Enrolled Nurse</option>
+                            <option value="nursing_assistant">Nursing Assistant</option>
+                            <option value="midwife">Midwife</option>
+                        </select>
+                        <label for="profession">Profession</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" name= "reg_num" class="form-control" id="reg_num" placeholder="Enter Council Registration Number" required>
+                        <label for="floatingInput">Enter Council Registration Number</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password"
+                        class="form-control form-control-sm" id="password1" 
+                        placeholder="password1" 
+                        name="password1"
+                        required
+                        minlength="8"
+                        pattern='^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$'
+                        title="Password must be at least 8 characters, include a number and a special character.">
+                        <label for="exampleInputPassword1" >Password</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" 
+                        class="form-control form-control-sm" 
+                        id="password2" 
+                        placeholder="password2" 
+                        name="password2"
+                        required
+                        minlength="8"
+                        pattern='^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$'
+                        title="Password must be at least 8 characters, include a number and a special character.">
+                        <label for="exampleInputPassword2" >Confirm Password</label>
+                    </div>
+
+                    <div class="pt-3 text-center">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+
+
+                    <div class="text-center mt-3">
+                        <p>Already Registered With OralSmart?<a href="{% url 'login' %}">Login</a></p>
+                    </div>
+                </form>
+            </div>
         </div>
+    </div>
 
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Name" required>
-            <label for="name">Name</label>
-        </div>
+    <!-- <style>
+        .was-validated input:invalid,
+        .was-validated select:invalid {
+        border: 2px solid red;
+        }
+        </style>
 
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control form-control-sm" id="surname" name='surname' placeholder="Surname" required>
-            <label for="name">Surname</label>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="Number" class="form-control" id="id_number" name="id_number" placeholder="id_number" required>
-            <label for="id_number">ID Number</label>
-        </div>
-
-<!--
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name">
-            <label for="name">Enter Child Name</label>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Enter Child Name">
-            <label for="name">Enter Child Name</label>
-        </div>
-    -->
-        <div class="form-floating mb-3">
-            <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
-            <label for="floatingInput">Email address</label>
-        </div>
-
-        <div class="form-floating mb-3">
-        <select class="form-select" id="profession" name="profession" required>
-            <option value="">Select your profession</option>
-            <option value="medical_doctor">Medical Doctor</option>
-            <option value="dentist">Dentist</option>
-            <option value="psychologist">Psychologist</option>
-            <option value="physiotherapist">Physiotherapist</option>
-            <option value="radiographer">Radiographer</option>
-            <option value="occupational_therapist">Occupational Therapist</option>
-            <option value="biokineticist">Biokineticist</option>
-            <option value="clinical_technologist">Clinical Technologist</option>
-            <option value="dietitian">Dietitian</option>
-            <option value="audiologist">Audiologist</option>
-            <option value="optometrist">Optometrist</option>
-            <option value="emergency_care_practitioner">Emergency Care Practitioner</option>
-            <option value="registered_nurse">Registered Nurse</option>
-            <option value="enrolled_nurse">Enrolled Nurse</option>
-            <option value="nursing_assistant">Nursing Assistant</option>
-            <option value="midwife">Midwife</option>
-            <option value="pharmacist">Pharmacist</option>
-            <option value="pharmacy_assistant">Pharmacy Assistant</option>
-            <option value="pharmacist_intern">Pharmacist Intern</option>
-            <option value="dental_technician">Dental Technician</option>
-            <option value="dental_technologist">Dental Technologist</option>
-            <option value="chiropractor">Chiropractor</option>
-            <option value="homeopath">Homeopath</option>
-            <option value="naturopath">Naturopath</option>
-            <option value="osteopath">Osteopath</option>
-            <option value="acupuncturist">Acupuncturist</option>
-            <option value="traditional_health_practitioner">Traditional Health Practitioner</option>
-        </select>
-        <label for="profession">Profession</label>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="password" class="form-control form-control-sm" id="password1" placeholder="password1" name="password1">
-            <label for="exampleInputPassword1" >Password</label>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="password" class="form-control form-control-sm" id="password2" placeholder="password2" name="password2">
-            <label for="exampleInputPassword2" >Confirm Password</label>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Register</button>
-
-        <div class="text-center">
-            <p>Already a user? <a href="{% url 'login' %}">Login</a></p>
-        </div>
-    </form>
+        <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+        this.classList.add('was-validated');
+        });
+    </script> -->
 
 {% endblock %}
