@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from patient.views import patient_detail_view, create_patient
 from userauth.views import login_user, logout_user,register_user, home_view
-from userprofile.views import profile_view
+from userprofile.views import profile_view, get_professions
 from assessments.views import dental_screening
 from reports.views import view_report, generate_pdf
 from userauth.views import activate, change_password, req_password_reset, confirm_password_reset
@@ -39,6 +39,7 @@ urlpatterns = [
 
     #for profile
     path('profile_view/', profile_view, name='profile'),
+    path('ajax/get_professions/', get_professions, name='get_professions'), #gets professions for authority body dynamically
 
     #for screening assessments
     path('assessments/dental_screening/<int:patient_id>/', dental_screening, name='dental_screening'),

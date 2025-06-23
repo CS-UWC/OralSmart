@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from userprofile.models import Profile
 
+from django.http import JsonResponse
+
 # Create your views here.
 
 @login_required
@@ -22,3 +24,31 @@ def profile_view(request):
     }
     
     return render(request, 'userprofile/profile.html', context)
+
+#view that serves professions for a given authority body
+def get_professions(request):
+    body = request.GET.get('body')
+    professions = []
+    if body == 'HPCSA':
+        professions = [
+            {'value': 'medical_doctor', 'text': 'Medical Doctor'},
+            {'value': 'dentist', 'text': 'Dentist'},
+            {'value': 'psychologist', 'text': 'Psychologist'},
+            {'value': 'physiotherapist', 'text': 'Physiotherapist'},
+            {'value': 'radiographer', 'text': 'Radiographer'},
+            {'value': 'occupational_therapist', 'text': 'Occupational Therapist'},
+            {'value': 'biokineticist', 'text': 'Biokineticist'},
+            {'value': 'clinical_technologist', 'text': 'Clinical Technologist'},
+            {'value': 'dietitian', 'text': 'Dietitian'},
+            {'value': 'audiologist', 'text': 'Audiologist'},
+            {'value': 'optometrist', 'text': 'Optometrist'},
+            {'value': 'emergency_care_practitioner', 'text': 'Emergency Care Practitioner'},
+        ]
+    elif body == 'SANC':
+        professions = [
+            {'value': 'registered_nurse', 'text': 'Registered Nurse'},
+            {'value': 'enrolled_nurse', 'text': 'Enrolled Nurse'},
+            {'value': 'nursing_assistant', 'text': 'Nursing Assistant'},
+            {'value': 'midwife', 'text': 'Midwife'},
+        ]
+    return JsonResponse({'professions': professions})
