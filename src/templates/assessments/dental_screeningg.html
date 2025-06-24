@@ -1,0 +1,619 @@
+{% load static %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <ul>
+            {% for field, errors in form.errors.items %}
+                <li>{{ field }}: {{ errors|striptags }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 3000); //3 seconds
+    });
+    </script>
+
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dental Assessment</title>
+        
+        <!--Bootstrap CSS-->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        
+        <!--Custom CSS-->
+        <link rel="stylesheet" href="{% static 'css/dmft_styles.css' %}">
+        
+    </head>
+    <body>
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg bg-body-tertiary">
+            <div class="container-fluid">
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <a class="navbar-brand mt-2 mt-lg-0" href="#">
+                        <img src="{% static 'images/Logo.png' %}" height="45" alt="oralsmart logo" loading="lazy" />
+                    </a>
+                    
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0 justify-content-center">
+                        <li class="nav-item mx-3">
+                            <a class="nav-link" href="#">New patient</a>
+                        </li>
+                        <li class="nav-item mx-3">
+                            <a class="nav-link" href="#">Referrals</a>
+                        </li>
+                        <li class="nav-item mx-3">
+                            <a class="nav-link" href="#">History</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="d-flex align-items-center">
+
+                    <div class="dropdown">
+                        <a href="{% url 'profile' %}" class="d-flex align-items-center">
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp"
+                                class="rounded-circle" height="45" alt="avatar" loading="lazy" />
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+
+
+        <div class="container">
+            <form method="post" action="#">
+                {% csrf_token %}
+                
+                <div class="row">
+
+                    <!-- SOCIAL / BEHAVIOURAL / MEDICAL RISK FACTORS -->
+                    <div class="col-lg-12">
+                        <h3 class="risk-section-title text-center">SOCIAL / BEHAVIOURAL / MEDICAL RISK FACTORS</h3>
+                        
+                        <div class="risk-question high-risk">
+                            <div class="question-text">Has the primary caregiver undergone any dental decay treatment such as fillings, extractions, etc?</div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="caregiver_treatment_yes" name="caregiver_treatment" value="yes">
+                                        <label for="caregiver_treatment_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="caregiver_treatment_no" name="caregiver_treatment" value="no">
+                                        <label for="caregiver_treatment_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                <div class="risk-question">
+                    <div class="question-text">Monthly household income?</div>
+                    <div class="income-grid">
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="income_0" name="income" value="0">
+                                <label for="income_0">R0</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="income_1_2500" name="income" value="1-2500">
+                                <label for="income_1_2500">R1-R2500</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="income_2501_5000" name="income" value="2501-5000">
+                                <label for="income_2501_5000">R2501-R5000</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="income_5000_10000" name="income" value="5000-10000">
+                                <label for="income_5000_10000">R5000-R10000</label>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-3 mt-2">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="income_10001_20000" name="income" value="10001-20000">
+                                <label for="income_10001_20000">R10001-R20000</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="income_20001_40000" name="income" value="20001-40000">
+                                <label for="income_20001_40000">R20001-R40000</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="income_40001_70000" name="income" value="40001-70000">
+                                <label for="income_40001_70000">R40001-R70000</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="income_70001_plus" name="income" value="70001+">
+                                <label for="income_70001_plus">R70001+</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Does the child usually eat (> 3x/day) meals that are sugar-containing?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sugar_meals_yes" name="sugar_meals" value="yes">
+                            <label for="sugar_meals_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sugar_meals_no" name="sugar_meals" value="no">
+                            <label for="sugar_meals_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Does the child usually eat (> 3x/day) snacks that are sugar-containing?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sugar_snacks_yes" name="sugar_snacks" value="yes">
+                            <label for="sugar_snacks_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sugar_snacks_no" name="sugar_snacks" value="no">
+                            <label for="sugar_snacks_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Does the child usually drink (> 3x/day) beverages that are sugar-containing?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sugar_beverages_yes" name="sugar_beverages" value="yes">
+                            <label for="sugar_beverages_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sugar_beverages_no" name="sugar_beverages" value="no">
+                            <label for="sugar_beverages_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question moderate-risk">
+                    <div class="question-text">Is the child a South African citizen?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sa_citizen_yes" name="sa_citizen" value="yes">
+                            <label for="sa_citizen_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sa_citizen_no" name="sa_citizen" value="no">
+                            <label for="sa_citizen_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question moderate-risk">
+                    <div class="question-text">Does the child have special health care needs?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="special_needs_yes" name="special_needs" value="yes">
+                            <label for="special_needs_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="special_needs_no" name="special_needs" value="no">
+                            <label for="special_needs_no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLINICAL RISK FACTORS -->
+            <div class="risk-assessment-section">
+                <h3 class="risk-section-title text-center">CLINICAL RISK FACTORS</h3>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Is there visible dental plaque present on the child's teeth?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="plaque_yes" name="plaque" value="yes">
+                            <label for="plaque_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="plaque_no" name="plaque" value="no">
+                            <label for="plaque_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Does the child experience reduced salivary flow or show any symptoms of dry mouth?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="dry_mouth_yes" name="dry_mouth" value="yes">
+                            <label for="dry_mouth_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="dry_mouth_no" name="dry_mouth" value="no">
+                            <label for="dry_mouth_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Are there any developmental enamel defects such as opacity, translucency, or discolouration?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="enamel_defects_yes" name="enamel_defects" value="yes">
+                            <label for="enamel_defects_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="enamel_defects_no" name="enamel_defects" value="no">
+                            <label for="enamel_defects_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question moderate-risk">
+                    <div class="question-text">Is the child wearing any intraoral appliance (e.g., braces, retainers)?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="appliance_yes" name="appliance" value="yes">
+                            <label for="appliance_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="appliance_no" name="appliance" value="no">
+                            <label for="appliance_no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROTECTIVE FACTORS -->
+            <div class="risk-assessment-section">
+                <h3 class="risk-section-title text-center">PROTECTIVE FACTORS</h3>
+                
+                <div class="risk-question low-risk">
+                    <div class="question-text">Does the child drink optimally fluoridated water (e.g., municipal tap water in South Africa) or take fluoride supplements?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fluoride_water_yes" name="fluoride_water" value="yes">
+                            <label for="fluoride_water_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fluoride_water_no" name="fluoride_water" value="no">
+                            <label for="fluoride_water_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question low-risk">
+                    <div class="question-text">Are the child's teeth brushed daily with fluoride toothpaste (e.g., Colgate, Aquafresh, Sensodyne)?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fluoride_toothpaste_yes" name="fluoride_toothpaste" value="yes">
+                            <label for="fluoride_toothpaste_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fluoride_toothpaste_no" name="fluoride_toothpaste" value="no">
+                            <label for="fluoride_toothpaste_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question low-risk">
+                    <div class="question-text">Has the child received topical fluoride from a dental professional in the past year?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="topical_fluoride_yes" name="topical_fluoride" value="yes">
+                            <label for="topical_fluoride_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="topical_fluoride_no" name="topical_fluoride" value="no">
+                            <label for="topical_fluoride_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question low-risk">
+                    <div class="question-text">Does the child attend regular dental check-ups with a designated family dentist?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="regular_checkups_yes" name="regular_checkups" value="yes">
+                            <label for="regular_checkups_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="regular_checkups_no" name="regular_checkups" value="no">
+                            <label for="regular_checkups_no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DISEASE INDICATORS (CURRENT / HISTORY) -->
+            <h3 class="risk-section-title text-center">DISEASE INDICATORS (CURRENT/HISTORY)</h3>
+                
+                <div class="risk-question low-risk">
+                    <div class="question-text">Are there any partially sealed pits and/or fissures present on any of the child's teeth?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sealed_pits_yes" name="sealed_pits" value="yes">
+                            <label for="sealed_pits_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sealed_pits_no" name="sealed_pits" value="no">
+                            <label for="sealed_pits_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question low-risk">
+                    <div class="question-text">Has the child received any restorative dental procedures within the past 3 years (e.g. fillings)?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="restorative_procedures_yes" name="restorative_procedures" value="yes">
+                            <label for="restorative_procedures_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="restorative_procedures_no" name="restorative_procedures" value="no">
+                            <label for="restorative_procedures_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question moderate-risk">
+                    <div class="question-text">Is there any clinically visible enamel change without structural breakdown (e.g., opacity, discoloration)?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="enamel_change_yes" name="enamel_change" value="yes">
+                            <label for="enamel_change_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="enamel_change_no" name="enamel_change" value="no">
+                            <label for="enamel_change_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Does the child have any observed internal dentin discoloration without breach of the enamel surface?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="dentin_discoloration_yes" name="dentin_discoloration" value="yes">
+                            <label for="dentin_discoloration_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="dentin_discoloration_no" name="dentin_discoloration" value="no">
+                            <label for="dentin_discoloration_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Are there non-cavitated (white-spot) lesions visible on smooth surfaces or along the gingival margin?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="white_spot_lesions_yes" name="white_spot_lesions" value="yes">
+                            <label for="white_spot_lesions_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="white_spot_lesions_no" name="white_spot_lesions" value="no">
+                            <label for="white_spot_lesions_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Are there any cavitated carious lesions clinically visible on examination?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cavitated_lesions_yes" name="cavitated_lesions" value="yes">
+                            <label for="cavitated_lesions_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cavitated_lesions_no" name="cavitated_lesions" value="no">
+                            <label for="cavitated_lesions_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Has the child received multiple recent dental restorations indicating active caries progression?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="multiple_restorations_yes" name="multiple_restorations" value="yes">
+                            <label for="multiple_restorations_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="multiple_restorations_no" name="multiple_restorations" value="no">
+                            <label for="multiple_restorations_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-question high-risk">
+                    <div class="question-text">Are there any missing teeth attributed to caries or previous extraction due to decay?</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="missing_teeth_yes" name="missing_teeth" value="yes">
+                            <label for="missing_teeth_yes">Yes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="missing_teeth_no" name="missing_teeth" value="no">
+                            <label for="missing_teeth_no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            
+
+            <div class="text-center">
+                <h3 class="section-title">DMFT ASSESSMENT</h3>
+            </div>
+
+            <!-- Instructions -->
+            <p><strong>Instructions:</strong> Select the appropriate status for each tooth using the FDI numbering system.</p>
+            
+            <table class="table table-bordered instructions-table">
+                <thead>
+                    <tr>
+                        <th>Permanent Tooth Code</th>
+                        <th>Description</th>
+                        <th>Primary Tooth Code</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>0</strong></td><td>Sound</td><td>A</td></tr>
+                    <tr><td><strong>1</strong></td><td>Decayed</td><td>B</td></tr>
+                    <tr><td><strong>2</strong></td><td>Filled</td><td>C</td></tr>
+                    <tr><td><strong>3</strong></td><td>Missing</td><td>D</td></tr>
+                    <tr><td><strong>4</strong></td><td>Missing due to caries</td><td>E</td></tr>
+                    <tr><td><strong>5</strong></td><td>Missing due to other</td><td>X</td></tr>
+                    <tr><td><strong>6</strong></td><td>Fissure sealant</td><td>F</td></tr>
+                    <tr><td><strong>7</strong></td><td>Bridge abutment</td><td></td></tr>
+                    <tr><td><strong>8</strong></td><td>Unerupted</td><td></td></tr>
+                    <tr><td><strong>9</strong></td><td>Excluded</td><td></td></tr>
+                </tbody>
+            </table>
+
+
+            <!-- Permanent Teeth Upper -->
+            <h5>Permanent Teeth - Upper Jaw</h5>
+            <table class="dmft-table">
+                <tr>
+                    {% for tooth in permanent_upper %}
+                        {% if tooth != "," %}
+                        <td>
+                            <label for="tooth_{{ tooth }}">{{ tooth }}</label>
+                            <select name="tooth_{{ tooth }}" id="tooth_{{ tooth }}" class="tooth-select permanent-tooth">
+                                <option value="">-</option>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                            </select>
+                        </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </table>
+
+            <!-- Permanent Teeth Lower -->
+            <h5>Permanent Teeth - Lower Jaw</h5>
+            <table class="dmft-table">
+                <tr>
+                    {% for tooth in permanent_lower %}
+                        {% if tooth != "," %}
+                        <td>
+                            <label for="tooth_{{ tooth }}">{{ tooth }}</label>
+                            <select name="tooth_{{ tooth }}" id="tooth_{{ tooth }}" class="tooth-select permanent-tooth">
+                                <option value="">-</option>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                            </select>
+                        </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </table>
+
+                <!-- Primary Teeth Upper -->
+            <h5>Primary Teeth - Upper Jaw</h5>
+            <table class="dmft-table">
+                <tr>
+                    {% for tooth in primary_upper %}
+                        {% if tooth != "," %}
+                        <td>
+                            <label for="tooth_{{ tooth }}">{{ tooth }}</label>
+                            <select name="tooth_{{ tooth }}" id="tooth_{{ tooth }}" class="tooth-select primary-tooth">
+                                <option value="">-</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="X">X</option>
+                                <option value="F">F</option>
+                            </select>
+                        </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </table>
+
+            <!-- Primary Teeth Lower -->
+            <h5>Primary Teeth - Lower Jaw</h5>
+            <table class="dmft-table">
+                <tr>
+                    {% for tooth in primary_lower %}
+                        {% if tooth != "," %}
+                        <td>
+                            <label for="tooth_{{ tooth }}">{{ tooth }}</label>
+                            <select name="tooth_{{ tooth }}" id="tooth_{{ tooth }}" class="tooth-select primary-tooth">
+                                <option value="">-</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="X">X</option>
+                                <option value="F">F</option>
+                            </select>
+                        </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </table>
+
+
+            <div class="form-section text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">Proceed</button>
+                <!-- <button type="button" class="btn btn-secondary btn-lg" onclick="resetForm()">Reset Form</button> -->
+            </div>
+            
+            </form>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

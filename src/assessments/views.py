@@ -14,8 +14,28 @@ def dental_screening(request, patient_id):
     permanent_lower = ["48", "47", "46", "45", "44", "43", "42", "41", "31", "32", "33", "34", "35", "36", "37", "38"]
     primary_upper = ["55", "54", "53", "52", "51", "61", "62", "63", "64", "65"]
     primary_lower = ["85", "84", "83", "82", "81", "71", "72", "73", "74", "75"]
+
+    required_fields = [
+        'caregiver_treatment', 'income', 'sugar_meals', 'sugar_snacks', 'sugar_beverages',
+        'sa_citizen', 'special_needs', 'plaque', 'dry_mouth', 'enamel_defects', 'appliance',
+        'fluoride_water', 'fluoride_toothpaste', 'topical_fluoride', 'regular_checkups',
+        'sealed_pits', 'restorative_procedures', 'enamel_change', 'dentin_discoloration',
+        'white_spot_lesions', 'cavitated_lesions', 'multiple_restorations', 'missing_teeth'
+    ]
     
     if request.method == 'POST':
+
+        missing = [field for field in required_fields if not request.POST.get(field)]
+        if missing:
+            # Show error and re-render form
+            from django.contrib import messages
+            messages.error(request, f"Please answer all required questions: {', '.join(missing)}")
+            return render(request, 'assessments/dental_screening.html', {
+                'permanent_upper': permanent_upper,
+                'permanent_lower': permanent_lower,
+                'primary_upper': primary_upper,
+                'primary_lower': primary_lower,
+            })
 
         teeth_fields = {}
 
@@ -24,8 +44,8 @@ def dental_screening(request, patient_id):
             key = f"tooth_{tooth}"
             teeth_fields[key] = request.POST.get(key, "")
 
-            #collect other fields
-            screening = DentalScreening.objects.create(
+        #collect other fields
+        screening = DentalScreening.objects.create(
             patient=patient,
             caregiver_treatment=request.POST.get('caregiver_treatment', ''),
             income=request.POST.get('income', ''),
