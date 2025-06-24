@@ -1,12 +1,11 @@
 from django.shortcuts import render
-
 from patient.models import Patient
-
 from django.http import FileResponse
 import io
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 from assessments.models import DentalScreening
 from django.http import HttpResponse
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -53,7 +52,7 @@ def generate_pdf(request, patient_id):
         request.session['selected_sections'] = selected_sections  # Save for GET
         return HttpResponse(status=204)#return render(request, "reports/report.html", {"patient_id": patient_id})
     else:
-        # For GET, generate PDF with last selected sections
+        #For GET, generate PDF with last selected sections
         selected_sections = request.session.get('selected_sections', [
             'section1', 'section2', 'section3', 'section4', 'section5'
         ])
@@ -67,63 +66,121 @@ def generate_pdf(request, patient_id):
                 "patient_id": patient_id,
                 "messages": ["No dental screening found for this patient."]
             })
+        
         buf = io.BytesIO()
-        c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
-        textobj = c.beginText()
-        textobj.setTextOrigin(inch, inch)
-        textobj.setFont('Helvetica', 14)
-
-        textobj.textLine(" ")
-        textobj.textLine("Patient Name: " + patient.name)
-        textobj.textLine("Patient Surname: " + patient.surname)
-        textobj.textLine("Patient Parent ID " + patient.parent_id)
-        textobj.textLine("Patient Parent Contact Number: " + patient.parent_contact)
-        textobj.textLine("")
-
-        # Add only the selected sections
+        
+        #Create document template
+        doc = SimpleDocTemplate(buf, pagesize=letter, rightMargin=72, leftMargin=72, 
+                              topMargin=72, bottomMargin=18)
+        
+        #Get styles
+        styles = getSampleStyleSheet()
+        
+        #Custom styles
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1,  #Center alignment
+        )
+        
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontSize=14,
+            spaceAfter=12,
+            spaceBefore=12,
+        )
+        
+        normal_style = styles['Normal']
+        
+        #Build story (content)
+        story = []
+        
+        #Title
+        story.append(Paragraph("OralSmart Dental Screening Report", title_style))
+        story.append(Spacer(1, 12))
+        
+        #Patient Info
+        story.append(Paragraph("Patient Information", heading_style))
+        story.append(Paragraph(f"<b>Patient Name:</b> {patient.name}", normal_style))
+        story.append(Paragraph(f"<b>Patient Surname:</b> {patient.surname}", normal_style))
+        story.append(Paragraph(f"<b>Patient Parent ID:</b> {patient.parent_id}", normal_style))
+        story.append(Paragraph(f"<b>Patient Parent Contact:</b> {patient.parent_contact}", normal_style))
+        story.append(Spacer(1, 12))
+        
+        #Section 1: Social/Behavioural/Medical Risk Factors
         if 'section1' in selected_sections:
-            textobj.textLine(" ")
-            textobj.textLine("Social/Behavioural/Medical Risk Factors")
-            textobj.textLine(f"Caregiver treatment: {data.caregiver_treatment}")
-            textobj.textLine(f"Income: {data.income}")
-            textobj.textLine(f"Sugary meals: {data.sugar_meals}")
-            textobj.textLine(f"Sugar snacks: {data.sugar_snacks}")
-            textobj.textLine(f"Sugar beverages: {data.sugar_beverages}")
-            textobj.textLine(f"South African Citizen: {data.sa_citizen}")
-            textobj.textLine(f"Special_needs: {data.special_needs}")
+            story.append(Paragraph("Social/Behavioural/Medical Risk Factors", heading_style))
+            
+            section1_data = [
+                f"<b>Caregiver treatment:</b> {data.caregiver_treatment}",
+                f"<b>Income:</b> {data.income}",
+                f"<b>Sugary meals:</b> {data.sugar_meals}",
+                f"<b>Sugar snacks:</b> {data.sugar_snacks}",
+                f"<b>Sugar beverages:</b> {data.sugar_beverages}",
+                f"<b>South African Citizen:</b> {data.sa_citizen}",
+                f"<b>Special needs:</b> {data.special_needs}"
+            ]
+            
+            for line in section1_data:
+                story.append(Paragraph(line, normal_style))
+            story.append(Spacer(1, 12))
 
+        #Section 2: Clinical Risk Factors
         if 'section2' in selected_sections:
-            textobj.textLine(" ")
-            textobj.textLine("Clinical Risk Factors")
-            textobj.textLine(f"Plaque: {data.plaque}")
-            textobj.textLine(f"Dry mouth: {data.dry_mouth}")
-            textobj.textLine(f"Enamel defects: {data.enamel_defects}")
-            textobj.textLine(f"Intra-oral appliance: {data.appliance}")
+            story.append(Paragraph("Clinical Risk Factors", heading_style))
+            
+            section2_data = [
+                f"<b>Plaque:</b> {data.plaque}",
+                f"<b>Dry mouth:</b> {data.dry_mouth}",
+                f"<b>Enamel defects:</b> {data.enamel_defects}",
+                f"<b>Intra-oral appliance:</b> {data.appliance}"
+            ]
+            
+            for line in section2_data:
+                story.append(Paragraph(line, normal_style))
+            story.append(Spacer(1, 12))
 
+        #Section 3: Protective Factors
         if 'section3' in selected_sections:
-            textobj.textLine(" ")
-            textobj.textLine("Protective Factors")
-            textobj.textLine(f"Fluoride water: {data.fluoride_water}")
-            textobj.textLine(f"Fluoride toothpaste: {data.fluoride_toothpaste}")
-            textobj.textLine(f"Topical fluoride: {data.topical_fluoride}")
-            textobj.textLine(f"Regular checkups: {data.regular_checkups}")
+            story.append(Paragraph("Protective Factors", heading_style))
+            
+            section3_data = [
+                f"<b>Fluoride water:</b> {data.fluoride_water}",
+                f"<b>Fluoride toothpaste:</b> {data.fluoride_toothpaste}",
+                f"<b>Topical fluoride:</b> {data.topical_fluoride}",
+                f"<b>Regular checkups:</b> {data.regular_checkups}"
+            ]
+            
+            for line in section3_data:
+                story.append(Paragraph(line, normal_style))
+            story.append(Spacer(1, 12))
 
+        #Section 4: Disease Indicators
         if 'section4' in selected_sections:
-            textobj.textLine(" ")
-            textobj.textLine("Disease Indicators")
-            textobj.textLine(f"Sealed pits: {data.sealed_pits}")
-            textobj.textLine(f"Restorative procedures: {data.restorative_procedures}")
-            textobj.textLine(f"Enamel change: {data.enamel_change}")
-            textobj.textLine(f"Dentin discoloration: {data.dentin_discoloration}")
-            textobj.textLine(f"White spot lesions: {data.white_spot_lesions}")
-            textobj.textLine(f"Cavitated lesions: {data.cavitated_lesions}")
-            textobj.textLine(f"Multiple restorations: {data.multiple_restorations}")
-            textobj.textLine(f"Missing teeth: {data.missing_teeth}")
+            story.append(Paragraph("Disease Indicators", heading_style))
+            
+            section4_data = [
+                f"<b>Sealed pits:</b> {data.sealed_pits}",
+                f"<b>Restorative procedures:</b> {data.restorative_procedures}",
+                f"<b>Enamel change:</b> {data.enamel_change}",
+                f"<b>Dentin discoloration:</b> {data.dentin_discoloration}",
+                f"<b>White spot lesions:</b> {data.white_spot_lesions}",
+                f"<b>Cavitated lesions:</b> {data.cavitated_lesions}",
+                f"<b>Multiple restorations:</b> {data.multiple_restorations}",
+                f"<b>Missing teeth:</b> {data.missing_teeth}"
+            ]
+            
+            for line in section4_data:
+                story.append(Paragraph(line, normal_style))
+            story.append(Spacer(1, 12))
 
+        #Section 5: DMFT Assessment starts here
         if 'section5' in selected_sections:
-
             tooth_names = {
-                # Permanent Teeth
+                #Permanent Teeth
                 "tooth_18": "Upper Right Third Molar (Wisdom Tooth)",
                 "tooth_17": "Upper Right Second Molar",
                 "tooth_16": "Upper Right First Molar",
@@ -156,8 +213,7 @@ def generate_pdf(request, patient_id):
                 "tooth_36": "Lower Left First Molar",
                 "tooth_37": "Lower Left Second Molar",
                 "tooth_38": "Lower Left Third Molar (Wisdom Tooth)",
-
-                # Primary (Deciduous) Teeth
+                #Primary Teeth
                 "tooth_55": "Upper Right Second Primary Molar",
                 "tooth_54": "Upper Right First Primary Molar",
                 "tooth_53": "Upper Right Primary Canine",
@@ -180,22 +236,23 @@ def generate_pdf(request, patient_id):
                 "tooth_75": "Lower Left Second Primary Molar"
             }
 
-            textobj.textLine(" ")
-            textobj.textLine("DMFT Assessment")
+            story.append(Paragraph("DMFT Assessment", heading_style))
+            
+            #add a new page for tooth data
+            story.append(PageBreak())
+            story.append(Paragraph("Tooth Assessment", heading_style))
 
             for code, status in data.teeth_data.items():
-                if status:  # Only show teeth with some status
-                    textobj.textLine(f"{tooth_names.get(code, 'Unknown Tooth')} ({code}): Status = {status}")
+                if status:
+                    text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> {status}"
+                    story.append(Paragraph(text, normal_style))
                 elif status == "":
-                    textobj.textLine(f"{tooth_names.get(code, 'Unknown Tooth')} ({code}): Status = No Issue (Assumed)")
-                    
+                    text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> No Issue (Assumed)"
+                    story.append(Paragraph(text, normal_style))
 
-        c.drawText(textobj)
-        c.showPage()
-        c.save()
+        #build PDF
+        doc.build(story)
         buf.seek(0)
 
-        #return FileResponse(buf, as_attachment=False, filename='report.pdf', content_type='application/pdf')        #patient_name = data.patient.first_name + "_" + data.patient.last_name if data.patient else "unknown"
         filename = f"report_{patient.name}_{patient.surname}_{patient_id}.pdf"
         return FileResponse(buf, as_attachment=False, filename=filename, content_type='application/pdf')
-    
