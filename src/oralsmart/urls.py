@@ -19,7 +19,7 @@ from patient.views import patient_detail_view, create_patient
 from userauth.views import login_user, logout_user,register_user, home_view
 from userprofile.views import profile_view, get_professions
 from assessments.views import dental_screening
-from reports.views import view_report, generate_pdf
+from reports.views import generate_pdf, view_report 
 from userauth.views import activate, change_password, req_password_reset, confirm_password_reset
 
 urlpatterns = [
@@ -45,16 +45,16 @@ urlpatterns = [
     path('assessments/dental_screening/<int:patient_id>/', dental_screening, name='dental_screening'),
 
     #for reports
-    path('reports/report', view_report, name='report'),
-    path('report/<int:patient_id>', generate_pdf, name='generate_pdf'),
+    path('reports/report/<int:patient_id>/', view_report, name='report'),
+    path('reports/<int:patient_id>/', generate_pdf, name='generate_pdf'),
 
     #for activating account
     path('activate/<uidb64>/<token>/', activate, name='activate'),
 
     #for password reset
-    path('change_password', change_password, name='change_password'),
-    path('reset_password', req_password_reset, name='reset_password'),
-    path('reset/<uidb64>/<token>', confirm_password_reset, name='confirm_password_reset'),
+    path('change_password/', change_password, name='change_password'),
+    path('reset_password/', req_password_reset, name='reset_password'),
+    path('reset/<uidb64>/<token>/', confirm_password_reset, name='confirm_password_reset'),
     
 
 ]

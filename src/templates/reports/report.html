@@ -10,20 +10,90 @@
         </div>
     {% endfor %}
 {% endif %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
-            var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-            bsAlert.close();
-        });
-    }, 3000); //3 seconds
-});
-</script>
 
-<div>
-  <iframe src="https://mozilla.github.io/pdf.js/web/viewer.html?file=https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf"
-          width="100%" height="600px"></iframe>
-</div>
+
+<form id="section-toggles" class="mb-4" method="post" action="{% url 'generate_pdf' patient_id=patient_id %}">
+
+    {% csrf_token %}
+
+    <div>
+        <iframe id="pdf-preview" src="{% url 'generate_pdf' patient_id=patient_id %}" width="100%" height="600px"></iframe>
+    </div>
+
+    <input type="hidden" name="selected_sections" id="selected_sections" value="section1,section2,section3,section4,section5">
+
+    <div class="form-section mt-4 pt-3">
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section1" checked> Social/Behavioural/Medical Risk Factors</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section2" checked> Clinical Risk Factors</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section3" checked> Protective Factors</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section4" checked> Disease Indicators</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section5" checked> DMFT Assessment</label>
+    </div>
+
+    <div class="form-section mt-3 d-flex justify-content-center"></div>
+        <button type="submit" class="btn btn-primary">Refresh PDF</button>
+    </div>
+
+</form>
+
+<!-- <div id="report-preview">
+    <div id="section1" class="report-section">
+        <h3>Social / Behavioural / Medical Risk Factors</h3>
+        <p>Section 1 content goes here...</p>
+    </div>
+    <div id="section2" class="report-section">
+        <h3>Clinical Risk Factors</h3>
+        <p>Section 2 content goes here...</p>
+    </div>
+    <div id="section3" class="report-section">
+        <h3>Protective Factors</h3>
+        <p>Section 3 content goes here...</p>
+    </div>
+    <div id="section4" class="report-section">
+        <h3>Disease Indicators</h3>
+        <p>Section 4 content goes here...</p>
+    </div>
+    <div id="section5" class="report-section">
+        <h3>DMFT Assessment</h3>
+        <p>Section 5 content goes here...</p>
+    </div>
+</div> -->
+
+<script>
+
+    function updateSelectedSections() {
+    const checked = Array.from(document.querySelectorAll('.section-toggle:checked'))
+        .map(cb => cb.getAttribute('data-section'));
+    document.getElementById('selected_sections').value = checked.join(',');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        updateSelectedSections();
+        document.querySelectorAll('.section-toggle').forEach(function(toggle) {
+            toggle.addEventListener('change', updateSelectedSections);
+        });
+
+        //AJAX form submit for PDF preview
+        document.getElementById('section-toggles').addEventListener('submit', function(e) {
+            e.preventDefault();
+            updateSelectedSections();
+            fetch(this.action, {
+                method: "POST",
+                body: new FormData(this),
+                headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
+            }).then(function() {
+                //refresh the iframe to show the updated PDF
+                document.getElementById('pdf-preview').src = document.getElementById('pdf-preview').src.split('?')[0] + '?t=' + Date.now();
+            });
+        });
+    });
+</script>
 
 {% endblock %}
