@@ -21,6 +21,8 @@ from userprofile.views import profile_view, get_professions
 from assessments.views import dental_screening
 from reports.views import generate_pdf, view_report 
 from userauth.views import activate, change_password, req_password_reset, confirm_password_reset
+from facility.views import clinic_list, refer_patient
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -55,6 +57,9 @@ urlpatterns = [
     path('change_password/', change_password, name='change_password'),
     path('reset_password/', req_password_reset, name='reset_password'),
     path('reset/<uidb64>/<token>/', confirm_password_reset, name='confirm_password_reset'),
-    
+
+    #for clinics
+    path('clinics/', clinic_list, name='clinics'),
+    path('clinics/refer/<int:clinic_id>/', refer_patient, name='refer_patient'),
 
 ]

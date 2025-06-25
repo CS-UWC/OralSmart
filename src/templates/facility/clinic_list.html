@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Healthcare Centers - OralSmart{% endblock %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
+            <strong>{{ message }}</strong>
+            <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+            var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+        });
+    }, 5000); //3 seconds
+});
+</script>
+
+{% block extra_css %}
+<style>
+    .search-container {
+        background-color: white;
+        padding: 24px 32px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e9ecef;
+        margin-bottom: 32px;
+    }
+    
+    .search-form {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+    }
+    
+    .search-dropdown {
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        background-color: #f8f9fa;
+        color: #666;
+        min-width: 220px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        transition: all 0.2s ease;
+    }
+    
+    .search-dropdown:focus {
+        outline: none;
+        border-color: #4285f4;
+        background-color: white;
+        color: #333;
+    }
+    
+    .search-input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        background-color: #f8f9fa;
+        color: #666;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        transition: all 0.2s ease;
+    }
+    
+    .search-input::placeholder {
+        color: #999;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #4285f4;
+        background-color: white;
+        color: #333;
+    }
+    
+    .search-btn {
+        padding: 12px 24px;
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .search-btn:hover {
+        background-color: #3367d6;
+        transform: translateY(-1px);
+    }
+    
+    .results-info {
+        margin-bottom: 24px;
+        color: #666;
+        font-size: 16px;
+        font-weight: 500;
+    }
+    
+    .clinic-card {
+        display: flex;
+        background-color: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        align-items: center;
+        gap: 24px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+    
+    .clinic-card:hover {
+        border-color: #4285f4;
+        box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+        transform: translateY(-1px);
+    }
+    
+    .clinic-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+    }
+    
+    .clinic-icon img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+    }
+    
+    .clinic-info {
+        flex: 1;
+    }
+    
+    .clinic-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        margin: 0 0 8px 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .clinic-type {
+        background-color: #f8f9fa;
+        color: #666;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 12px;
+        border: 1px solid #e9ecef;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .clinic-details {
+        color: #666;
+        line-height: 1.5;
+        margin: 6px 0;
+        font-size: 16px;
+        font-weight: 500;
+    }
+    
+    .clinic-details strong {
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .clinic-details a {
+        color: #4285f4;
+        text-decoration: none;
+    }
+    
+    .clinic-details a:hover {
+        text-decoration: underline;
+    }
+    
+    .book-btn {
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .book-btn:hover {
+        background-color: #3367d6;
+        transform: translateY(-1px);
+    }
+    
+    .no-clinics {
+        text-align: center;
+        color: #666;
+        font-size: 18px;
+        font-weight: 500;
+        margin-top: 48px;
+        padding: 48px;
+        background-color: white;
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .search-container {
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+        
+        .search-form {
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .search-dropdown,
+        .search-input {
+            width: 100%;
+            min-width: unset;
+        }
+        
+        .clinic-card {
+            flex-direction: column;
+            text-align: center;
+            gap: 16px;
+            padding: 20px;
+        }
+        
+        .clinic-info {
+            width: 100%;
+        }
+        
+        .book-btn {
+            width: 100%;
+            padding: 14px 24px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <form method="GET" class="search-form">
+        <select class="search-dropdown" name="center_type">
+            <option value="">Choose Healthcare Center</option>
+            <option value="public" {% if center_type == 'public' %}selected{% endif %}>Public</option>
+            <option value="private" {% if center_type == 'private' %}selected{% endif %}>Private</option>
+        </select>
+        <input type="text" class="search-input" name="search" placeholder="Search by name, address, description..." value="{{ search_query }}">
+        <button type="submit" class="search-btn">Search</button>
+    </form>
+</div>
+
+{% if clinics %}
+    <div class="results-info">
+        {% if search_query %}
+            Found {{ clinics.count }} result{{ clinics.count|pluralize }} for "{{ search_query }}"
+        {% else %}
+            Showing all {{ clinics.count }} healthcare center{{ clinics.count|pluralize }}
+        {% endif %}
+    </div>
+
+    <div id="clinic-list">
+        {% for clinic in clinics %}
+            <div class="clinic-card clinic-select" 
+                 data-clinic-id="{{ clinic.id }}"
+                 data-clinic-name="{{ clinic.name }}"
+                 data-clinic-email="{{ clinic.email|default_if_none:'' }}">
+                <div class="clinic-icon">
+                    <img src="{% static 'images/clinic_icon.png' %}" alt="Clinic Icon">
+                </div>
+                <div class="clinic-info">
+                    <h2 class="clinic-name">{{ clinic.name }}</h2>
+                    <span class="clinic-type">{{ clinic.clinic_type|capfirst }}</span>
+            
+                    {% if clinic.emergency %}
+                        <div class="clinic-details"><strong>Emergency:</strong> {{ clinic.emergency }}</div>
+                    {% endif %}
+                    
+                    {% if clinic.hours %}
+                        <div class="clinic-details"><strong>Hours:</strong> {{ clinic.hours }}</div>
+                    {% endif %}
+                    
+                    {% if clinic.address %}
+                        <div class="clinic-details"><strong>Address:</strong> {{ clinic.address }}</div>
+                    {% endif %}
+                    
+                    {% if clinic.phone_number %}
+                        <div class="clinic-details"><strong>Phone:</strong> {{ clinic.phone_number }}</div>
+                    {% endif %}
+                    
+                    {% if clinic.email %}
+                        <div class="clinic-details"><strong>Email:</strong> {{ clinic.email }}</div>
+                    {% endif %}
+                    
+                    {% if clinic.website %}
+                        <div class="clinic-details"><strong>Website:</strong> <a href="{{ clinic.website }}">{{ clinic.website }}</a></div>
+                    {% endif %}
+                    
+                    {% if clinic.description %}
+                        <div class="clinic-details"><strong>Description:</strong> {{ clinic.description }}</div>
+                    {% endif %}
+                </div>
+                <button class="book-btn" type="button">BOOK</button>
+            </div>
+        {% endfor %}
+    </div>
+
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form method="post" id="bookingForm">
+            {% csrf_token %}
+            <input type="hidden" name="patient_id" value="{{ patient_id }}">
+            <input type="hidden" name="selected_sections" value="{{ selected_sections|join:',' }}">
+            <input type="hidden" name="clinic_id" id="modal_clinic_id">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="bookingModalLabel">Book Appointment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div id="modalClinicName" class="mb-2"></div>
+                <div class="mb-2">
+                    <label for="appointment_date">Date:</label>
+                    <input type="date" name="appointment_date" id="appointment_date" required>
+                </div>
+                <div class="mb-2">
+                    <label for="appointment_time">Time:</label>
+                    <input type="time" name="appointment_time" id="appointment_time" required>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="book-btn">Refer/Book</button>
+              </div>
+            </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // When a clinic card or BOOK button is clicked
+        document.querySelectorAll('.clinic-card').forEach(function(card) {
+            card.addEventListener('click', function(e) {
+                // Prevent double trigger if button is inside card
+                if (e.target.tagName === 'BUTTON' || e.currentTarget === e.target) {
+                    var clinicId = card.getAttribute('data-clinic-id');
+                    var clinicName = card.getAttribute('data-clinic-name');
+                    document.getElementById('modal_clinic_id').value = clinicId;
+                    document.getElementById('modalClinicName').innerText = clinicName;
+                    // Set form action
+                    document.getElementById('bookingForm').action = "{% url 'refer_patient' 0 %}".replace('0', clinicId);
+                    var bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+                    bookingModal.show();
+                }
+            });
+        });
+    });
+    </script>
+{% else %}
+    <div class="no-clinics">No healthcare centers found.</div>
+{% endif %}
+{% endblock %}

@@ -36,35 +36,22 @@
 
 </form>
 
-<!-- <div id="report-preview">
-    <div id="section1" class="report-section">
-        <h3>Social / Behavioural / Medical Risk Factors</h3>
-        <p>Section 1 content goes here...</p>
-    </div>
-    <div id="section2" class="report-section">
-        <h3>Clinical Risk Factors</h3>
-        <p>Section 2 content goes here...</p>
-    </div>
-    <div id="section3" class="report-section">
-        <h3>Protective Factors</h3>
-        <p>Section 3 content goes here...</p>
-    </div>
-    <div id="section4" class="report-section">
-        <h3>Disease Indicators</h3>
-        <p>Section 4 content goes here...</p>
-    </div>
-    <div id="section5" class="report-section">
-        <h3>DMFT Assessment</h3>
-        <p>Section 5 content goes here...</p>
-    </div>
-</div> -->
+
+<div class="form-section mt-3 d-flex justify-content-center">
+    <!-- <button type="submit" class="btn btn-primary me-3">Refresh PDF</button> -->
+    <a id="proceed-btn" class="btn btn-success" href="{% url 'clinics' %}?patient_id={{ patient_id }}&selected_sections=section1,section2,section3,section4,section5">Proceed to Booking</a>
+</div>
 
 <script>
-
     function updateSelectedSections() {
-    const checked = Array.from(document.querySelectorAll('.section-toggle:checked'))
-        .map(cb => cb.getAttribute('data-section'));
-    document.getElementById('selected_sections').value = checked.join(',');
+        const checked = Array.from(document.querySelectorAll('.section-toggle:checked'))
+            .map(cb => cb.getAttribute('data-section'));
+        document.getElementById('selected_sections').value = checked.join(',');
+
+        // Update the Proceed button link
+        const proceedBtn = document.getElementById('proceed-btn');
+        const patientId = "{{ patient_id }}";
+        proceedBtn.href = "{% url 'clinics' %}?patient_id=" + encodeURIComponent(patientId) + "&selected_sections=" + encodeURIComponent(checked.join(','));
     }
 
     document.addEventListener('DOMContentLoaded', function() {
