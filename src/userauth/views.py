@@ -6,6 +6,7 @@ from django.http import HttpRequest, HttpResponse
 from django.contrib.auth.forms import UserCreationForm
 from userprofile.models import Profile
 from django.db import transaction
+from .forms import CustomUserCreationForm
 
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -131,7 +132,7 @@ def register_user(request):
 
     if request.method == 'POST':
 
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
 
         if form.is_valid():
 
@@ -140,12 +141,15 @@ def register_user(request):
                     user = form.save(commit=False)
                     user.is_active=False
 
-                    user.first_name = request.POST.get('name', '')
-                    user.last_name = request.POST.get('surname', '')
-                    user.email = request.POST.get('email', '')
+                    # Get additional fields from the form
+                    user.first_name = form.cleaned_data['first_name']
+                    user.last_name = form.cleaned_data['last_name']
+                    user.email = form.cleaned_data['email']
                     user.save()
-                    activateEmail(request, user, request.POST.get('email'))
+                    
+                    activateEmail(request, user, user.email)
 
+                    # Get profile-specific fields from POST data
                     profession = request.POST.get('profession', '')
                     health_professional_body = request.POST.get('health_professional_body', '')
                     reg_num = request.POST.get('reg_num', '')
@@ -157,19 +161,21 @@ def register_user(request):
                         reg_num=reg_num,
                         email=user.email
                     )
-                return redirect('create_patient') #logs user in and redirects the user to the create patient page.
+                return redirect('login') # Redirect to login after successful registration
             
-            except  Exception as e:
+            except Exception as e:
                 print(f"Registration error {e}") #prints on the terminal
+                messages.error(request, "An error occurred during registration. Please try again.")
 
         else:
+            # Display form validation errors
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, f"{field}: {error}.")
+                    messages.error(request, f"{field}: {error}")
 
     else:
 
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
 
     return render(request, 'authentication/register_user.html', {
         'form': form,

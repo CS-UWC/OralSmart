@@ -10,16 +10,6 @@
             </div>
         {% endfor %}
     {% endif %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
-                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                bsAlert.close();
-            });
-        }, 3000); //5 seconds
-    });
-    </script>
 
     <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
         <div class="card shadow" style="width: 100%; max-width: 1000px;">
@@ -33,23 +23,35 @@
                     </div>
                     
                     <div class="form-floating mb-3 pt-3">
-                        <input type="text" class="form-control form-control-sm" id="username" name="username" placeholder="Username" required>
-                        <label for="username">Username</label>
+                        {{ form.username }}
+                        <label for="id_username">Username</label>
+                        {% if form.username.errors %}
+                            <div class="text-danger small">{{ form.username.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="text" class="form-control form-control-sm" id="name" name='name' placeholder="Name" required>
-                        <label for="name">Name</label>
+                        {{ form.first_name }}
+                        <label for="id_first_name">First Name</label>
+                        {% if form.first_name.errors %}
+                            <div class="text-danger small">{{ form.first_name.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="text" class="form-control form-control-sm" id="surname" name='surname' placeholder="Surname" required>
-                        <label for="name">Surname</label>
+                        {{ form.last_name }}
+                        <label for="id_last_name">Last Name</label>
+                        {% if form.last_name.errors %}
+                            <div class="text-danger small">{{ form.last_name.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="email" name="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
-                        <label for="floatingInput">Email address</label>
+                        {{ form.email }}
+                        <label for="id_email">Email address</label>
+                        {% if form.email.errors %}
+                            <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="form-floating mb-3">
@@ -74,28 +76,19 @@
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="password"
-                        class="form-control form-control-sm" id="password1" 
-                        placeholder="password1" 
-                        name="password1"
-                        required
-                        minlength="8"
-                        pattern='^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$'
-                        title="Password must be at least 8 characters, include a number and a special character.">
-                        <label for="exampleInputPassword1" >Password</label>
+                        {{ form.password1 }}
+                        <label for="id_password1">Password</label>
+                        {% if form.password1.errors %}
+                            <div class="text-danger small">{{ form.password1.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="password" 
-                        class="form-control form-control-sm" 
-                        id="password2" 
-                        placeholder="password2" 
-                        name="password2"
-                        required
-                        minlength="8"
-                        pattern='^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$'
-                        title="Password must be at least 8 characters, include a number and a special character.">
-                        <label for="exampleInputPassword2" >Confirm Password</label>
+                        {{ form.password2 }}
+                        <label for="id_password2">Confirm Password</label>
+                        {% if form.password2.errors %}
+                            <div class="text-danger small">{{ form.password2.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="pt-3 text-center">
@@ -112,64 +105,55 @@
     </div>
 
     <script>
-
-    //Automatically dismisses the the message alerts 
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
-                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                bsAlert.close();
-            });
-        }, 5000); //10 seconds
-    });
-
-    //For the dependent dropdown
-    document.addEventListener('DOMContentLoaded', function() {
-    const authoritySelect = document.getElementById('health_professional_body');
-    const professionSelect = document.getElementById('profession');
-
-    authoritySelect.addEventListener('change', function() {
-        const selectedBody = this.value;
-        professionSelect.innerHTML = '<option value="">Loading...</option>';
-        if (selectedBody) {
-            fetch(`/ajax/get_professions/?body=${selectedBody}`)
-                .then(response => response.json())
-                .then(data => {
-                    professionSelect.innerHTML = '<option value="">Select your profession</option>';
-                    data.professions.forEach(function(prof) {
-                        const option = document.createElement('option');
-                        option.value = prof.value;
-                        option.text = prof.text;
-                        professionSelect.appendChild(option);
-                    });
+        //Automatically dismisses the the message alerts 
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                    var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    bsAlert.close();
                 });
-        } else {
-            professionSelect.innerHTML = '<option value="">Select your profession</option>';
-        }
-    });
-    });
+            }, 5000); //10 seconds
+        });
 
-    //Checks if the passwords Match
-    const form = document.querySelector('form');
-    const password1 = document.getElementById('password1');
-    const password2 = document.getElementById('password2');
+        //For the dependent dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+        const authoritySelect = document.getElementById('health_professional_body');
+        const professionSelect = document.getElementById('profession');
 
-    form.addEventListener('submit', function(e) {
-        if (password1.value !== password2.value) {
-            e.preventDefault();
-            alert("Passwords do not match!");
-            password2.focus();
-        }
-    });
-    
-</script>
+        authoritySelect.addEventListener('change', function() {
+            const selectedBody = this.value;
+            professionSelect.innerHTML = '<option value="">Loading...</option>';
+            if (selectedBody) {
+                fetch(`/ajax/get_professions/?body=${selectedBody}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        professionSelect.innerHTML = '<option value="">Select your profession</option>';
+                        data.professions.forEach(function(prof) {
+                            const option = document.createElement('option');
+                            option.value = prof.value;
+                            option.text = prof.text;
+                            professionSelect.appendChild(option);
+                        });
+                    });
+            } else {
+                professionSelect.innerHTML = '<option value="">Select your profession</option>';
+            }
+        });
+        });
 
-    <!-- <style>
-        .was-validated input:invalid,
-        .was-validated select:invalid {
-        border: 2px solid red;
-        }
-        </style>
-    </script> -->
+        //Checks if the passwords Match
+        const form = document.querySelector('form');
+        const password1 = document.getElementById('password1');
+        const password2 = document.getElementById('password2');
+
+        form.addEventListener('submit', function(e) {
+            if (password1.value !== password2.value) {
+                e.preventDefault();
+                alert("Passwords do not match!");
+                password2.focus();
+            }
+        });
+        
+    </script>
 
 {% endblock %}
