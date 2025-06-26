@@ -124,9 +124,41 @@
                     <div id="sectionOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#questionnaireAccordion">
                         <div class="accordion-body">
                             
+                            <div class="risk-question moderate-risk">
+                                <div class="question-text">1.1) Is the child a South African citizen?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sa_citizen_yes" name="sa_citizen" value="yes">
+                                        <label for="sa_citizen_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sa_citizen_no" name="sa_citizen" value="no">
+                                        <label for="sa_citizen_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="risk-question moderate-risk">
+                                <div class="question-text">1.2) Does the child have special health care needs?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="special_needs_yes" name="special_needs" value="yes">
+                                        <label for="special_needs_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="special_needs_no" name="special_needs" value="no">
+                                        <label for="special_needs_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="risk-question high-risk">
                                 <div class="question-text">
-                                    1.1) Has the primary caregiver undergone any dental decay treatment such as fillings, extractions, etc?
+                                    1.3) Has the primary caregiver undergone any dental decay treatment such as fillings, extractions, etc?
                                     <span class="required-asterisk">*</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
@@ -142,7 +174,7 @@
                             </div>
 
                             <div class="risk-question">
-                                <div class="question-text">1.2) Monthly household income?
+                                <div class="question-text">1.4) Monthly household income?
                                     <span class="required-asterisk">*</span>
                                 </div>
                                 <div class="income-grid">
@@ -186,7 +218,7 @@
                             </div>
 
                             <div class="risk-question high-risk">
-                                <div class="question-text">1.3) Does the child usually eat (> 3x/day) meals that are sugar-containing?
+                                <div class="question-text">1.5) Does the child usually eat (> 3x/day) meals that are sugar-containing?
                                     <span class="required-asterisk">*</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
@@ -202,7 +234,7 @@
                             </div>
 
                             <div class="risk-question high-risk">
-                                <div class="question-text">1.4) Does the child usually eat (> 3x/day) snacks that are sugar-containing?
+                                <div class="question-text">1.6) Does the child usually eat (> 3x/day) snacks that are sugar-containing?
                                     <span class="required-asterisk">*</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
@@ -218,7 +250,7 @@
                             </div>
 
                             <div class="risk-question high-risk">
-                                <div class="question-text">1.5) Does the child usually drink (> 3x/day) beverages that are sugar-containing?
+                                <div class="question-text">1.7) Does the child usually drink (> 3x/day) beverages that are sugar-containing?
                                     <span class="required-asterisk">*</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
@@ -229,38 +261,6 @@
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="sugar_beverages_no" name="sugar_beverages" value="no">
                                         <label for="sugar_beverages_no">No</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="risk-question moderate-risk">
-                                <div class="question-text">1.6) Is the child a South African citizen?
-                                    <span class="required-asterisk">*</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="sa_citizen_yes" name="sa_citizen" value="yes">
-                                        <label for="sa_citizen_yes">Yes</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="sa_citizen_no" name="sa_citizen" value="no">
-                                        <label for="sa_citizen_no">No</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="risk-question moderate-risk">
-                                <div class="question-text">1.7) Does the child have special health care needs?
-                                    <span class="required-asterisk">*</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="special_needs_yes" name="special_needs" value="yes">
-                                        <label for="special_needs_yes">Yes</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="special_needs_no" name="special_needs" value="no">
-                                        <label for="special_needs_no">No</label>
                                     </div>
                                 </div>
                             </div>
@@ -280,8 +280,24 @@
                     <div id="sectionTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#questionnaireAccordion">
                         <div class="accordion-body">
 
+                            <div class="risk-question moderate-risk">
+                                <div class="question-text">2.1) Is the child wearing any intraoral appliance (e.g., braces, retainers)?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="appliance_yes" name="appliance" value="yes">
+                                        <label for="appliance_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="appliance_no" name="appliance" value="no">
+                                        <label for="appliance_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="risk-question high-risk">
-                                <div class="question-text">2.1) Is there visible dental plaque present on the child's teeth?
+                                <div class="question-text">2.2) Is there visible dental plaque present on the child's teeth?
                                     <span class="required-asterisk">*</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
@@ -297,7 +313,7 @@
                             </div>
 
                             <div class="risk-question high-risk">
-                                <div class="question-text">2.2) Does the child experience reduced salivary flow or show any symptoms of dry mouth?
+                                <div class="question-text">2.3) Does the child experience reduced salivary flow or show any symptoms of dry mouth?
                                     <span class="required-asterisk">*</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
@@ -313,7 +329,7 @@
                             </div>
 
                             <div class="risk-question high-risk">
-                                <div class="question-text">2.3) Are there any developmental enamel defects such as opacity, translucency, or discolouration?
+                                <div class="question-text">2.4) Are there any developmental enamel defects such as opacity, translucency, or discolouration?
                                     <span class="required-asterisk">*</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
@@ -324,22 +340,6 @@
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="enamel_defects_no" name="enamel_defects" value="no">
                                         <label for="enamel_defects_no">No</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="risk-question moderate-risk">
-                                <div class="question-text">2.4) Is the child wearing any intraoral appliance (e.g., braces, retainers)?
-                                    <span class="required-asterisk">*</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="appliance_yes" name="appliance" value="yes">
-                                        <label for="appliance_yes">Yes</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="appliance_no" name="appliance" value="no">
-                                        <label for="appliance_no">No</label>
                                     </div>
                                 </div>
                             </div>
@@ -610,6 +610,32 @@
                                     <tr><td><strong>9</strong></td><td>Excluded</td><td></td></tr>
                                 </tbody>
                             </table>
+                            <div class="mb-4">
+                                <div class="alert alert-info"></div>
+                                    <strong>How to read FDI Tooth Numbers:</strong>
+                                    <ul class="mb-2">
+                                        <li>
+                                            <b>First digit</b>: Quadrant of the mouth<br>
+                                            <span class="text-muted small">1 = Upper right, 2 = Upper left, 3 = Lower left, 4 = Lower right (for permanent teeth)<br>
+                                            5 = Upper right, 6 = Upper left, 7 = Lower left, 8 = Lower right (for primary teeth)</span>
+                                        </li>
+                                        <li>
+                                            <b>Second digit</b>: Tooth position from the midline (center), numbered 1 (central incisor) to 8 (third molar for permanent teeth) or 5 (second molar for primary teeth)
+                                        </li>
+                                    </ul>
+                                    <div>
+                                        <b>Permanent teeth:</b> Numbered <span class="badge bg-primary">11</span> to <span class="badge bg-primary">48</span><br>
+                                        <b>Primary (baby) teeth:</b> Numbered <span class="badge bg-success">51</span> to <span class="badge bg-success">85</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center my-3">
+                                <a class="fdi-numbering-system" href="https://www.researchgate.net/publication/359614391_OdontoAI_A_human-in-the-loop_labeled_data_set_and_an_online_platform_to_boost_research_on_dental_panoramic_radiographs">
+                                    <img src="{% static 'images/FDI_Numbering_System.png' %}" style="height:350px; width:auto; max-width:100%;" alt="fdi numbering system" loading="lazy" />
+                                </a>
+                            </div>
+                            </a>
 
 
                             <!-- Permanent Teeth Upper -->
@@ -621,7 +647,6 @@
                                         <td>
                                             <label for="tooth_{{ tooth }}">{{ tooth }}</label>
                                             <select name="tooth_{{ tooth }}" id="tooth_{{ tooth }}" class="tooth-select permanent-tooth">
-                                                <option value="">-</option>
                                                 <option value="0">0</option>
                                                 <option value="1">1</option>
                                                 <option value="2">2</option>
@@ -648,7 +673,6 @@
                                         <td>
                                             <label for="tooth_{{ tooth }}">{{ tooth }}</label>
                                             <select name="tooth_{{ tooth }}" id="tooth_{{ tooth }}" class="tooth-select permanent-tooth">
-                                                <option value="">-</option>
                                                 <option value="0">0</option>
                                                 <option value="1">1</option>
                                                 <option value="2">2</option>
@@ -675,7 +699,6 @@
                                         <td>
                                             <label for="tooth_{{ tooth }}">{{ tooth }}</label>
                                             <select name="tooth_{{ tooth }}" id="tooth_{{ tooth }}" class="tooth-select primary-tooth">
-                                                <option value="">-</option>
                                                 <option value="A">A</option>
                                                 <option value="B">B</option>
                                                 <option value="C">C</option>
@@ -699,7 +722,6 @@
                                         <td>
                                             <label for="tooth_{{ tooth }}">{{ tooth }}</label>
                                             <select name="tooth_{{ tooth }}" id="tooth_{{ tooth }}" class="tooth-select primary-tooth">
-                                                <option value="">-</option>
                                                 <option value="A">A</option>
                                                 <option value="B">B</option>
                                                 <option value="C">C</option>
@@ -715,8 +737,9 @@
                             </table>
 
                             <div class="form-section text-center mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg">Proceed</button>
+                                <button type="submit" class="btn btn-primary">Proceed</button>
                             </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -736,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 3000);
 
-        //make checkboxes behave like radio buttons within each question group (only one can be chose at a time)
+    //make checkboxes behave like radio buttons within each question group (only one can be chose at a time)
     document.querySelectorAll('.risk-question').forEach(function(question) {
         const checkboxes = question.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(function(checkbox) {
