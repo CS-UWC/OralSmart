@@ -3,19 +3,19 @@
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <!-- Container wrapper -->
-  <div class="container-fluid">
+    <div class="container-fluid">
     <!-- Toggle button -->
-    <button
-      data-mdb-collapse-init
-      class="navbar-toggler"
-      type="button"
-      data-mdb-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      <i class="fas fa-bars"></i>
-    </button>
+        <button
+            data-mdb-collapse-init
+            class="navbar-toggler"
+            type="button"
+            data-mdb-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+              <i class="fas fa-bars"></i>
+        </button>
 
     <!-- Collapsible wrapper -->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -51,21 +51,22 @@
       <a class="text-reset me-3" href="#">
         <i class="fas fa-shopping-cart"></i>
       </a>
-      <div class="dropdown">
-<ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-  <li class="nav-item">
-    <a class="nav-link" href="#">Dashboard</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="#">Team</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="#">Projects</a>
-  </li>
-</ul>
-</div>
+        <div class="dropdown">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                  <a class="nav-link" href="#">Dashboard</a>
+              </li>
+
+              <li class="nav-item">
+                  <a class="nav-link" href="#">Team</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="#">Projects</a>
+              </li>
+          </ul>
+      </div>
     <!-- Right elements -->
-  </div>
+    </div>
   <!-- Container wrapper -->
 </nav>
 <!-- Navbar -->
@@ -80,16 +81,6 @@
             </div>
         {% endfor %}
     {% endif %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
-                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                bsAlert.close();
-            });
-        }, 3000); //3 seconds
-    });
-    </script>
 
     <form action="{% url 'logout' %}" method="POST"> 
 
@@ -100,5 +91,16 @@
         <button type="submit" class="btn btn-primary">Log out</button>
 
     </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 3000); //3 seconds
+    });
+</script>
 
 {% endblock %}

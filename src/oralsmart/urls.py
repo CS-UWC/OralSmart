@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from patient.views import patient_detail_view, create_patient
-from userauth.views import login_user, logout_user,register_user, home_view
+from userauth.views import login_user, logout_user,register_user, home_view, landing
 from userprofile.views import profile_view, get_professions
 from assessments.views import dental_screening
 from reports.views import generate_pdf, view_report 
@@ -26,6 +26,9 @@ from facility.views import clinic_list, refer_patient
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    #landing page
+    path('', landing, name='landing'),
 
     #for home page
     path('home/', home_view, name='home'),

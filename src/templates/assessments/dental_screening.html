@@ -42,18 +42,51 @@
             padding: 15px;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
+            /* transition: all 0.2s ease; */
+        }
+        .high-risk:hover {
+            /* Changes when mouse hovers over */
+            border-color: #dc3545; /* Border changes to blue */
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15); /* Shadow becomes larger and blue-tinted */
+            transform: translateY(-1px); /* Moves the card up by 1px creating "float" effect */
         }
         .high-risk {
             border-left: 4px solid #dc3545;
             background-color: #fdf2f2;
+            /* transition: all 0.2s ease; */
+        }
+        .moderate-risk:hover {
+            /* Changes when mouse hovers over */
+            border-color: #ffc107; /* Border changes to blue */
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15); /* Shadow becomes larger and blue-tinted */
+            transform: translateY(-1px); /* Moves the card up by 1px creating "float" effect */
         }
         .moderate-risk {
             border-left: 4px solid #ffc107;
             background-color: #fffbf0;
+            /* transition: all 0.2s ease; */
+        }
+        .low-risk:hover {
+            /* Changes when mouse hovers over */
+            border-color: #28a745; /* Border changes to blue */
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15); /* Shadow becomes larger and blue-tinted */
+            transform: translateY(-1px); /* Moves the card up by 1px creating "float" effect */
         }
         .low-risk {
             border-left: 4px solid #28a745;
             background-color: #f0f8f0;
+            /* transition: all 0.2s ease; */
+        }
+        .no-risk:hover {
+            /* Changes when mouse hovers over */
+            border-color: #383838; /* Border changes to blue */
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15); /* Shadow becomes larger and blue-tinted */
+            transform: translateY(-1px); /* Moves the card up by 1px creating "float" effect */
+        }
+        .no-risk {
+            border-left: 4px solid #383838;
+            background-color: #f4f4f4;
+            /* transition: all 0.2s ease; */
         }
         .question-text {
             font-weight: 500;
@@ -102,6 +135,16 @@
             font-weight: bold;
             margin-left: 4px;
         }
+        .view-examples {
+            text-decoration: none;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        
+        .view-examples:hover {
+            text-decoration: underline;
+        }
+
     </style>
 </head>
 <body>
@@ -113,6 +156,12 @@
             {% csrf_token %}
 
             <div class="accordion" id="questionnaireAccordion">
+
+                <div class="text-center mb-4">
+                    <h4>
+                        Complete the Dental Screening by Clicking on the Field that Applies to the Child
+                    </h4>
+                </div>
                 
                 <!-- Section 1: Social / Behavioural / Medical Risk Factors -->
                 <div class="accordion-item">
@@ -173,7 +222,7 @@
                                 </div>
                             </div>
 
-                            <div class="risk-question">
+                            <div class="risk-question no-risk">
                                 <div class="question-text">1.4) Monthly household income?
                                     <span class="required-asterisk">*</span>
                                 </div>
@@ -231,6 +280,11 @@
                                         <label for="sugar_meals_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="sugarMeals">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question high-risk">
@@ -247,6 +301,11 @@
                                         <label for="sugar_snacks_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="sugarSnacks">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question high-risk">
@@ -263,6 +322,11 @@
                                         <label for="sugar_beverages_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="sugarDrinks">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <button type="button" class="btn btn-primary next-section" data-next="#sectionTwo">Next</button>
@@ -294,6 +358,11 @@
                                         <label for="appliance_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="appliance">View Examples</a></small>
+                                </div>
+
                             </div>
                             
                             <div class="risk-question high-risk">
@@ -310,6 +379,11 @@
                                         <label for="plaque_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="plaque">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question high-risk">
@@ -342,6 +416,11 @@
                                         <label for="enamel_defects_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="enamelDefects">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <button type="button" class="btn btn-primary next-section" data-next="#sectionThree">Next</button>
@@ -373,6 +452,11 @@
                                         <label for="fluoride_water_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="fluoride">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question low-risk">
@@ -389,6 +473,11 @@
                                         <label for="fluoride_toothpaste_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="toothpaste">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question low-risk">
@@ -452,6 +541,11 @@
                                         <label for="sealed_pits_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="fissures">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question low-risk">
@@ -468,6 +562,11 @@
                                         <label for="restorative_procedures_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="restorative3">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question moderate-risk">
@@ -484,6 +583,11 @@
                                         <label for="enamel_change_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="enamelNoBreakdown">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question high-risk">
@@ -500,6 +604,11 @@
                                         <label for="dentin_discoloration_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="internalDiscolouration">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question high-risk">
@@ -516,6 +625,11 @@
                                         <label for="white_spot_lesions_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="whiteSpot">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question high-risk">
@@ -532,6 +646,11 @@
                                         <label for="cavitated_lesions_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="visibleLesions">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <div class="risk-question high-risk">
@@ -747,6 +866,21 @@
         </form>
     </div>
 
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Examples</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="exampleImage" src="" alt="Example" class="img-fluid" style="max-height: 400px;">
+                    <p id="exampleDescription" class="mt-3"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -809,6 +943,102 @@ document.addEventListener('DOMContentLoaded', function() {
             nextSection.scrollIntoView({behavior: "smooth"});
         });
     });
+
+    //example modal functionality
+    const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    const exampleImage = document.getElementById('exampleImage');
+    const exampleDescription = document.getElementById('exampleDescription');
+    const exampleModalLabel = document.getElementById('exampleModalLabel');
+
+    const examples = {
+        'sugarMeals': {
+            title: 'Sugary Meal Examples',
+            image: '{% static "images/examples/sugary_meal_example.jpg" %}',
+            description: 'Examples of meals containing sugar that are consumed more than 3 times per day'
+        },
+        'sugarSnacks': {
+            title: 'Sugary Snack Examples',
+            image: '{% static "images/examples/sugary_snack_example.jpg" %}',
+            description: 'Examples of sugary snacks consumed more than 3 times per day'
+        },
+        'sugarDrinks': {
+            title: 'Sugary Drink Examples',
+            image: '{% static "images/examples/sugary_drink_example.jpg" %}',
+            description: 'Examples of sugar-containing beverages consumed more than 3 times per day'
+        },
+        'appliance': {
+            title: 'Intraoral Appliances Examples',
+            image: '{% static "images/examples/appliance_example.jpg" %}',
+            description: 'Examples of braces, retainers, and other intraoral appliances'
+        },
+        'plaque': {
+            title: 'Dental Plaque Examples',
+            image: '{% static "images/examples/plaque_example.jpg" %}',
+            description: 'Visible dental plaque on teeth surfaces'
+        },
+        'enamelDefects': {
+            title: 'Enamel Defects Examples',
+            image: '{% static "images/examples/enamel_defects_example.jpg" %}',
+            description: 'Examples of opacity, translucency, and discoloration'
+        },
+        'fluoride': {
+            title: 'Fluoride Water Examples',
+            image: '{% static "images/examples/fluoride_example.jpg" %}',
+            description: 'Examples of fluoridated water sources and fluoride supplements'
+        },
+        'toothpaste': {
+            title: 'Fluoride Toothpaste Examples',
+            image: '{% static "images/examples/toothpaste_example.jpg" %}',
+            description: 'Examples of fluoride-containing toothpaste brands'
+        },
+        'fissures': {
+            title: 'Pit and Fissure Sealants',
+            image: '{% static "images/examples/fissures_example.jpg" %}',
+            description: 'Examples of sealed pits and fissures on teeth'
+        },
+        'restorative3': {
+            title: 'Dental Restorations Examples',
+            image: '{% static "images/examples/restorative_example.jpg" %}',
+            description: 'Examples of fillings and other restorative procedures'
+        },
+        'enamelNoBreakdown': {
+            title: 'Enamel Changes Without Breakdown',
+            image: '{% static "images/examples/no_enamel_breakdown_example.jpg" %}',
+            description: 'Examples of enamel opacity and discoloration without structural breakdown'
+        },
+        'internalDiscolouration': {
+            title: 'Internal Dentin Discoloration',
+            image: '{% static "images/examples/internal_discoloration_example.jpg" %}',
+            description: 'Examples of internal dentin discoloration without enamel breach'
+        },
+        'whiteSpot': {
+            title: 'White Spot Lesions',
+            image: '{% static "images/examples/white_spot_example.jpg" %}',
+            description: 'Examples of non-cavitated white-spot lesions on smooth surfaces'
+        },
+        'visibleLesions': {
+            title: 'Cavitated Lesions',
+            image: '{% static "images/examples/visible_lesions_example.jpg" %}',
+            description: 'Examples of cavitated carious lesions visible on examination'
+        }
+    };
+
+    //handle view examples clicks
+    document.querySelectorAll('.view-examples').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const exampleType = this.getAttribute('data-example');
+            const example = examples[exampleType];
+            
+            if (example) {
+                exampleModalLabel.textContent = example.title;
+                exampleImage.src = example.image;
+                exampleDescription.textContent = example.description;
+                exampleModal.show();
+            }
+        });
+    });
+
 });
 </script>
 

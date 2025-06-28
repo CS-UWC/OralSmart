@@ -22,6 +22,11 @@ from django.contrib.auth.tokens import default_token_generator
 
 # Create your views here.
 
+#landing
+@user_not_authenticated
+def landing(request):
+    return render(request, 'landing.html')
+
 #home
 @login_required
 def home_view(request):

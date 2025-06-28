@@ -16,6 +16,8 @@
 
     {% csrf_token %}
 
+    <h1 class="text-center mb-4">Referral Report</h1>
+
     <div>
         <iframe id="pdf-preview" src="{% url 'generate_pdf' patient_id=patient_id %}" width="100%" height="600px"></iframe>
     </div>
@@ -23,6 +25,9 @@
     <input type="hidden" name="selected_sections" id="selected_sections" value="section1,section2,section3,section4,section5">
 
     <div class="form-section mt-4 pt-3">
+
+        <h4 class="text-center mb-4">What would you like to include in the patient's report?</h4>
+        
         <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section1" checked> Social/Behavioural/Medical Risk Factors</label>
         <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section2" checked> Clinical Risk Factors</label>
         <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section3" checked> Protective Factors</label>

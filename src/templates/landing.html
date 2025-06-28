@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+<!-- Navbar -->
+<!-- <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse " id="navbarSupportedContent">
+            <a class="navbar-brand mt-2 mt-lg-0 mb-2 mb-lg-0" href="#">
+              <img {% load static %} src="{% static 'images/Logo.png' %}" height="45" alt="oralsmart logo" loading="lazy" />
+            </a>
+
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-2 flex-column flex-lg-row">
+              <li class="nav-item">
+              <a href="" type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-primary ms-1">About Us</a>
+              </li>
+              <li class="nav-item">
+              <a href="{% url 'login' %}" type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-primary ms-1">Log In</a>
+              </li>
+              <li class="nav-item">
+              <a href="{% url 'register_user' %}" type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-primary ms-1">Register</a>
+              </li>
+            </ul>
+        </div>
+
+        <div class="d-flex align-items-center">
+    </div>
+    
+</nav> -->
+
+{% block content %}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="card shadow" style="width: 100%; max-width: 1000px;">
+
+        <div class="card-body">
+
+            <h3 class="pt-3 text-center mb-4">
+                Welcome to OralSmart - a web-based oral health referral system 
+                designed for both health professionals and community members 
+                to easily perform screenings and make bookings.
+            </h3>
+
+            <div class="row g-4">
+                <div class="col-12 col-md-6 d-flex">
+                    <div class="border rounded p-4 flex-fill d-flex flex-column justify-content-center align-items-center text-center" style="background-color: #f8f9fa;">
+
+                        <h4 class="mb-4">
+                            View Tips and Dental Advice
+                        </h4>
+
+                        <div>
+                            <a href="#" type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-primary">Proceed</a>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 d-flex">
+                    <div class="border rounded p-4 flex-fill d-flex flex-column justify-content-center align-items-center text-center" style="background-color: #f8f9fa;">
+
+                        <h4 class="mb-4">
+                            Use as a Health Professional
+                        </h4>
+
+                        <div>
+                            <a href="{% url 'login' %}" type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-primary ms-1">Proceed</a>
+                        </div>
+
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
