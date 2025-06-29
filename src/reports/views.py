@@ -6,7 +6,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from assessments.models import DentalScreening
+from assessments.models import DentalScreening, DietaryScreening
 from django.http import HttpResponse
 from django.views.decorators.clickjacking import xframe_options_exempt
 
@@ -42,7 +42,27 @@ def view_report(request, patient_id):
 @xframe_options_exempt
 def generate_pdf(request, patient_id):
 
-    patient =Patient.objects.get(pk=patient_id)
+    try:
+        patient = Patient.objects.get(pk=patient_id)
+    except Patient.DoesNotExist:
+        # Return a PDF with error message for missing patient
+        # This ensures the iframe always gets PDF content, not HTML
+        from reportlab.pdfgen import canvas
+        
+        buf = io.BytesIO()
+        c = canvas.Canvas(buf, pagesize=letter)
+        
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(100, 750, "Error: Patient Not Found")
+        c.setFont("Helvetica", 12)
+        c.drawString(100, 720, f"No patient found with ID: {patient_id}")
+        c.drawString(100, 700, "Please check the patient ID and try again.")
+        
+        c.showPage()
+        c.save()
+        buf.seek(0)
+        
+        return FileResponse(buf, as_attachment=False, filename="error.pdf", content_type='application/pdf')
 
     allowed_sections = {'section1', 'section2', 'section3', 'section4', 'section5'}
 
@@ -60,12 +80,37 @@ def generate_pdf(request, patient_id):
         selected_sections = [s for s in selected_sections if s in allowed_sections]
 
         try:
-            data = DentalScreening.objects.get(patient_id=patient_id)
+            dental_data = DentalScreening.objects.get(patient_id=patient_id)
         except DentalScreening.DoesNotExist:
-            return render(request, "reports/report.html", {
-                "patient_id": patient_id,
-                "messages": ["No dental screening found for this patient."]
-            })
+            dental_data = None
+            
+        try:
+            dietary_data = DietaryScreening.objects.get(patient_id=patient_id)
+        except DietaryScreening.DoesNotExist:
+            dietary_data = None
+            
+        # Check if we have at least one type of screening data
+        if not dental_data and not dietary_data:
+            # Return a PDF with error message instead of HTML
+            # This prevents the iframe from displaying a nested HTML page
+            from reportlab.pdfgen import canvas
+            
+            buf = io.BytesIO()
+            c = canvas.Canvas(buf, pagesize=letter)
+            
+            # Add error message to PDF
+            c.setFont("Helvetica-Bold", 16)
+            c.drawString(100, 750, "Error: No Screening Data Found")
+            c.setFont("Helvetica", 12)
+            c.drawString(100, 720, f"No screening data found for patient ID: {patient_id}")
+            c.drawString(100, 700, "Please complete at least one screening before generating a report.")
+            c.drawString(100, 680, "Available screenings: Dental Screening, Dietary Screening")
+            
+            c.showPage()
+            c.save()
+            buf.seek(0)
+            
+            return FileResponse(buf, as_attachment=False, filename="error.pdf", content_type='application/pdf')
         
         buf = io.BytesIO()
         
@@ -110,145 +155,179 @@ def generate_pdf(request, patient_id):
         story.append(Paragraph(f"<b>Patient Parent Contact:</b> {patient.parent_contact}", normal_style))
         story.append(Spacer(1, 12))
         
-        #Section 1: Social/Behavioural/Medical Risk Factors
-        if 'section1' in selected_sections:
-            story.append(Paragraph("Social/Behavioural/Medical Risk Factors", heading_style))
+        # Add screening availability info
+        available_screenings = []
+        if dental_data:
+            available_screenings.append("Dental Screening")
+        if dietary_data:
+            available_screenings.append("Dietary Screening")
+        
+        story.append(Paragraph("Available Screening Data", heading_style))
+        story.append(Paragraph(f"<b>Completed Screenings:</b> {', '.join(available_screenings)}", normal_style))
+        story.append(Spacer(1, 12))
+        
+        # Include dental screening sections if dental data exists
+        if dental_data:
+            #Section 1: Social/Behavioural/Medical Risk Factors (Dental)
+            if 'section1' in selected_sections:
+                story.append(Paragraph("Social/Behavioural/Medical Risk Factors (Dental Screening)", heading_style))
+                
+                section1_data = [
+                    f"<b>Caregiver treatment:</b> {dental_data.caregiver_treatment}",
+                    f"<b>Income:</b> {dental_data.income}",
+                    f"<b>Sugary meals:</b> {dental_data.sugar_meals}",
+                    f"<b>Sugar snacks:</b> {dental_data.sugar_snacks}",
+                    f"<b>Sugar beverages:</b> {dental_data.sugar_beverages}",
+                    f"<b>South African Citizen:</b> {dental_data.sa_citizen}",
+                    f"<b>Special needs:</b> {dental_data.special_needs}"
+                ]
+                
+                for line in section1_data:
+                    story.append(Paragraph(line, normal_style))
+                story.append(Spacer(1, 12))
+
+            #Section 2: Clinical Risk Factors (Dental)
+            if 'section2' in selected_sections:
+                story.append(Paragraph("Clinical Risk Factors (Dental Screening)", heading_style))
+                
+                section2_data = [
+                    f"<b>Plaque:</b> {dental_data.plaque}",
+                    f"<b>Dry mouth:</b> {dental_data.dry_mouth}",
+                    f"<b>Enamel defects:</b> {dental_data.enamel_defects}",
+                    f"<b>Intra-oral appliance:</b> {dental_data.appliance}"
+                ]
+                
+                for line in section2_data:
+                    story.append(Paragraph(line, normal_style))
+                story.append(Spacer(1, 12))
+
+            #Section 3: Protective Factors (Dental)
+            if 'section3' in selected_sections:
+                story.append(Paragraph("Protective Factors (Dental Screening)", heading_style))
+                
+                section3_data = [
+                    f"<b>Fluoride water:</b> {dental_data.fluoride_water}",
+                    f"<b>Fluoride toothpaste:</b> {dental_data.fluoride_toothpaste}",
+                    f"<b>Topical fluoride:</b> {dental_data.topical_fluoride}",
+                    f"<b>Regular checkups:</b> {dental_data.regular_checkups}"
+                ]
             
-            section1_data = [
-                f"<b>Caregiver treatment:</b> {data.caregiver_treatment}",
-                f"<b>Income:</b> {data.income}",
-                f"<b>Sugary meals:</b> {data.sugar_meals}",
-                f"<b>Sugar snacks:</b> {data.sugar_snacks}",
-                f"<b>Sugar beverages:</b> {data.sugar_beverages}",
-                f"<b>South African Citizen:</b> {data.sa_citizen}",
-                f"<b>Special needs:</b> {data.special_needs}"
+                for line in section3_data:
+                    story.append(Paragraph(line, normal_style))
+                story.append(Spacer(1, 12))
+
+            #Section 4: Disease Indicators (Dental)
+            if 'section4' in selected_sections:
+                story.append(Paragraph("Disease Indicators (Dental Screening)", heading_style))
+                
+                section4_data = [
+                    f"<b>Sealed pits:</b> {dental_data.sealed_pits}",
+                    f"<b>Restorative procedures:</b> {dental_data.restorative_procedures}",
+                    f"<b>Enamel change:</b> {dental_data.enamel_change}",
+                    f"<b>Dentin discoloration:</b> {dental_data.dentin_discoloration}",
+                    f"<b>White spot lesions:</b> {dental_data.white_spot_lesions}",
+                    f"<b>Cavitated lesions:</b> {dental_data.cavitated_lesions}",
+                    f"<b>Multiple restorations:</b> {dental_data.multiple_restorations}",
+                    f"<b>Missing teeth:</b> {dental_data.missing_teeth}"
+                ]
+                
+                for line in section4_data:
+                    story.append(Paragraph(line, normal_style))
+                story.append(Spacer(1, 12))
+
+            #Section 5: DMFT Assessment (Dental only)
+            if 'section5' in selected_sections:
+                tooth_names = {
+                    #Permanent Teeth
+                    "tooth_18": "Upper Right Third Molar (Wisdom Tooth)",
+                    "tooth_17": "Upper Right Second Molar",
+                    "tooth_16": "Upper Right First Molar",
+                    "tooth_15": "Upper Right Second Premolar",
+                    "tooth_14": "Upper Right First Premolar",
+                    "tooth_13": "Upper Right Canine",
+                    "tooth_12": "Upper Right Lateral Incisor",
+                    "tooth_11": "Upper Right Central Incisor",
+                    "tooth_21": "Upper Left Central Incisor",
+                    "tooth_22": "Upper Left Lateral Incisor",
+                    "tooth_23": "Upper Left Canine",
+                    "tooth_24": "Upper Left First Premolar",
+                    "tooth_25": "Upper Left Second Premolar",
+                    "tooth_26": "Upper Left First Molar",
+                    "tooth_27": "Upper Left Second Molar",
+                    "tooth_28": "Upper Left Third Molar (Wisdom Tooth)",
+                    "tooth_48": "Lower Right Third Molar (Wisdom Tooth)",
+                    "tooth_47": "Lower Right Second Molar",
+                    "tooth_46": "Lower Right First Molar",
+                    "tooth_45": "Lower Right Second Premolar",
+                    "tooth_44": "Lower Right First Premolar",
+                    "tooth_43": "Lower Right Canine",
+                    "tooth_42": "Lower Right Lateral Incisor",
+                    "tooth_41": "Lower Right Central Incisor",
+                    "tooth_31": "Lower Left Central Incisor",
+                    "tooth_32": "Lower Left Lateral Incisor",
+                    "tooth_33": "Lower Left Canine",
+                    "tooth_34": "Lower Left First Premolar",
+                    "tooth_35": "Lower Left Second Premolar",
+                    "tooth_36": "Lower Left First Molar",
+                    "tooth_37": "Lower Left Second Molar",
+                    "tooth_38": "Lower Left Third Molar (Wisdom Tooth)",
+                    #Primary Teeth
+                    "tooth_55": "Upper Right Second Primary Molar",
+                    "tooth_54": "Upper Right First Primary Molar",
+                    "tooth_53": "Upper Right Primary Canine",
+                    "tooth_52": "Upper Right Lateral Primary Incisor",
+                    "tooth_51": "Upper Right Central Primary Incisor",
+                    "tooth_61": "Upper Left Central Primary Incisor",
+                    "tooth_62": "Upper Left Lateral Primary Incisor",
+                    "tooth_63": "Upper Left Primary Canine",
+                    "tooth_64": "Upper Left First Primary Molar",
+                    "tooth_65": "Upper Left Second Primary Molar",
+                    "tooth_85": "Lower Right Second Primary Molar",
+                    "tooth_84": "Lower Right First Primary Molar",
+                    "tooth_83": "Lower Right Primary Canine",
+                    "tooth_82": "Lower Right Lateral Primary Incisor",
+                    "tooth_81": "Lower Right Central Primary Incisor",
+                    "tooth_71": "Lower Left Central Primary Incisor",
+                    "tooth_72": "Lower Left Lateral Primary Incisor",
+                    "tooth_73": "Lower Left Primary Canine",
+                    "tooth_74": "Lower Left First Primary Molar",
+                    "tooth_75": "Lower Left Second Primary Molar"
+                }
+
+                story.append(Paragraph("DMFT Assessment (Dental Screening)", heading_style))
+                
+                #add a new page for tooth data
+                story.append(PageBreak())
+                story.append(Paragraph("Tooth Assessment", heading_style))
+
+                for code, status in dental_data.teeth_data.items():
+                    if status:
+                        text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> {status}"
+                        story.append(Paragraph(text, normal_style))
+                    elif status == "":
+                        text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> No Issue (Assumed)"
+                        story.append(Paragraph(text, normal_style))
+                        
+        # Include dietary screening sections if dietary data exists
+        if dietary_data:
+            story.append(Paragraph("Dietary Screening Results", heading_style))
+            
+            dietary_sections = [
+                ("Sweet/Sugary Foods", dietary_data.sweet_sugary_foods, dietary_data.sweet_sugary_foods_daily, dietary_data.sweet_sugary_foods_weekly),
+                ("Cold Drinks and Juices", dietary_data.cold_drinks_juices, dietary_data.cold_drinks_juices_daily, dietary_data.cold_drinks_juices_weekly),
+                ("Take-aways and Processed Foods", dietary_data.takeaways_processed_foods, dietary_data.takeaways_processed_foods_daily, dietary_data.takeaways_processed_foods_weekly),
+                ("Salty Snacks", dietary_data.salty_snacks, dietary_data.salty_snacks_daily, dietary_data.salty_snacks_weekly),
+                ("Spreads", dietary_data.spreads, dietary_data.spreads_daily, dietary_data.spreads_weekly)
             ]
             
-            for line in section1_data:
-                story.append(Paragraph(line, normal_style))
-            story.append(Spacer(1, 12))
-
-        #Section 2: Clinical Risk Factors
-        if 'section2' in selected_sections:
-            story.append(Paragraph("Clinical Risk Factors", heading_style))
-            
-            section2_data = [
-                f"<b>Plaque:</b> {data.plaque}",
-                f"<b>Dry mouth:</b> {data.dry_mouth}",
-                f"<b>Enamel defects:</b> {data.enamel_defects}",
-                f"<b>Intra-oral appliance:</b> {data.appliance}"
-            ]
-            
-            for line in section2_data:
-                story.append(Paragraph(line, normal_style))
-            story.append(Spacer(1, 12))
-
-        #Section 3: Protective Factors
-        if 'section3' in selected_sections:
-            story.append(Paragraph("Protective Factors", heading_style))
-            
-            section3_data = [
-                f"<b>Fluoride water:</b> {data.fluoride_water}",
-                f"<b>Fluoride toothpaste:</b> {data.fluoride_toothpaste}",
-                f"<b>Topical fluoride:</b> {data.topical_fluoride}",
-                f"<b>Regular checkups:</b> {data.regular_checkups}"
-            ]
-            
-            for line in section3_data:
-                story.append(Paragraph(line, normal_style))
-            story.append(Spacer(1, 12))
-
-        #Section 4: Disease Indicators
-        if 'section4' in selected_sections:
-            story.append(Paragraph("Disease Indicators", heading_style))
-            
-            section4_data = [
-                f"<b>Sealed pits:</b> {data.sealed_pits}",
-                f"<b>Restorative procedures:</b> {data.restorative_procedures}",
-                f"<b>Enamel change:</b> {data.enamel_change}",
-                f"<b>Dentin discoloration:</b> {data.dentin_discoloration}",
-                f"<b>White spot lesions:</b> {data.white_spot_lesions}",
-                f"<b>Cavitated lesions:</b> {data.cavitated_lesions}",
-                f"<b>Multiple restorations:</b> {data.multiple_restorations}",
-                f"<b>Missing teeth:</b> {data.missing_teeth}"
-            ]
-            
-            for line in section4_data:
-                story.append(Paragraph(line, normal_style))
-            story.append(Spacer(1, 12))
-
-        #Section 5: DMFT Assessment starts here
-        if 'section5' in selected_sections:
-            tooth_names = {
-                #Permanent Teeth
-                "tooth_18": "Upper Right Third Molar (Wisdom Tooth)",
-                "tooth_17": "Upper Right Second Molar",
-                "tooth_16": "Upper Right First Molar",
-                "tooth_15": "Upper Right Second Premolar",
-                "tooth_14": "Upper Right First Premolar",
-                "tooth_13": "Upper Right Canine",
-                "tooth_12": "Upper Right Lateral Incisor",
-                "tooth_11": "Upper Right Central Incisor",
-                "tooth_21": "Upper Left Central Incisor",
-                "tooth_22": "Upper Left Lateral Incisor",
-                "tooth_23": "Upper Left Canine",
-                "tooth_24": "Upper Left First Premolar",
-                "tooth_25": "Upper Left Second Premolar",
-                "tooth_26": "Upper Left First Molar",
-                "tooth_27": "Upper Left Second Molar",
-                "tooth_28": "Upper Left Third Molar (Wisdom Tooth)",
-                "tooth_48": "Lower Right Third Molar (Wisdom Tooth)",
-                "tooth_47": "Lower Right Second Molar",
-                "tooth_46": "Lower Right First Molar",
-                "tooth_45": "Lower Right Second Premolar",
-                "tooth_44": "Lower Right First Premolar",
-                "tooth_43": "Lower Right Canine",
-                "tooth_42": "Lower Right Lateral Incisor",
-                "tooth_41": "Lower Right Central Incisor",
-                "tooth_31": "Lower Left Central Incisor",
-                "tooth_32": "Lower Left Lateral Incisor",
-                "tooth_33": "Lower Left Canine",
-                "tooth_34": "Lower Left First Premolar",
-                "tooth_35": "Lower Left Second Premolar",
-                "tooth_36": "Lower Left First Molar",
-                "tooth_37": "Lower Left Second Molar",
-                "tooth_38": "Lower Left Third Molar (Wisdom Tooth)",
-                #Primary Teeth
-                "tooth_55": "Upper Right Second Primary Molar",
-                "tooth_54": "Upper Right First Primary Molar",
-                "tooth_53": "Upper Right Primary Canine",
-                "tooth_52": "Upper Right Lateral Primary Incisor",
-                "tooth_51": "Upper Right Central Primary Incisor",
-                "tooth_61": "Upper Left Central Primary Incisor",
-                "tooth_62": "Upper Left Lateral Primary Incisor",
-                "tooth_63": "Upper Left Primary Canine",
-                "tooth_64": "Upper Left First Primary Molar",
-                "tooth_65": "Upper Left Second Primary Molar",
-                "tooth_85": "Lower Right Second Primary Molar",
-                "tooth_84": "Lower Right First Primary Molar",
-                "tooth_83": "Lower Right Primary Canine",
-                "tooth_82": "Lower Right Lateral Primary Incisor",
-                "tooth_81": "Lower Right Central Primary Incisor",
-                "tooth_71": "Lower Left Central Primary Incisor",
-                "tooth_72": "Lower Left Lateral Primary Incisor",
-                "tooth_73": "Lower Left Primary Canine",
-                "tooth_74": "Lower Left First Primary Molar",
-                "tooth_75": "Lower Left Second Primary Molar"
-            }
-
-            story.append(Paragraph("DMFT Assessment", heading_style))
-            
-            #add a new page for tooth data
-            story.append(PageBreak())
-            story.append(Paragraph("Tooth Assessment", heading_style))
-
-            for code, status in data.teeth_data.items():
-                if status:
-                    text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> {status}"
-                    story.append(Paragraph(text, normal_style))
-                elif status == "":
-                    text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> No Issue (Assumed)"
-                    story.append(Paragraph(text, normal_style))
+            for section_name, consumes, daily, weekly in dietary_sections:
+                story.append(Paragraph(f"<b>{section_name}</b>", normal_style))
+                story.append(Paragraph(f"Consumes: {consumes}", normal_style))
+                if daily:
+                    story.append(Paragraph(f"Daily frequency: {daily}", normal_style))
+                if weekly:
+                    story.append(Paragraph(f"Weekly frequency: {weekly}", normal_style))
+                story.append(Spacer(1, 8))
 
         #build PDF
         doc.build(story)

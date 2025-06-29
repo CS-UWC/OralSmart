@@ -1,13 +1,16 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from patient.models import Patient
-from .models import DentalScreening
+from .models import DentalScreening, DietaryScreening
 
 # Create your views here.
 
 def dental_screening(request, patient_id):
 
     patient = Patient.objects.get(pk=patient_id)
+    
+    #check if this comes from dietary screening
+    from_dietary = request.GET.get('from_dietary', 'false') == 'true'
 
     permanent_upper = ["18", "17", "16", "15", "14", "13", "12", "11", "21", "22", "23", "24", "25", "26", "27", "28"]
     permanent_lower = ["48", "47", "46", "45", "44", "43", "42", "41", "31", "32", "33", "34", "35", "36", "37", "38"]
@@ -35,6 +38,7 @@ def dental_screening(request, patient_id):
                     'permanent_lower': permanent_lower,
                     'primary_upper': primary_upper,
                     'primary_lower': primary_lower,
+                    'from_dietary': from_dietary,
                 })
 
             teeth_fields = {}
@@ -91,6 +95,11 @@ def dental_screening(request, patient_id):
                 screening.teeth_data = teeth_fields
                 screening.save()
 
+            if from_dietary:
+                messages.success(request, "Both dietary and dental screenings completed successfully!")
+            else:
+                messages.success(request, "Dental screening completed successfully!")
+                
             return redirect('report', patient_id=patient_id)  #redirects to report page and sends patient_id for identification
 
         except Exception as e:
@@ -101,4 +110,82 @@ def dental_screening(request, patient_id):
         'permanent_lower': permanent_lower,
         'primary_upper': primary_upper,
         'primary_lower': primary_lower,
+        'from_dietary': from_dietary,
+    })
+
+def dietary_screening(request, patient_id):
+    patient = Patient.objects.get(pk=patient_id)
+    
+    #check if this is part of a combined screening
+    perform_both = request.GET.get('perform_both', 'false') == 'true'
+
+    required_fields = [
+        'sweet_sugary_foods', 'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly',
+        'cold_drinks_juices', 'cold_drinks_juices_daily', 'cold_drinks_juices_weekly',
+        'takeaways_processed_foods', 'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
+        'salty_snacks', 'salty_snacks_daily', 'salty_snacks_weekly',
+        'spreads', 'spreads_daily', 'spreads_weekly'
+    ]
+    
+    if request.method == 'POST':
+        try:
+            #check for missing required fields
+            missing = [field for field in required_fields if not request.POST.get(field)]
+            if missing:
+                messages.error(request, f"Please answer all required questions: {', '.join(missing)}")
+                return render(request, 'assessments/dietary_screening.html', {
+                    'patient': patient,
+                    'perform_both': perform_both,
+                })
+
+            #create or update dietary screening
+            screening, created = DietaryScreening.objects.get_or_create(
+                patient=patient,
+                defaults={
+                    'sweet_sugary_foods': request.POST.get('sweet_sugary_foods', ''),
+                    'sweet_sugary_foods_daily': request.POST.get('sweet_sugary_foods_daily', ''),
+                    'sweet_sugary_foods_weekly': request.POST.get('sweet_sugary_foods_weekly', ''),
+                    'cold_drinks_juices': request.POST.get('cold_drinks_juices', ''),
+                    'cold_drinks_juices_daily': request.POST.get('cold_drinks_juices_daily', ''),
+                    'cold_drinks_juices_weekly': request.POST.get('cold_drinks_juices_weekly', ''),
+                    'takeaways_processed_foods': request.POST.get('takeaways_processed_foods', ''),
+                    'takeaways_processed_foods_daily': request.POST.get('takeaways_processed_foods_daily', ''),
+                    'takeaways_processed_foods_weekly': request.POST.get('takeaways_processed_foods_weekly', ''),
+                    'salty_snacks': request.POST.get('salty_snacks', ''),
+                    'salty_snacks_daily': request.POST.get('salty_snacks_daily', ''),
+                    'salty_snacks_weekly': request.POST.get('salty_snacks_weekly', ''),
+                    'spreads': request.POST.get('spreads', ''),
+                    'spreads_daily': request.POST.get('spreads_daily', ''),
+                    'spreads_weekly': request.POST.get('spreads_weekly', ''),
+                }
+            )
+            
+            if not created:
+                #update existing screening
+                fields = [
+                    'sweet_sugary_foods', 'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly',
+                    'cold_drinks_juices', 'cold_drinks_juices_daily', 'cold_drinks_juices_weekly',
+                    'takeaways_processed_foods', 'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
+                    'salty_snacks', 'salty_snacks_daily', 'salty_snacks_weekly',
+                    'spreads', 'spreads_daily', 'spreads_weekly'
+                ]
+
+                for field in fields:
+                    setattr(screening, field, request.POST.get(field, ''))
+                screening.save()
+
+            messages.success(request, "Dietary screening completed successfully!")
+            
+            #check if we need to proceed to dental screening
+            if perform_both or request.POST.get('proceed_to_dental') == 'true':
+                return redirect(f'/assessments/dental_screening/{patient_id}/?from_dietary=true')
+            else:
+                return redirect('report', patient_id=patient_id)
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+
+    return render(request, 'assessments/dietary_screening.html', {
+        'patient': patient,
+        'perform_both': perform_both,
     })

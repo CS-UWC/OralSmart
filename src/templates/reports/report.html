@@ -19,7 +19,13 @@
     <h1 class="text-center mb-4">Referral Report</h1>
 
     <div>
-        <iframe id="pdf-preview" src="{% url 'generate_pdf' patient_id=patient_id %}" width="100%" height="600px"></iframe>
+        <div id="loading-indicator" class="text-center p-4" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading report...</p>
+        </div>
+        <iframe id="pdf-preview" src="{% url 'generate_pdf' patient_id=patient_id %}" width="100%" height="600px" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>
     </div>
 
     <input type="hidden" name="selected_sections" id="selected_sections" value="section1,section2,section3,section4,section5">
@@ -28,11 +34,12 @@
 
         <h4 class="text-center mb-4">What would you like to include in the patient's report?</h4>
         
-        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section1" checked> Social/Behavioural/Medical Risk Factors</label>
-        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section2" checked> Clinical Risk Factors</label>
-        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section3" checked> Protective Factors</label>
-        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section4" checked> Disease Indicators</label>
-        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section5" checked> DMFT Assessment</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section1" checked> Social/Behavioural/Medical Risk Factors (Dental)</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section2" checked> Clinical Risk Factors (Dental)</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section3" checked> Protective Factors (Dental)</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section4" checked> Disease Indicators (Dental)</label>
+        <label class="d-block"><input type="checkbox" class="section-toggle" data-section="section5" checked> DMFT Assessment (Dental)</label>
+        <small class="text-muted d-block mt-2">Note: Dietary screening data will be included automatically if available</small>
     </div>
 
     <div class="form-section mt-3 d-flex justify-content-center"></div>
@@ -76,13 +83,31 @@
         document.getElementById('section-toggles').addEventListener('submit', function(e) {
             e.preventDefault();
             updateSelectedSections();
+            
+            // Show loading indicator
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const iframe = document.getElementById('pdf-preview');
+            
+            loadingIndicator.style.display = 'block';
+            iframe.style.display = 'none';
+            
             fetch(this.action, {
                 method: "POST",
                 body: new FormData(this),
                 headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
             }).then(function() {
                 //refresh the iframe to show the updated PDF
-                document.getElementById('pdf-preview').src = document.getElementById('pdf-preview').src.split('?')[0] + '?t=' + Date.now();
+                iframe.src = iframe.src.split('?')[0] + '?t=' + Date.now();
+                
+                // Hide loading indicator and show iframe after a short delay
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                    iframe.style.display = 'block';
+                }, 1000);
+            }).catch(function(error) {
+                console.error('Error updating PDF:', error);
+                loadingIndicator.style.display = 'none';
+                iframe.style.display = 'block';
             });
         });
     });

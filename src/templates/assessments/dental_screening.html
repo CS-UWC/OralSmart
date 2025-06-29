@@ -154,6 +154,11 @@
         <form method="post" action="#">
             
             {% csrf_token %}
+            
+            <!-- Hidden fields for workflow control -->
+            {% if from_dietary %}
+                <input type="hidden" name="from_dietary" value="true">
+            {% endif %}
 
             <div class="accordion" id="questionnaireAccordion">
 
@@ -856,7 +861,11 @@
                             </table>
 
                             <div class="form-section text-center mt-4">
-                                <button type="submit" class="btn btn-primary">Proceed</button>
+                                {% if from_dietary %}
+                                    <button type="submit" class="btn btn-primary">Complete Assessment & Generate Report</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-primary">Complete Dental Screening</button>
+                                {% endif %}
                             </div>
                             
                         </div>

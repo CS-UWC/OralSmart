@@ -37,7 +37,7 @@ def patient_detail_view(request):
 def create_patient(request):
     if request.method == 'POST':
         try:
-            # Get form data
+            #get form data
             name = request.POST.get('name')
             surname = request.POST.get('surname')
             gender = request.POST.get('gender')
@@ -48,12 +48,12 @@ def create_patient(request):
             parent_contact = request.POST.get('parent_contact')
             screening_type = request.POST.get('screening_type')
             
-            # Validate required fields
+            #validate required fields
             if not all([name, surname, gender, age, parent_name, parent_surname, parent_id, parent_contact]):
                 messages.error(request, 'All fields are required.')
                 return render(request, 'patient/create_patient.html', {'show_navbar': True})
             
-            # Create new patient
+            #create new patient
             patient = Patient.objects.create(
                 name=name,
                 surname=surname,
@@ -67,19 +67,22 @@ def create_patient(request):
             
             messages.success(request, f'Patient {patient.name} {patient.surname} created successfully!')
             
-            # Check if screening was requested
+            #check if screening was requested
             if screening_type:
                 if screening_type == 'dental':
                     return redirect('dental_screening', patient_id=patient.id) #type: ignore
                 elif screening_type == 'dietary':
                     return redirect('dietary_screening', patient_id=patient.id) #type: ignore
+                elif screening_type == 'both':
+                    #start with dietary screening, then proceed to dental
+                    return redirect(f'/assessments/dietary_screening/{patient.id}/?perform_both=true') #type: ignore
             
-            # If no screening, redirect to success page or patient list
+            #if no screening, redirect to success page or patient list
             return redirect('create_patient')  # or wherever you want to redirect
             
         except Exception as e:
             messages.error(request, f'Error creating patient: {str(e)}')
             return render(request, 'patient/create_patient.html', {'show_navbar': True})
     
-    # If GET request, render the form
+    #if GET request, render the form
     return render(request, 'patient/create_patient.html', {'show_navbar': True})

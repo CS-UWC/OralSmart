@@ -36,3 +36,34 @@ class DentalScreening(models.Model):
     teeth_data = models.JSONField()  #stores all tooth values as a dict
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+class DietaryScreening(models.Model):
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='dietary_screenings')
+
+    # Section 1: Sweet/Sugary Foods
+    sweet_sugary_foods = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+    sweet_sugary_foods_daily = models.CharField(max_length=20, blank=True, null=True)
+    sweet_sugary_foods_weekly = models.CharField(max_length=20, blank=True, null=True)
+
+    # Section 2: Cold Drinks and Juices
+    cold_drinks_juices = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+    cold_drinks_juices_daily = models.CharField(max_length=20, blank=True, null=True)
+    cold_drinks_juices_weekly = models.CharField(max_length=20, blank=True, null=True)
+
+    # Section 3: Take-aways and Processed Foods
+    takeaways_processed_foods = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+    takeaways_processed_foods_daily = models.CharField(max_length=20, blank=True, null=True)
+    takeaways_processed_foods_weekly = models.CharField(max_length=20, blank=True, null=True)
+
+    # Section 4: Salty Snacks
+    salty_snacks = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+    salty_snacks_daily = models.CharField(max_length=20, blank=True, null=True)
+    salty_snacks_weekly = models.CharField(max_length=20, blank=True, null=True)
+
+    # Section 5: Spreads
+    spreads = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+    spreads_daily = models.CharField(max_length=20, blank=True, null=True)
+    spreads_weekly = models.CharField(max_length=20, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
