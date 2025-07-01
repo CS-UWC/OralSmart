@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db.models import Q
 from .models import Clinic
 from django.core.mail import EmailMessage
@@ -9,7 +9,8 @@ import io
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from assessments.models import DentalScreening
+from assessments.models import DentalScreening, DietaryScreening
+from django.contrib import messages
 
 
 
@@ -46,7 +47,7 @@ def clinic_list(request):
     }
     return render(request, 'facility/clinic_list.html', context)
 
-def generate_pdf_buffer(patient, data, selected_sections):
+def generate_pdf_buffer(patient, dental_data, dietary_data, selected_sections):
     buf = io.BytesIO()
 
     #Create document template
@@ -91,17 +92,17 @@ def generate_pdf_buffer(patient, data, selected_sections):
     story.append(Spacer(1, 12))
     
     #Section 1: Social/Behavioural/Medical Risk Factors
-    if 'section1' in selected_sections:
+    if 'section1' in selected_sections and dental_data:
         story.append(Paragraph("Social/Behavioural/Medical Risk Factors", heading_style))
         
         section1_data = [
-            f"<b>Caregiver treatment:</b> {data.caregiver_treatment}",
-            f"<b>Income:</b> {data.income}",
-            f"<b>Sugary meals:</b> {data.sugar_meals}",
-            f"<b>Sugar snacks:</b> {data.sugar_snacks}",
-            f"<b>Sugar beverages:</b> {data.sugar_beverages}",
-            f"<b>South African Citizen:</b> {data.sa_citizen}",
-            f"<b>Special needs:</b> {data.special_needs}"
+            f"<b>Caregiver treatment:</b> {dental_data.caregiver_treatment}",
+            f"<b>Income:</b> {dental_data.income}",
+            f"<b>Sugary meals:</b> {dental_data.sugar_meals}",
+            f"<b>Sugar snacks:</b> {dental_data.sugar_snacks}",
+            f"<b>Sugar beverages:</b> {dental_data.sugar_beverages}",
+            f"<b>South African Citizen:</b> {dental_data.sa_citizen}",
+            f"<b>Special needs:</b> {dental_data.special_needs}"
         ]
         
         for line in section1_data:
@@ -109,14 +110,14 @@ def generate_pdf_buffer(patient, data, selected_sections):
         story.append(Spacer(1, 12))
 
     #Section 2: Clinical Risk Factors
-    if 'section2' in selected_sections:
+    if 'section2' in selected_sections and dental_data:
         story.append(Paragraph("Clinical Risk Factors", heading_style))
         
         section2_data = [
-            f"<b>Plaque:</b> {data.plaque}",
-            f"<b>Dry mouth:</b> {data.dry_mouth}",
-            f"<b>Enamel defects:</b> {data.enamel_defects}",
-            f"<b>Intra-oral appliance:</b> {data.appliance}"
+            f"<b>Plaque:</b> {dental_data.plaque}",
+            f"<b>Dry mouth:</b> {dental_data.dry_mouth}",
+            f"<b>Enamel defects:</b> {dental_data.enamel_defects}",
+            f"<b>Intra-oral appliance:</b> {dental_data.appliance}"
         ]
         
         for line in section2_data:
@@ -124,14 +125,14 @@ def generate_pdf_buffer(patient, data, selected_sections):
         story.append(Spacer(1, 12))
 
     #Section 3: Protective Factors
-    if 'section3' in selected_sections:
+    if 'section3' in selected_sections and dental_data:
         story.append(Paragraph("Protective Factors", heading_style))
         
         section3_data = [
-            f"<b>Fluoride water:</b> {data.fluoride_water}",
-            f"<b>Fluoride toothpaste:</b> {data.fluoride_toothpaste}",
-            f"<b>Topical fluoride:</b> {data.topical_fluoride}",
-            f"<b>Regular checkups:</b> {data.regular_checkups}"
+            f"<b>Fluoride water:</b> {dental_data.fluoride_water}",
+            f"<b>Fluoride toothpaste:</b> {dental_data.fluoride_toothpaste}",
+            f"<b>Topical fluoride:</b> {dental_data.topical_fluoride}",
+            f"<b>Regular checkups:</b> {dental_data.regular_checkups}"
         ]
         
         for line in section3_data:
@@ -139,18 +140,18 @@ def generate_pdf_buffer(patient, data, selected_sections):
         story.append(Spacer(1, 12))
 
     #Section 4: Disease Indicators
-    if 'section4' in selected_sections:
+    if 'section4' in selected_sections and dental_data:
         story.append(Paragraph("Disease Indicators", heading_style))
         
         section4_data = [
-            f"<b>Sealed pits:</b> {data.sealed_pits}",
-            f"<b>Restorative procedures:</b> {data.restorative_procedures}",
-            f"<b>Enamel change:</b> {data.enamel_change}",
-            f"<b>Dentin discoloration:</b> {data.dentin_discoloration}",
-            f"<b>White spot lesions:</b> {data.white_spot_lesions}",
-            f"<b>Cavitated lesions:</b> {data.cavitated_lesions}",
-            f"<b>Multiple restorations:</b> {data.multiple_restorations}",
-            f"<b>Missing teeth:</b> {data.missing_teeth}"
+            f"<b>Sealed pits:</b> {dental_data.sealed_pits}",
+            f"<b>Restorative procedures:</b> {dental_data.restorative_procedures}",
+            f"<b>Enamel change:</b> {dental_data.enamel_change}",
+            f"<b>Dentin discoloration:</b> {dental_data.dentin_discoloration}",
+            f"<b>White spot lesions:</b> {dental_data.white_spot_lesions}",
+            f"<b>Cavitated lesions:</b> {dental_data.cavitated_lesions}",
+            f"<b>Multiple restorations:</b> {dental_data.multiple_restorations}",
+            f"<b>Missing teeth:</b> {dental_data.missing_teeth}"
         ]
         
         for line in section4_data:
@@ -158,7 +159,7 @@ def generate_pdf_buffer(patient, data, selected_sections):
         story.append(Spacer(1, 12))
 
     #Section 5: DMFT Assessment starts here
-    if 'section5' in selected_sections:
+    if 'section5' in selected_sections and dental_data:
         tooth_names = {
             #Permanent Teeth
             "tooth_18": "Upper Right Third Molar (Wisdom Tooth)",
@@ -222,7 +223,7 @@ def generate_pdf_buffer(patient, data, selected_sections):
         story.append(PageBreak())
         story.append(Paragraph("Tooth Assessment", heading_style))
 
-        for code, status in data.teeth_data.items():
+        for code, status in dental_data.teeth_data.items():
             if status:
                 text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> {status}"
                 story.append(Paragraph(text, normal_style))
@@ -230,15 +231,12 @@ def generate_pdf_buffer(patient, data, selected_sections):
                 text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> No Issue (Assumed)"
                 story.append(Paragraph(text, normal_style))
 
+    # Add dietary screening sections if dietary_data exists
+    if dietary_data:
+        story.append(Paragraph("Dietary Screening Results", heading_style))
+        # ...add dietary fields as needed...
     #build PDF
 
-    doc = SimpleDocTemplate(buf, pagesize=letter, rightMargin=72, leftMargin=72, 
-                            topMargin=72, bottomMargin=18)
-    styles = getSampleStyleSheet()
-    story = []
-    story.append(Paragraph(f"Patient: {patient.name} {patient.surname}", styles['Title']))
-    story.append(Spacer(1, 12))
-    # Add more content to story as needed, using data and selected_sections
     doc.build(story)
     buf.seek(0)
     return buf
@@ -248,14 +246,23 @@ def refer_patient(request, clinic_id):
         patient_id = request.POST.get('patient_id')
         if not patient_id:
             return HttpResponse("Missing patient_id", status=400)
-        
         selected_sections = request.POST['selected_sections'].split(',')
         appointment_date = request.POST['appointment_date']
         appointment_time = request.POST['appointment_time']
         clinic = Clinic.objects.get(pk=clinic_id)
         patient = Patient.objects.get(pk=patient_id)
-        data = DentalScreening.objects.get(patient_id=patient_id)
-        pdf_buffer = generate_pdf_buffer(patient, data, selected_sections)
+        try:
+            dental_data = DentalScreening.objects.get(patient_id=patient_id)
+        except DentalScreening.DoesNotExist:
+            dental_data = None
+        try:
+            dietary_data = DietaryScreening.objects.get(patient_id=patient_id)
+        except DietaryScreening.DoesNotExist:
+            dietary_data = None
+        if not dental_data and not dietary_data:
+            messages.error(request, "No screening found for this patient. Please complete at least one screening before referral.")
+            return redirect('clinics')
+        pdf_buffer = generate_pdf_buffer(patient, dental_data, dietary_data, selected_sections)
         # Compose and send email
         recipient_list = [clinic.email] if clinic.email else []
         email = EmailMessage(
@@ -268,4 +275,4 @@ def refer_patient(request, clinic_id):
         return render(request, 'facility/referral_success.html', {'clinic': clinic})
     else:
         return HttpResponse(status=405)
-    
+

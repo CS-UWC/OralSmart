@@ -118,19 +118,30 @@ def dietary_screening(request, patient_id):
     
     #check if this is part of a combined screening
     perform_both = request.GET.get('perform_both', 'false') == 'true'
-
-    required_fields = [
-        'sweet_sugary_foods', 'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly',
-        'cold_drinks_juices', 'cold_drinks_juices_daily', 'cold_drinks_juices_weekly',
-        'takeaways_processed_foods', 'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
-        'salty_snacks', 'salty_snacks_daily', 'salty_snacks_weekly',
-        'spreads', 'spreads_daily', 'spreads_weekly'
-    ]
     
     if request.method == 'POST':
         try:
-            #check for missing required fields
-            missing = [field for field in required_fields if not request.POST.get(field)]
+            # Define main questions and their associated frequency questions
+            question_groups = {
+                'sweet_sugary_foods': ['sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly'],
+                'cold_drinks_juices': ['cold_drinks_juices_daily', 'cold_drinks_juices_weekly'],
+                'takeaways_processed_foods': ['takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly'],
+                'salty_snacks': ['salty_snacks_daily', 'salty_snacks_weekly'],
+                'spreads': ['spreads_daily', 'spreads_weekly']
+            }
+            
+            missing = []
+            for main_question, frequency_questions in question_groups.items():
+                # Check if main question is answered
+                if not request.POST.get(main_question):
+                    missing.append(main_question)
+                else:
+                    # If main question is "yes", frequency questions are required
+                    if request.POST.get(main_question) == 'yes':
+                        for freq_q in frequency_questions:
+                            if not request.POST.get(freq_q):
+                                missing.append(freq_q)
+            
             if missing:
                 messages.error(request, f"Please answer all required questions: {', '.join(missing)}")
                 return render(request, 'assessments/dietary_screening.html', {
@@ -138,40 +149,30 @@ def dietary_screening(request, patient_id):
                     'perform_both': perform_both,
                 })
 
+            # Prepare data with default values for "no" answers
+            screening_data = {}
+            for main_question, frequency_questions in question_groups.items():
+                screening_data[main_question] = request.POST.get(main_question, '')
+                
+                # If main answer is "no", set frequency questions to default empty values
+                if request.POST.get(main_question) == 'no':
+                    for freq_q in frequency_questions:
+                        screening_data[freq_q] = ''
+                else:
+                    # If "yes", use provided values
+                    for freq_q in frequency_questions:
+                        screening_data[freq_q] = request.POST.get(freq_q, '')
+
             #create or update dietary screening
             screening, created = DietaryScreening.objects.get_or_create(
                 patient=patient,
-                defaults={
-                    'sweet_sugary_foods': request.POST.get('sweet_sugary_foods', ''),
-                    'sweet_sugary_foods_daily': request.POST.get('sweet_sugary_foods_daily', ''),
-                    'sweet_sugary_foods_weekly': request.POST.get('sweet_sugary_foods_weekly', ''),
-                    'cold_drinks_juices': request.POST.get('cold_drinks_juices', ''),
-                    'cold_drinks_juices_daily': request.POST.get('cold_drinks_juices_daily', ''),
-                    'cold_drinks_juices_weekly': request.POST.get('cold_drinks_juices_weekly', ''),
-                    'takeaways_processed_foods': request.POST.get('takeaways_processed_foods', ''),
-                    'takeaways_processed_foods_daily': request.POST.get('takeaways_processed_foods_daily', ''),
-                    'takeaways_processed_foods_weekly': request.POST.get('takeaways_processed_foods_weekly', ''),
-                    'salty_snacks': request.POST.get('salty_snacks', ''),
-                    'salty_snacks_daily': request.POST.get('salty_snacks_daily', ''),
-                    'salty_snacks_weekly': request.POST.get('salty_snacks_weekly', ''),
-                    'spreads': request.POST.get('spreads', ''),
-                    'spreads_daily': request.POST.get('spreads_daily', ''),
-                    'spreads_weekly': request.POST.get('spreads_weekly', ''),
-                }
+                defaults=screening_data
             )
             
             if not created:
                 #update existing screening
-                fields = [
-                    'sweet_sugary_foods', 'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly',
-                    'cold_drinks_juices', 'cold_drinks_juices_daily', 'cold_drinks_juices_weekly',
-                    'takeaways_processed_foods', 'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
-                    'salty_snacks', 'salty_snacks_daily', 'salty_snacks_weekly',
-                    'spreads', 'spreads_daily', 'spreads_weekly'
-                ]
-
-                for field in fields:
-                    setattr(screening, field, request.POST.get(field, ''))
+                for field, value in screening_data.items():
+                    setattr(screening, field, value)
                 screening.save()
 
             messages.success(request, "Dietary screening completed successfully!")
