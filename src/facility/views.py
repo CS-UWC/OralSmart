@@ -233,8 +233,50 @@ def generate_pdf_buffer(patient, dental_data, dietary_data, selected_sections):
 
     # Add dietary screening sections if dietary_data exists
     if dietary_data:
+        story.append(PageBreak())
         story.append(Paragraph("Dietary Screening Results", heading_style))
-        # ...add dietary fields as needed...
+        
+        dietary_sections = [
+            ("Sweet/Sugary Foods", [
+                f"<b>Consumes sweet/sugary foods:</b> {dietary_data.sweet_sugary_foods}",
+                f"<b>Daily frequency:</b> {dietary_data.sweet_sugary_foods_daily if dietary_data.sweet_sugary_foods_daily else 'Not specified'}",
+                f"<b>Weekly frequency:</b> {dietary_data.sweet_sugary_foods_weekly if dietary_data.sweet_sugary_foods_weekly else 'Not specified'}"
+            ]),
+            ("Cold Drinks and Juices", [
+                f"<b>Consumes cold drinks/juices:</b> {dietary_data.cold_drinks_juices}",
+                f"<b>Daily frequency:</b> {dietary_data.cold_drinks_juices_daily if dietary_data.cold_drinks_juices_daily else 'Not specified'}",
+                f"<b>Weekly frequency:</b> {dietary_data.cold_drinks_juices_weekly if dietary_data.cold_drinks_juices_weekly else 'Not specified'}"
+            ]),
+            ("Take-aways and Processed Foods", [
+                f"<b>Consumes takeaways/processed foods:</b> {dietary_data.takeaways_processed_foods}",
+                f"<b>Daily frequency:</b> {dietary_data.takeaways_processed_foods_daily if dietary_data.takeaways_processed_foods_daily else 'Not specified'}",
+                f"<b>Weekly frequency:</b> {dietary_data.takeaways_processed_foods_weekly if dietary_data.takeaways_processed_foods_weekly else 'Not specified'}"
+            ]),
+            ("Salty Snacks", [
+                f"<b>Consumes salty snacks:</b> {dietary_data.salty_snacks}",
+                f"<b>Daily frequency:</b> {dietary_data.salty_snacks_daily if dietary_data.salty_snacks_daily else 'Not specified'}",
+                f"<b>Weekly frequency:</b> {dietary_data.salty_snacks_weekly if dietary_data.salty_snacks_weekly else 'Not specified'}"
+            ]),
+            ("Spreads", [
+                f"<b>Consumes spreads:</b> {dietary_data.spreads}",
+                f"<b>Daily frequency:</b> {dietary_data.spreads_daily if dietary_data.spreads_daily else 'Not specified'}",
+                f"<b>Weekly frequency:</b> {dietary_data.spreads_weekly if dietary_data.spreads_weekly else 'Not specified'}"
+            ])
+        ]
+        
+        for section_title, section_data in dietary_sections:
+            story.append(Paragraph(section_title, ParagraphStyle(
+                'SubHeading',
+                parent=styles['Heading3'],
+                fontSize=12,
+                spaceAfter=8,
+                spaceBefore=8,
+            )))
+            
+            for line in section_data:
+                story.append(Paragraph(line, normal_style))
+            story.append(Spacer(1, 8))
+    
     #build PDF
 
     doc.build(story)
