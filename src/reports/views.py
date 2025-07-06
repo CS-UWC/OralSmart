@@ -36,7 +36,14 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 #     return FileResponse(buf, as_attachment=True, filename='report.pdf')
 
 def view_report(request, patient_id):
-    return render(request, "reports/report.html", {"patient_id": patient_id})
+    return render(
+        request, 
+        "reports/report.html", 
+        {
+            "patient_id": patient_id,
+            'show_navbar': True,
+        }
+    )
 
 #@login_required
 @xframe_options_exempt

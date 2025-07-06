@@ -145,13 +145,28 @@
             text-decoration: underline;
         }
 
+        /* Initially hide frequency questions with higher specificity */
+        .risk-question .question-text:nth-child(n+3),
+        .risk-question .d-flex.flex-wrap.gap-3.mt-2 {
+            display: none !important;
+        }
+
+        /* Show frequency questions when they have the 'show-frequency' class */
+        .risk-question.show-frequency .question-text:nth-child(n+3) {
+            display: block !important;
+        }
+        
+        .risk-question.show-frequency .d-flex.flex-wrap.gap-3.mt-2 {
+            display: flex !important;
+        }
+
     </style>
 </head>
 <body>
     <div class="container mt-4">
         <h1 class="text-center mb-4">Dietary Assessment Form</h1>
         
-        <form method="post" action="#">
+        <form method="post" action="#" id="dietaryForm">
             
             {% csrf_token %}
             
@@ -166,6 +181,9 @@
                     <h4>
                         Complete the Dietary Screening by Clicking on the Field that Applies to the Child
                     </h4>
+                    <p class="text-muted">
+                        <small>Note: If you select "No" for any food category, you can proceed without answering the frequency questions for that category.</small>
+                    </p>
                 </div>
                 
                 <!-- Section 1: Social / Behavioural / Medical Risk Factors -->
@@ -608,13 +626,30 @@ document.addEventListener('DOMContentLoaded', function() {
                                 other.checked = false;
                             }
                         });
+                        
+                        // If this is a main yes/no question and "No" is selected, hide frequency questions
+                        if (this.value === 'no' && names[0] === name) {
+                            // Hide frequency questions by removing the show-frequency class
+                            question.classList.remove('show-frequency');
+                            
+                            // Clear any selected frequency options
+                            names.slice(1).forEach(function(freqName) {
+                                const freqGroup = question.querySelectorAll('input[type="checkbox"][name="' + freqName + '"]');
+                                freqGroup.forEach(function(cb) {
+                                    cb.checked = false;
+                                });
+                            });
+                        } else if (this.value === 'yes' && names[0] === name) {
+                            // Show frequency questions by adding the show-frequency class
+                            question.classList.add('show-frequency');
+                        }
                     }
                 });
             });
         });
     });
 
-    // Accordion section progression with validation (every question is required)
+    // Accordion section progression with validation (conditional based on "No" answers)
     document.querySelectorAll('.next-section').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var currentSection = btn.closest('.accordion-collapse');
@@ -622,16 +657,43 @@ document.addEventListener('DOMContentLoaded', function() {
             var allAnswered = true;
 
             allQuestions.forEach(function(question) {
-                // For each group by name, check at least one is checked
+                // Get all checkbox groups by name within this question
                 const names = Array.from(new Set(Array.from(question.querySelectorAll('input[type="checkbox"]')).map(cb => cb.name)));
                 let questionAnswered = true;
-                names.forEach(function(name) {
-                    // Only require for visible groups (in case some are hidden)
-                    const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
-                    if (group.length > 0 && !Array.from(group).some(cb => cb.checked)) {
-                        questionAnswered = false;
+                
+                // Check if the main question (first group) has been answered
+                const mainGroup = names[0]; // First group is typically the yes/no question
+                const mainCheckboxes = question.querySelectorAll('input[type="checkbox"][name="' + mainGroup + '"]');
+                const mainAnswered = Array.from(mainCheckboxes).some(cb => cb.checked);
+                
+                if (!mainAnswered) {
+                    // Main question not answered - this is required
+                    questionAnswered = false;
+                } else {
+                    // Check if user answered "No" to main question
+                    const noSelected = Array.from(mainCheckboxes).some(cb => cb.checked && cb.value === 'no');
+                    
+                    if (noSelected) {
+                        // If "No" is selected, we don't need to validate frequency questions
+                        // Set default values for frequency questions
+                        names.slice(1).forEach(function(name) {
+                            const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+                            // Uncheck all frequency options when "No" is selected
+                            group.forEach(function(cb) {
+                                cb.checked = false;
+                            });
+                        });
+                    } else {
+                        // If "Yes" is selected, validate that frequency questions are answered
+                        names.slice(1).forEach(function(name) {
+                            const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+                            if (group.length > 0 && !Array.from(group).some(cb => cb.checked)) {
+                                questionAnswered = false;
+                            }
+                        });
                     }
-                });
+                }
+                
                 if (!questionAnswered) {
                     allAnswered = false;
                     question.classList.add('border', 'border-danger');
@@ -748,6 +810,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 exampleModal.show();
             }
         });
+    });
+
+    // Form submission validation
+    document.getElementById('dietaryForm').addEventListener('submit', function(e) {
+        var allSections = document.querySelectorAll('.risk-question');
+        var allValid = true;
+        var errorMessages = [];
+
+        allSections.forEach(function(question) {
+            const names = Array.from(new Set(Array.from(question.querySelectorAll('input[type="checkbox"]')).map(cb => cb.name)));
+            
+            if (names.length > 0) {
+                const mainGroup = names[0];
+                const mainCheckboxes = question.querySelectorAll('input[type="checkbox"][name="' + mainGroup + '"]');
+                const mainAnswered = Array.from(mainCheckboxes).some(cb => cb.checked);
+                
+                if (!mainAnswered) {
+                    allValid = false;
+                    errorMessages.push(`Please answer the main question for ${mainGroup.replace(/_/g, ' ')}`);
+                    question.classList.add('border', 'border-danger');
+                } else {
+                    const noSelected = Array.from(mainCheckboxes).some(cb => cb.checked && cb.value === 'no');
+                    
+                    if (!noSelected) {
+                        // If "Yes" is selected, validate frequency questions
+                        names.slice(1).forEach(function(name) {
+                            const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+                            if (group.length > 0 && !Array.from(group).some(cb => cb.checked)) {
+                                allValid = false;
+                                errorMessages.push(`Please answer the frequency question for ${name.replace(/_/g, ' ')}`);
+                                question.classList.add('border', 'border-danger');
+                            }
+                        });
+                    }
+                    
+                    if (allValid) {
+                        question.classList.remove('border', 'border-danger');
+                    }
+                }
+            }
+        });
+
+        if (!allValid) {
+            e.preventDefault();
+            alert("Please complete all required questions:\n" + errorMessages.join('\n'));
+            return false;
+        }
     });
 
 });

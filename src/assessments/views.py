@@ -118,18 +118,30 @@ def dietary_screening(request, patient_id):
     
     #check if this is part of a combined screening
     perform_both = request.GET.get('perform_both', 'false') == 'true'
-
-    required_fields = [
-        # Basic consumption fields (yes/no required for all)
-        'sweet_sugary_foods', 'takeaways_processed_foods', 'fresh_fruit', 'cold_drinks_juices',
-        'processed_fruit', 'spreads', 'added_sugars', 'salty_snacks', 'dairy_products',
-        'vegetables', 'water', 'xylitol_products'
-    ]
     
     if request.method == 'POST':
         try:
-            #check for missing required fields
-            missing = [field for field in required_fields if not request.POST.get(field)]
+            # Define main questions and their associated frequency questions
+            question_groups = {
+                'sweet_sugary_foods': ['sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly'],
+                'cold_drinks_juices': ['cold_drinks_juices_daily', 'cold_drinks_juices_weekly'],
+                'takeaways_processed_foods': ['takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly'],
+                'salty_snacks': ['salty_snacks_daily', 'salty_snacks_weekly'],
+                'spreads': ['spreads_daily', 'spreads_weekly']
+            }
+            
+            missing = []
+            for main_question, frequency_questions in question_groups.items():
+                # Check if main question is answered
+                if not request.POST.get(main_question):
+                    missing.append(main_question)
+                else:
+                    # If main question is "yes", frequency questions are required
+                    if request.POST.get(main_question) == 'yes':
+                        for freq_q in frequency_questions:
+                            if not request.POST.get(freq_q):
+                                missing.append(freq_q)
+            
             if missing:
                 messages.error(request, f"Please answer all required questions: {', '.join(missing)}")
                 return render(request, 'assessments/dietary_screening_new.html', {
@@ -137,108 +149,30 @@ def dietary_screening(request, patient_id):
                     'perform_both': perform_both,
                 })
 
+            # Prepare data with default values for "no" answers
+            screening_data = {}
+            for main_question, frequency_questions in question_groups.items():
+                screening_data[main_question] = request.POST.get(main_question, '')
+                
+                # If main answer is "no", set frequency questions to default empty values
+                if request.POST.get(main_question) == 'no':
+                    for freq_q in frequency_questions:
+                        screening_data[freq_q] = ''
+                else:
+                    # If "yes", use provided values
+                    for freq_q in frequency_questions:
+                        screening_data[freq_q] = request.POST.get(freq_q, '')
+
             #create or update dietary screening
             screening, created = DietaryScreening.objects.get_or_create(
                 patient=patient,
-                defaults={
-                    # Sweet/Sugary Foods
-                    'sweet_sugary_foods': request.POST.get('sweet_sugary_foods', ''),
-                    'sweet_sugary_foods_daily': request.POST.get('sweet_sugary_foods_daily', ''),
-                    'sweet_sugary_foods_weekly': request.POST.get('sweet_sugary_foods_weekly', ''),
-                    'sweet_sugary_foods_timing': request.POST.get('sweet_sugary_foods_timing', ''),
-                    'sweet_sugary_foods_bedtime': request.POST.get('sweet_sugary_foods_bedtime', ''),
-                    
-                    # Take-aways and Processed Foods
-                    'takeaways_processed_foods': request.POST.get('takeaways_processed_foods', ''),
-                    'takeaways_processed_foods_daily': request.POST.get('takeaways_processed_foods_daily', ''),
-                    'takeaways_processed_foods_weekly': request.POST.get('takeaways_processed_foods_weekly', ''),
-                    
-                    # Fresh Fruit
-                    'fresh_fruit': request.POST.get('fresh_fruit', ''),
-                    'fresh_fruit_daily': request.POST.get('fresh_fruit_daily', ''),
-                    'fresh_fruit_weekly': request.POST.get('fresh_fruit_weekly', ''),
-                    'fresh_fruit_timing': request.POST.get('fresh_fruit_timing', ''),
-                    'fresh_fruit_bedtime': request.POST.get('fresh_fruit_bedtime', ''),
-                    
-                    # Cold Drinks, Juices and Flavoured Water and Milk
-                    'cold_drinks_juices': request.POST.get('cold_drinks_juices', ''),
-                    'cold_drinks_juices_daily': request.POST.get('cold_drinks_juices_daily', ''),
-                    'cold_drinks_juices_weekly': request.POST.get('cold_drinks_juices_weekly', ''),
-                    'cold_drinks_juices_timing': request.POST.get('cold_drinks_juices_timing', ''),
-                    'cold_drinks_juices_bedtime': request.POST.get('cold_drinks_juices_bedtime', ''),
-                    
-                    # Processed Fruit
-                    'processed_fruit': request.POST.get('processed_fruit', ''),
-                    'processed_fruit_daily': request.POST.get('processed_fruit_daily', ''),
-                    'processed_fruit_weekly': request.POST.get('processed_fruit_weekly', ''),
-                    'processed_fruit_timing': request.POST.get('processed_fruit_timing', ''),
-                    'processed_fruit_bedtime': request.POST.get('processed_fruit_bedtime', ''),
-                    
-                    # Spreads
-                    'spreads': request.POST.get('spreads', ''),
-                    'spreads_daily': request.POST.get('spreads_daily', ''),
-                    'spreads_weekly': request.POST.get('spreads_weekly', ''),
-                    'spreads_timing': request.POST.get('spreads_timing', ''),
-                    'spreads_bedtime': request.POST.get('spreads_bedtime', ''),
-                    
-                    # Added Sugars
-                    'added_sugars': request.POST.get('added_sugars', ''),
-                    'added_sugars_daily': request.POST.get('added_sugars_daily', ''),
-                    'added_sugars_weekly': request.POST.get('added_sugars_weekly', ''),
-                    'added_sugars_timing': request.POST.get('added_sugars_timing', ''),
-                    'added_sugars_bedtime': request.POST.get('added_sugars_bedtime', ''),
-                    
-                    # Salty Snacks
-                    'salty_snacks': request.POST.get('salty_snacks', ''),
-                    'salty_snacks_daily': request.POST.get('salty_snacks_daily', ''),
-                    'salty_snacks_weekly': request.POST.get('salty_snacks_weekly', ''),
-                    'salty_snacks_timing': request.POST.get('salty_snacks_timing', ''),
-                    
-                    # Dairy Products
-                    'dairy_products': request.POST.get('dairy_products', ''),
-                    'dairy_products_daily': request.POST.get('dairy_products_daily', ''),
-                    'dairy_products_weekly': request.POST.get('dairy_products_weekly', ''),
-                    
-                    # Vegetables
-                    'vegetables': request.POST.get('vegetables', ''),
-                    'vegetables_daily': request.POST.get('vegetables_daily', ''),
-                    'vegetables_weekly': request.POST.get('vegetables_weekly', ''),
-                    
-                    # Water
-                    'water': request.POST.get('water', ''),
-                    'water_timing': request.POST.get('water_timing', ''),
-                    'water_glasses': request.POST.get('water_glasses', ''),
-                    
-                    # Xylitol Products
-                    'xylitol_products': request.POST.get('xylitol_products', ''),
-                    'xylitol_products_daily': request.POST.get('xylitol_products_daily', ''),
-                    'xylitol_products_weekly': request.POST.get('xylitol_products_weekly', ''),
-                }
+                defaults=screening_data
             )
             
             if not created:
-                #update existing screening - all fields
-                all_fields = [
-                    'sweet_sugary_foods', 'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly',
-                    'sweet_sugary_foods_timing', 'sweet_sugary_foods_bedtime',
-                    'takeaways_processed_foods', 'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
-                    'fresh_fruit', 'fresh_fruit_daily', 'fresh_fruit_weekly', 'fresh_fruit_timing', 'fresh_fruit_bedtime',
-                    'cold_drinks_juices', 'cold_drinks_juices_daily', 'cold_drinks_juices_weekly',
-                    'cold_drinks_juices_timing', 'cold_drinks_juices_bedtime',
-                    'processed_fruit', 'processed_fruit_daily', 'processed_fruit_weekly',
-                    'processed_fruit_timing', 'processed_fruit_bedtime',
-                    'spreads', 'spreads_daily', 'spreads_weekly', 'spreads_timing', 'spreads_bedtime',
-                    'added_sugars', 'added_sugars_daily', 'added_sugars_weekly',
-                    'added_sugars_timing', 'added_sugars_bedtime',
-                    'salty_snacks', 'salty_snacks_daily', 'salty_snacks_weekly', 'salty_snacks_timing',
-                    'dairy_products', 'dairy_products_daily', 'dairy_products_weekly',
-                    'vegetables', 'vegetables_daily', 'vegetables_weekly',
-                    'water', 'water_timing', 'water_glasses',
-                    'xylitol_products', 'xylitol_products_daily', 'xylitol_products_weekly'
-                ]
-
-                for field in all_fields:
-                    setattr(screening, field, request.POST.get(field, ''))
+                #update existing screening
+                for field, value in screening_data.items():
+                    setattr(screening, field, value)
                 screening.save()
 
             messages.success(request, "Dietary screening completed successfully!")

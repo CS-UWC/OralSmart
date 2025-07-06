@@ -1,26 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Healthcare Centers - OralSmart{% endblock %}
+{% block navbar %}
+    {% include "navbar2.html" %}
+{% endblock %}
 
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
-            <strong>{{ message }}</strong>
-            <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    {% endfor %}
-{% endif %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
-            var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-            bsAlert.close();
-        });
-    }, 5000); //3 seconds
-});
-</script>
+{% block title %}Healthcare Centers - OralSmart{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -264,6 +249,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% block content %}
 
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
+            <strong>{{ message }}</strong>
+            <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
 <div class="text-center mb-4">
     <h4>
         Complete and Confirm your Booking
@@ -373,6 +367,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
         // When a clinic card or BOOK button is clicked
         document.querySelectorAll('.clinic-card').forEach(function(card) {
             card.addEventListener('click', function(e) {
