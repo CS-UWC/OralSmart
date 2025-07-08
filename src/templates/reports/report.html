@@ -45,16 +45,78 @@
         <small class="text-muted d-block mt-2">Note: Dietary screening data will be included automatically if available</small>
     </div>
 
-    <div class="form-section mt-3 d-flex justify-content-center"></div>
+    <!-- <div class="form-section mt-3 d-flex justify-content-center"></div>
+        <button type="submit" class="btn btn-primary">Refresh PDF</button> -->
+    <div class="form-section mt-3 d-flex justify-content-center">
         <button type="submit" class="btn btn-primary">Refresh PDF</button>
     </div>
 
 </form>
 
+<!-- Email Section -->
+<div class="email-section mt-4" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
+    <h4 class="text-center mb-4">Send Report via Email</h4>
+    
+    <form id="emailForm" method="post" action="{% url 'send_report_email' patient_id=patient_id %}">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="recipient_email" class="form-label">
+                        <strong>Recipient Email:</strong> <span class="text-danger">*</span>
+                    </label>
+                    <input type="email" id="recipient_email" name="recipient_email" required 
+                           class="form-control" placeholder="patient@example.com">
+                    <small class="form-text text-muted">Primary recipient of the report</small>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="cc_emails" class="form-label">
+                        <strong>CC (Health Professionals):</strong>
+                    </label>
+                    <input type="text" id="cc_emails" name="cc_emails" 
+                           class="form-control" placeholder="doctor1@clinic.com, doctor2@clinic.com">
+                    <small class="form-text text-muted">Comma-separated emails to CC (optional)</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group mb-3">
+            <label for="subject" class="form-label">
+                <strong>Email Subject:</strong>
+            </label>
+            <input type="text" id="subject" name="subject" 
+                   class="form-control" 
+                   value="OralSmart Dental Report - Patient ID {{ patient_id }}"
+                   placeholder="Email subject line">
+        </div>
+        
+        <div class="form-group mb-3">
+            <label for="message" class="form-label">
+                <strong>Additional Message:</strong>
+            </label>
+            <textarea id="message" name="message" rows="4" class="form-control" 
+                      placeholder="Optional message to include in the email..."></textarea>
+            <small class="form-text text-muted">This message will be included in the email body</small>
+        </div>
+        
+        <div class="d-flex justify-content-center">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-envelope"></i> Send Email
+            </button>
+        </div>
+    </form>
+    
+    <div id="email-status" class="mt-3" style="display: none;"></div>
+</div>
+
 
 <div class="form-section mt-3 d-flex justify-content-center">
     <!-- <button type="submit" class="btn btn-primary me-3">Refresh PDF</button> -->
-    <a id="proceed-btn" class="btn btn-success" href="{% url 'clinics' %}?patient_id={{ patient_id }}&selected_sections=section1,section2,section3,section4,section5">Proceed to Booking</a>
+    <a id="proceed-btn" class="btn btn-primary" href="{% url 'clinics' %}?patient_id={{ patient_id }}&selected_sections=section1,section2,section3,section4,section5">Proceed to Booking</a>
 </div>
 
 <script>
@@ -111,6 +173,52 @@
                 console.error('Error updating PDF:', error);
                 loadingIndicator.style.display = 'none';
                 iframe.style.display = 'block';
+            });
+        });
+
+        // Email form submission
+        document.getElementById('emailForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const statusDiv = document.getElementById('email-status');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+            statusDiv.style.display = 'none';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                statusDiv.style.display = 'block';
+                
+                if (data === 'Email sent successfully') {
+                    statusDiv.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Email sent successfully!</div>';
+                    document.getElementById('emailForm').reset();
+                } else {
+                    statusDiv.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Error: ' + data + '</div>';
+                }
+                
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-envelope"></i> Send Email';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> An error occurred while sending the email</div>';
+                
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-envelope"></i> Send Email';
             });
         });
     });
