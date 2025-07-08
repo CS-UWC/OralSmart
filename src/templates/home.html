@@ -6,6 +6,7 @@
 
 {% block content %}
 
+<div class="container mt-4">
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
@@ -15,15 +16,77 @@
         {% endfor %}
     {% endif %}
 
-    <form action="{% url 'logout' %}" method="POST"> 
+    <!-- Welcome Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Welcome to OralSmart</h3>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Digital Oral Health Screening System</h5>
+                    <p class="card-text">
+                        OralSmart is a comprehensive digital platform designed to streamline oral health assessments for children. 
+                        Our system allows healthcare professionals to conduct thorough dental and dietary screenings, 
+                        generate detailed reports, and share findings with patients and colleagues.
+                    </p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-user-plus text-primary"></i> Getting Started</h6>
+                            <ul class="list-unstyled">
+                                <li>• Register a new patient</li>
+                                <li>• Complete dental screening assessment</li>
+                                <li>• Complete dietary screening assessment</li>
+                                <li>• Generate comprehensive reports</li>
+                                <li>• Share reports via email</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-clipboard-check text-primary"></i> Features</h6>
+                            <ul class="list-unstyled">
+                                <li>• AI-powered risk assessment</li>
+                                <li>• Professional PDF reports</li>
+                                <li>• Email sharing capabilities</li>
+                                <li>• Comprehensive patient records</li>
+                                <li>• Clinic referral system</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        {% csrf_token %}
+    <!-- Action Buttons -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-10">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="{% url 'create_patient' %}" class="btn btn-success btn-lg me-md-2">
+                    <i class="fas fa-user-plus"></i> Create New Patient
+                </a>
+                <a href="{% url 'profile' %}" class="btn btn-info btn-lg">
+                    <i class="fas fa-user-cog"></i> View Profile
+                </a>
+            </div>
+        </div>
+    </div>
 
-
-
-        <button type="submit" class="btn btn-primary">Log out</button>
-
-    </form>
+    <!-- Quick Instructions -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-10">
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle"></i> Quick Instructions:</h6>
+                <p class="mb-0">
+                    <strong>1.</strong> Start by creating a new patient profile using the "Create New Patient" button above.<br>
+                    <strong>2.</strong> Access your patient history through the "History" link in the navigation menu.<br>
+                    <strong>3.</strong> Complete both dental and dietary screenings for comprehensive results.<br>
+                    <strong>4.</strong> Generate and share professional reports with patients and colleagues.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

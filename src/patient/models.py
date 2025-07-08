@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Patient(models.Model):
@@ -9,6 +10,9 @@ class Patient(models.Model):
         ('0', 'Male'),
         ('1', 'Female'),
     ]
+
+    # Add relationship to User (health professional)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patients', null=True, blank=True)
 
     name = models.CharField(
         max_length=64,
@@ -52,6 +56,8 @@ class Patient(models.Model):
         blank=False,
         null=False
     )
+    
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.name} {self.surname} (Age: {self.age})" #tells Django how to represent your Patient object as a string
