@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from patient.views import patient_detail_view, create_patient
 from userauth.views import login_user, logout_user,register_user, home_view, landing
 from userprofile.views import profile_view, get_professions
@@ -65,5 +65,8 @@ urlpatterns = [
     #for clinics
     path('clinics/', clinic_list, name='clinics'),
     path('clinics/refer/<int:clinic_id>/', refer_patient, name='refer_patient'),
+
+    #for ML models
+    path('ml/', include('ml_models.urls')),
 
 ]
