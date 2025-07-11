@@ -19,10 +19,10 @@
                     {% csrf_token %}
 
                     <div class="pt-3 text-center">
-                        <h1>Register To Use OralSmart</h1>
+                        <h1>Register to use <span style="color: #007bff; font-weight: bold;">OralSmart</span></h1>
                     </div>
                     
-                    <div class="form-floating mb-3 pt-3">
+                    <div class="form-floating mb-3">
                         {{ form.username }}
                         <label for="id_username">Username</label>
                         {% if form.username.errors %}
@@ -97,7 +97,7 @@
 
 
                     <div class="text-center mt-3">
-                        <p>Already Registered With OralSmart?<a href="{% url 'login' %}">Login</a></p>
+                        <p>Already Registered With OralSmart?<a href="{% url 'login' %}">Sign in</a></p>
                     </div>
                 </form>
             </div>
