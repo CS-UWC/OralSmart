@@ -52,7 +52,7 @@ def login_user(request):
 
                 return redirect(next_url)
             
-            return redirect('create_patient') #redirects to patient page
+            return redirect('home') #redirects to patient page
         else:
             print("Login unsuccessful")
             messages.error(request, "Invalid username or password.")

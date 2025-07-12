@@ -95,7 +95,7 @@
 
 <!--Div for entering the child's parent or guardian ID-->
         <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="parent_id" name="parent_id" placeholder="Enter Parent ID" required>
+            <input type="text" class="form-control" id="parent_id" name="parent_id" placeholder="Enter Parent ID" required pattern="\d{13}" maxlength="13" title="Please enter a 13-digit South African ID number">
             <label for="parent_id">Enter the parent's South African ID Number</label>
         </div>
 
@@ -136,8 +136,16 @@
         });
 
         function submitAndRedirect(screeningType) {
-            // First validate the form
+            // Validate Parent ID for exactly 13 digits
+            const parentIdInput = document.getElementById('parent_id');
+            const parentIdValue = parentIdInput.value;
             const form = document.querySelector('form');
+            if (!/^\d{13}$/.test(parentIdValue)) {
+                parentIdInput.setCustomValidity('Parent ID must be exactly 13 digits.');
+                form.reportValidity();
+                parentIdInput.setCustomValidity('');
+                return;
+            }
             if (form.checkValidity()) {
                 // Create a hidden input to indicate the screening type
                 const screeningInput = document.createElement('input');
@@ -145,7 +153,6 @@
                 screeningInput.name = 'screening_type';
                 screeningInput.value = screeningType;
                 form.appendChild(screeningInput);
-                
                 // Submit the form
                 form.submit();
             } else {
