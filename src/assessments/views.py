@@ -144,7 +144,7 @@ def dietary_screening(request, patient_id):
             
             if missing:
                 messages.error(request, f"Please answer all required questions: {', '.join(missing)}")
-                return render(request, 'assessments/dietary_screening.html', {
+                return render(request, 'assessments/dietary_screening_new.html', {
                     'patient': patient,
                     'perform_both': perform_both,
                 })
@@ -186,7 +186,7 @@ def dietary_screening(request, patient_id):
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
 
-    return render(request, 'assessments/dietary_screening.html', {
+    return render(request, 'assessments/dietary_screening_new.html', {
         'patient': patient,
         'perform_both': perform_both,
     })

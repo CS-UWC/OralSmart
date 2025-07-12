@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.db.models import Q
 from .forms import PatientForm
 from .models import Patient
 from django.contrib import messages
@@ -62,7 +63,8 @@ def create_patient(request):
                 parent_name=parent_name,
                 parent_surname=parent_surname,
                 parent_id=parent_id,
-                parent_contact=parent_contact
+                parent_contact=parent_contact,
+                created_by=request.user  # Associate with current user
             )
             
             messages.success(request, f'Patient {patient.name} {patient.surname} created successfully!')
@@ -86,3 +88,16 @@ def create_patient(request):
     
     #if GET request, render the form
     return render(request, 'patient/create_patient.html', {'show_navbar': True})
+
+@login_required
+def patient_list_view(request):
+    """View to display all patients created by the current user"""
+    # Only show patients created by the current user
+    patients = Patient.objects.filter(created_by=request.user).order_by('-id')
+    
+    context = {
+        'patients': patients,
+        'show_navbar': True,
+    }
+    
+    return render(request, "patient/patient_list.html", context)

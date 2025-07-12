@@ -1,0 +1,1246 @@
+{% load static %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <ul>
+            {% for field, errors in form.errors.items %}
+                <li>{{ field }}: {{ errors|striptags }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    });
+    </script>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutritional Screening Assessment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .risk-question {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .high-risk:hover {
+            border-color: #dc3545;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+            transform: translateY(-1px);
+        }
+        .high-risk {
+            border-left: 4px solid #dc3545;
+            background-color: #fdf2f2;
+        }
+        .moderate-risk:hover {
+            border-color: #ffc107;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+            transform: translateY(-1px);
+        }
+        .moderate-risk {
+            border-left: 4px solid #ffc107;
+            background-color: #fffbf0;
+        }
+        .low-risk:hover {
+            border-color: #28a745;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+            transform: translateY(-1px);
+        }
+        .low-risk {
+            border-left: 4px solid #28a745;
+            background-color: #f0f8f0;
+        }
+        .protective:hover {
+            border-color: #17a2b8;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+            transform: translateY(-1px);
+        }
+        .protective {
+            border-left: 4px solid #17a2b8;
+            background-color: #f0f9ff;
+        }
+        .question-text {
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .checkbox-item {
+            margin-right: 15px;
+        }
+        .checkbox-item input {
+            margin-right: 5px;
+        }
+        .section-title {
+            color: #2c3e50;
+            margin: 30px 0 20px 0;
+        }
+        .accordion-button:disabled {
+            opacity: 0.6;
+        }
+        .required-asterisk {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Nutritional Screening Assessment</h1>
+        
+        <form method="post" action="#">
+            
+            {% csrf_token %}
+            
+            <!-- Hidden fields for workflow control -->
+            {% if perform_both %}
+                <input type="hidden" name="perform_both" value="true">
+            {% endif %}
+
+            <div class="accordion" id="questionnaireAccordion">
+
+                <div class="text-center mb-4">
+                    <h4>
+                        Complete the Nutritional Screening by Clicking on the Field that Applies to the Child
+                    </h4>
+                </div>
+                
+                <!-- Section 1: Sweet/Sugary Foods -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#sectionOne" aria-expanded="true" aria-controls="sectionOne">
+                            Section 1: SWEET/SUGARY FOODS
+                        </button>
+                    </h2>
+                    <div id="sectionOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+
+                            <div class="risk-question high-risk">
+                                <div class="question-text">1. Does the child consume SWEET OR SUGARY FOODS such as sweets, sugary gum, chocolates, cakes, muffins, doughnuts, biscuits, sugary rusks, pudding, ice-cream, koeksisters, etc.?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_sugary_foods_yes" name="sweet_sugary_foods" value="yes">
+                                        <label for="sweet_sugary_foods_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_sugary_foods_no" name="sweet_sugary_foods" value="no">
+                                        <label for="sweet_sugary_foods_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How often do you usually consume these SWEET OR SUGARY FOODS?</div>
+                                
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_1_3_day" name="sweet_sugary_foods_daily" value="1-3_day">
+                                        <label for="sweet_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_3_4_day" name="sweet_sugary_foods_daily" value="3-4_day">
+                                        <label for="sweet_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_4_6_day" name="sweet_sugary_foods_daily" value="4-6_day">
+                                        <label for="sweet_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_1_3_week" name="sweet_sugary_foods_weekly" value="1-3_week">
+                                        <label for="sweet_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_3_4_week" name="sweet_sugary_foods_weekly" value="3-4_week">
+                                        <label for="sweet_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_4_6_week" name="sweet_sugary_foods_weekly" value="4-6_week">
+                                        <label for="sweet_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">When does the child usually consume these?</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_with_meals" name="sweet_sugary_foods_timing" value="with_meals">
+                                        <label for="sweet_with_meals">With meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_between_meals" name="sweet_sugary_foods_timing" value="between_meals">
+                                        <label for="sweet_between_meals">Between meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_both" name="sweet_sugary_foods_timing" value="both">
+                                        <label for="sweet_both">Both</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">Does the child consume any of these within 1 hour of bedtime?</div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_bedtime_yes" name="sweet_sugary_foods_bedtime" value="yes">
+                                        <label for="sweet_bedtime_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sweet_bedtime_no" name="sweet_sugary_foods_bedtime" value="no">
+                                        <label for="sweet_bedtime_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionTwo">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Take-aways and Processed Foods -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionTwo" aria-expanded="false" aria-controls="sectionTwo">
+                            Section 2: TAKE-AWAYS AND PROCESSED FOODS
+                        </button>
+                    </h2>
+                    <div id="sectionTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+
+                            <div class="risk-question high-risk">
+                                <div class="question-text">2. Does the child consume TAKE-AWAYS AND PROCESSED FOODS such as; KFC (deep fried chicken), McDonalds, Romans Pizza, Debonairs, Wimpy, Hungry Lion or processed foods such as; potato chips, corn chips, hot chips, etc.?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="takeaways_yes" name="takeaways_processed_foods" value="yes">
+                                        <label for="takeaways_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="takeaways_no" name="takeaways_processed_foods" value="no">
+                                        <label for="takeaways_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How often do you usually consume these TAKE-AWAYS AND PROCESSED FOODS?</div>
+                                
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="takeaways_1_3_day" name="takeaways_processed_foods_daily" value="1-3_day">
+                                        <label for="takeaways_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="takeaways_3_4_day" name="takeaways_processed_foods_daily" value="3-4_day">
+                                        <label for="takeaways_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="takeaways_4_6_day" name="takeaways_processed_foods_daily" value="4-6_day">
+                                        <label for="takeaways_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="takeaways_1_3_week" name="takeaways_processed_foods_weekly" value="1-3_week">
+                                        <label for="takeaways_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="takeaways_3_4_week" name="takeaways_processed_foods_weekly" value="3-4_week">
+                                        <label for="takeaways_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="takeaways_4_6_week" name="takeaways_processed_foods_weekly" value="4-6_week">
+                                        <label for="takeaways_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionThree">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Fresh Fruit -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionThree" aria-expanded="false" aria-controls="sectionThree">
+                            Section 3: FRESH FRUIT
+                        </button>
+                    </h2>
+                    <div id="sectionThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+
+                            <div class="risk-question protective">
+                                <div class="question-text">3. Does the child consume FRESH FRUIT such as apples, bananas, oranges, grapes, mangoes, pears, berries, etc.?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fresh_fruit_yes" name="fresh_fruit" value="yes">
+                                        <label for="fresh_fruit_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fresh_fruit_no" name="fresh_fruit" value="no">
+                                        <label for="fresh_fruit_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How often does the child usually consume these FRESH FRUIT?</div>
+                                
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_1_3_day" name="fresh_fruit_daily" value="1-3_day">
+                                        <label for="fruit_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_3_4_day" name="fresh_fruit_daily" value="3-4_day">
+                                        <label for="fruit_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_4_6_day" name="fresh_fruit_daily" value="4-6_day">
+                                        <label for="fruit_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_1_3_week" name="fresh_fruit_weekly" value="1-3_week">
+                                        <label for="fruit_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_3_4_week" name="fresh_fruit_weekly" value="3-4_week">
+                                        <label for="fruit_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_4_6_week" name="fresh_fruit_weekly" value="4-6_week">
+                                        <label for="fruit_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">When does the child usually consume these?</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_with_meals" name="fresh_fruit_timing" value="with_meals">
+                                        <label for="fruit_with_meals">With meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_between_meals" name="fresh_fruit_timing" value="between_meals">
+                                        <label for="fruit_between_meals">Between meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_both" name="fresh_fruit_timing" value="both">
+                                        <label for="fruit_both">Both</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">Does the child consume any of these within 1 hour of bedtime?</div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_bedtime_yes" name="fresh_fruit_bedtime" value="yes">
+                                        <label for="fruit_bedtime_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="fruit_bedtime_no" name="fresh_fruit_bedtime" value="no">
+                                        <label for="fruit_bedtime_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionFour">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Cold Drinks, Juices and Flavoured Water and Milk -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFour">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionFour" aria-expanded="false" aria-controls="sectionFour">
+                            Section 4: COLD DRINKS, JUICES AND FLAVOURED WATER AND MILK
+                        </button>
+                    </h2>
+                    <div id="sectionFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question high-risk">
+                                <div class="question-text">4. Does the child consume COLD DRINKS, JUICES AND FLAVOURED WATER AND MILK, cool drinks such as; Coca-Cola, Tweezer, Sprite, Kingsley, Grapetiser, Appletiser or juices such as; LiquiFruit, Cappy, Tropika, Krush, Sir Fruit or flavoured water such as; Bonaqua, Aqualle, Thirsti, flavoured milk such as chocolate milk, strawberry milk, etc.?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_yes" name="cold_drinks_juices" value="yes">
+                                        <label for="cold_drinks_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_no" name="cold_drinks_juices" value="no">
+                                        <label for="cold_drinks_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How often does the child usually consume these COLD DRINKS, JUICES AND FLAVOURED WATER AND MILK?</div>
+                                
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_1_3_day" name="cold_drinks_juices_daily" value="1-3_day">
+                                        <label for="cold_drinks_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_3_4_day" name="cold_drinks_juices_daily" value="3-4_day">
+                                        <label for="cold_drinks_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_4_6_day" name="cold_drinks_juices_daily" value="4-6_day">
+                                        <label for="cold_drinks_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_1_3_week" name="cold_drinks_juices_weekly" value="1-3_week">
+                                        <label for="cold_drinks_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_3_4_week" name="cold_drinks_juices_weekly" value="3-4_week">
+                                        <label for="cold_drinks_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_4_6_week" name="cold_drinks_juices_weekly" value="4-6_week">
+                                        <label for="cold_drinks_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">When does the child usually consume these?</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_with_meals" name="cold_drinks_juices_timing" value="with_meals">
+                                        <label for="cold_drinks_with_meals">With meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_between_meals" name="cold_drinks_juices_timing" value="between_meals">
+                                        <label for="cold_drinks_between_meals">Between meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_both" name="cold_drinks_juices_timing" value="both">
+                                        <label for="cold_drinks_both">Both</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">Does the child consume any of these within 1 hour of bedtime?</div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_bedtime_yes" name="cold_drinks_juices_bedtime" value="yes">
+                                        <label for="cold_drinks_bedtime_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="cold_drinks_bedtime_no" name="cold_drinks_juices_bedtime" value="no">
+                                        <label for="cold_drinks_bedtime_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionFive">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Processed Fruit -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFive">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionFive" aria-expanded="false" aria-controls="sectionFive">
+                            Section 5: PROCESSED FRUIT
+                        </button>
+                    </h2>
+                    <div id="sectionFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question moderate-risk">
+                                <div class="question-text">5. Does the child consume PROCESSED FRUITS such as dried fruit (dried apricots, raisins, fruit rolls), canned fruit (canned apricots, canned cherries), etc.?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_yes" name="processed_fruit" value="yes">
+                                        <label for="processed_fruit_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_no" name="processed_fruit" value="no">
+                                        <label for="processed_fruit_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How often does the child usually consume these PROCESSED FRUITS?</div>
+                                
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_1_3_day" name="processed_fruit_daily" value="1-3_day">
+                                        <label for="processed_fruit_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_3_4_day" name="processed_fruit_daily" value="3-4_day">
+                                        <label for="processed_fruit_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_4_6_day" name="processed_fruit_daily" value="4-6_day">
+                                        <label for="processed_fruit_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_1_3_week" name="processed_fruit_weekly" value="1-3_week">
+                                        <label for="processed_fruit_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_3_4_week" name="processed_fruit_weekly" value="3-4_week">
+                                        <label for="processed_fruit_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_4_6_week" name="processed_fruit_weekly" value="4-6_week">
+                                        <label for="processed_fruit_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">When does the child usually consume these?</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_with_meals" name="processed_fruit_timing" value="with_meals">
+                                        <label for="processed_fruit_with_meals">With meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_between_meals" name="processed_fruit_timing" value="between_meals">
+                                        <label for="processed_fruit_between_meals">Between meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_both" name="processed_fruit_timing" value="both">
+                                        <label for="processed_fruit_both">Both</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">Does the child consume any of these within 1 hour of bedtime?</div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_bedtime_yes" name="processed_fruit_bedtime" value="yes">
+                                        <label for="processed_fruit_bedtime_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="processed_fruit_bedtime_no" name="processed_fruit_bedtime" value="no">
+                                        <label for="processed_fruit_bedtime_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionSix">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 6: Spreads -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSix">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionSix" aria-expanded="false" aria-controls="sectionSix">
+                            Section 6: SPREADS
+                        </button>
+                    </h2>
+                    <div id="sectionSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question high-risk">
+                                <div class="question-text">6. Does the child consume SPREADS such as; jam, syrup, honey, chocolate spreads such as nutella, etc.?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_yes" name="spreads" value="yes">
+                                        <label for="spreads_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_no" name="spreads" value="no">
+                                        <label for="spreads_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How often do you usually consume these SPREADS?</div>
+                                
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_1_3_day" name="spreads_daily" value="1-3_day">
+                                        <label for="spreads_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_3_4_day" name="spreads_daily" value="3-4_day">
+                                        <label for="spreads_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_4_6_day" name="spreads_daily" value="4-6_day">
+                                        <label for="spreads_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_1_3_week" name="spreads_weekly" value="1-3_week">
+                                        <label for="spreads_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_3_4_week" name="spreads_weekly" value="3-4_week">
+                                        <label for="spreads_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_4_6_week" name="spreads_weekly" value="4-6_week">
+                                        <label for="spreads_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">When does the child usually consume these?</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_with_meals" name="spreads_timing" value="with_meals">
+                                        <label for="spreads_with_meals">With meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_between_meals" name="spreads_timing" value="between_meals">
+                                        <label for="spreads_between_meals">Between meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_both" name="spreads_timing" value="both">
+                                        <label for="spreads_both">Both</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">Does the child consume any of these within 1 hour of bedtime?</div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_bedtime_yes" name="spreads_bedtime" value="yes">
+                                        <label for="spreads_bedtime_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spreads_bedtime_no" name="spreads_bedtime" value="no">
+                                        <label for="spreads_bedtime_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionSeven">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 7: Added Sugars -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSeven">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionSeven" aria-expanded="false" aria-controls="sectionSeven">
+                            Section 7: ADDED SUGARS
+                        </button>
+                    </h2>
+                    <div id="sectionSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question high-risk">
+                                <div class="question-text">7. Does the child consume foods or drinks with ADDED SUGAR, added sugar/honey added to porridge, cereal, tea, coffee, Milo, hot chocolate or any other sweeteners added to foods or beverages?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_yes" name="added_sugars" value="yes">
+                                        <label for="added_sugars_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_no" name="added_sugars" value="no">
+                                        <label for="added_sugars_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How often does the child consume foods or drinks with ADDED SUGARS?</div>
+                                
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_1_3_day" name="added_sugars_daily" value="1-3_day">
+                                        <label for="added_sugars_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_3_4_day" name="added_sugars_daily" value="3-4_day">
+                                        <label for="added_sugars_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_4_6_day" name="added_sugars_daily" value="4-6_day">
+                                        <label for="added_sugars_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_1_3_week" name="added_sugars_weekly" value="1-3_week">
+                                        <label for="added_sugars_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_3_4_week" name="added_sugars_weekly" value="3-4_week">
+                                        <label for="added_sugars_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_4_6_week" name="added_sugars_weekly" value="4-6_week">
+                                        <label for="added_sugars_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">When does the child usually consume these?</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_with_meals" name="added_sugars_timing" value="with_meals">
+                                        <label for="added_sugars_with_meals">With meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_between_meals" name="added_sugars_timing" value="between_meals">
+                                        <label for="added_sugars_between_meals">Between meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_both" name="added_sugars_timing" value="both">
+                                        <label for="added_sugars_both">Both</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">Does the child consume any of these within 1 hour of bedtime?</div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_bedtime_yes" name="added_sugars_bedtime" value="yes">
+                                        <label for="added_sugars_bedtime_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="added_sugars_bedtime_no" name="added_sugars_bedtime" value="no">
+                                        <label for="added_sugars_bedtime_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionEight">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 8: Salty Snacks -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingEight">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionEight" aria-expanded="false" aria-controls="sectionEight">
+                            Section 8: SALTY SNACKS
+                        </button>
+                    </h2>
+                    <div id="sectionEight" class="accordion-collapse collapse" aria-labelledby="headingEight" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question moderate-risk">
+                                <div class="question-text">8. Does the child consume SALTY SNACKS such as; salted peanuts, pretzels, crackers, chips, niknaks, etc.?
+                                    <span class="required-asterisk">*</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_yes" name="salty_snacks" value="yes">
+                                        <label for="salty_snacks_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_no" name="salty_snacks" value="no">
+                                        <label for="salty_snacks_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How often do you usually consume these SALTY SNACKS?</div>
+                                
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_1_3_day" name="salty_snacks_daily" value="1-3_day">
+                                        <label for="salty_snacks_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_3_4_day" name="salty_snacks_daily" value="3-4_day">
+                                        <label for="salty_snacks_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_4_6_day" name="salty_snacks_daily" value="4-6_day">
+                                        <label for="salty_snacks_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_1_3_week" name="salty_snacks_weekly" value="1-3_week">
+                                        <label for="salty_snacks_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_3_4_week" name="salty_snacks_weekly" value="3-4_week">
+                                        <label for="salty_snacks_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_4_6_week" name="salty_snacks_weekly" value="4-6_week">
+                                        <label for="salty_snacks_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">When does the child usually consume these?</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_with_meals" name="salty_snacks_timing" value="with_meals">
+                                        <label for="salty_snacks_with_meals">With meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_between_meals" name="salty_snacks_timing" value="between_meals">
+                                        <label for="salty_snacks_between_meals">Between meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="salty_snacks_both" name="salty_snacks_timing" value="both">
+                                        <label for="salty_snacks_both">Both</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionNine">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 9: DAIRY PRODUCTS -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingNine">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionNine" aria-expanded="false" aria-controls="sectionNine">
+                            Section 9: DAIRY PRODUCTS
+                        </button>
+                    </h2>
+                    <div id="sectionNine" class="accordion-collapse collapse" aria-labelledby="headingNine" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question low-risk">
+                                <div class="question-text">9. Does the child regularly consume DAIRY PRODUCTS such as plain milk, unsweetened yoghurt, cheese, amasi, etc.?<span class="required-asterisk">*</span></div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="dairy_yes" name="dairy" value="yes">
+                                        <label for="dairy_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="dairy_no" name="dairy" value="no">
+                                        <label for="dairy_no">No</label>
+                                    </div>
+                                </div>
+                                <div class="question-text mt-3">How often do you usually consume these DAIRY PRODUCTS?</div>
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="dairy_1_3_day" name="dairy_daily" value="1-3_day">
+                                        <label for="dairy_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="dairy_3_4_day" name="dairy_daily" value="3-4_day">
+                                        <label for="dairy_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="dairy_4_6_day" name="dairy_daily" value="4-6_day">
+                                        <label for="dairy_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="dairy_1_3_week" name="dairy_weekly" value="1-3_week">
+                                        <label for="dairy_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="dairy_3_4_week" name="dairy_weekly" value="3-4_week">
+                                        <label for="dairy_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="dairy_4_6_week" name="dairy_weekly" value="4-6_week">
+                                        <label for="dairy_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionTen">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 10: VEGETABLES -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTen">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionTen" aria-expanded="false" aria-controls="sectionTen">
+                            Section 10: VEGETABLES
+                        </button>
+                    </h2>
+                    <div id="sectionTen" class="accordion-collapse collapse" aria-labelledby="headingTen" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question low-risk">
+                                <div class="question-text">10. Does the child regularly consume VEGETABLES such as carrots, celery, spinach, green beans, broccoli, sweet potato, butternut squash, Morogo, cabbage, onion, etc.?<span class="required-asterisk">*</span></div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="vegetables_yes" name="vegetables" value="yes">
+                                        <label for="vegetables_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="vegetables_no" name="vegetables" value="no">
+                                        <label for="vegetables_no">No</label>
+                                    </div>
+                                </div>
+                                <div class="question-text mt-3">How often do you usually consume these VEGETABLES?</div>
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="vegetables_1_3_day" name="vegetables_daily" value="1-3_day">
+                                        <label for="vegetables_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="vegetables_3_4_day" name="vegetables_daily" value="3-4_day">
+                                        <label for="vegetables_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="vegetables_4_6_day" name="vegetables_daily" value="4-6_day">
+                                        <label for="vegetables_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="vegetables_1_3_week" name="vegetables_weekly" value="1-3_week">
+                                        <label for="vegetables_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="vegetables_3_4_week" name="vegetables_weekly" value="3-4_week">
+                                        <label for="vegetables_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="vegetables_4_6_week" name="vegetables_weekly" value="4-6_week">
+                                        <label for="vegetables_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionEleven">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 11: WATER -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingEleven">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionEleven" aria-expanded="false" aria-controls="sectionEleven">
+                            Section 11: WATER
+                        </button>
+                    </h2>
+                    <div id="sectionEleven" class="accordion-collapse collapse" aria-labelledby="headingEleven" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question protective">
+                                <div class="question-text">11. Does the child drink PLAIN WATER daily, such as municipal tap water, bottled water, or filtered water? <span class="required-asterisk">*</span></div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_yes" name="plain_water" value="yes">
+                                        <label for="water_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_no" name="plain_water" value="no">
+                                        <label for="water_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">When does the child typically drink water?</div>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_with_meals" name="water_timing" value="with_meals">
+                                        <label for="water_with_meals">With meals</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_between_meals" name="water_timing" value="between_meals">
+                                        <label for="water_between_meals">Between meals/Snacks</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_after_sweets" name="water_timing" value="after_sweets">
+                                        <label for="water_after_sweets">After eating sweets/snacks</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_bedtime" name="water_timing" value="before_bedtime">
+                                        <label for="water_bedtime">Before bedtime</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">How many glasses of plain water does the child drink per day?</div>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_less_2" name="water_glasses" value="<2">
+                                        <label for="water_less_2">Less than 2</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_2_4" name="water_glasses" value="2-4">
+                                        <label for="water_2_4">2-4 glasses</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="water_5_plus" name="water_glasses" value="5+">
+                                        <label for="water_5_plus">5+ glasses</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary next-section" data-target="#sectionTwelve">Next Section</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 12: XYLITOL-CONTAINING PRODUCTS -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwelve">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionTwelve" aria-expanded="false" aria-controls="sectionTwelve">
+                            Section 12: XYLITOL-CONTAINING PRODUCTS
+                        </button>
+                    </h2>
+                    <div id="sectionTwelve" class="accordion-collapse collapse" aria-labelledby="headingTwelve" data-bs-parent="#questionnaireAccordion">
+                        <div class="accordion-body">
+                            <div class="risk-question protective">
+                                <div class="question-text">12. Does the child use XYLITOL-CONTAINING PRODUCTS such as sugar-free chewing gum (Trident, Extra, Stimorol sugar-free), xylitol toothpaste, or sugar-free mints with xylitol? <span class="required-asterisk">*</span></div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="xylitol_yes" name="xylitol_products" value="yes">
+                                        <label for="xylitol_yes">Yes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="xylitol_no" name="xylitol_products" value="no">
+                                        <label for="xylitol_no">No</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">If yes, how often does the child usually use XYLITOL-CONTAINING PRODUCTS?</div>
+                                <div class="question-text">DAILY</div>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="xylitol_1_3_day" name="xylitol_daily" value="1-3_day">
+                                        <label for="xylitol_1_3_day">1-3 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="xylitol_3_4_day" name="xylitol_daily" value="3-4_day">
+                                        <label for="xylitol_3_4_day">3-4 servings/day</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="xylitol_4_6_day" name="xylitol_daily" value="4-6_day">
+                                        <label for="xylitol_4_6_day">4-6 servings/day</label>
+                                    </div>
+                                </div>
+
+                                <div class="question-text mt-3">WEEKLY</div>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="xylitol_1_3_week" name="xylitol_weekly" value="1-3_week">
+                                        <label for="xylitol_1_3_week">1-3 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="xylitol_3_4_week" name="xylitol_weekly" value="3-4_week">
+                                        <label for="xylitol_3_4_week">3-4 times/week</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="xylitol_4_6_week" name="xylitol_weekly" value="4-6_week">
+                                        <label for="xylitol_4_6_week">4-6 times/week</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Final Submit Button -->
+                <div class="accordion-item">
+                    <div class="accordion-body">
+                        <div class="form-section text-center mt-4">
+                            {% if perform_both %}
+                                <button type="submit" class="btn btn-primary">Complete Dietary & Proceed to Dental</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-primary">Complete Dietary Screening</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// filepath: c:\Users\vhuta\dev\oralsmart\src\templates\assessments\dietary_screening.html
+document.addEventListener('DOMContentLoaded', function() {
+    // Automatically dismiss alerts
+    setTimeout(function() {
+        document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+            var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+        });
+    }, 3000);
+
+    // Make checkboxes behave like radio buttons within each logical group (by name) inside each question
+    document.querySelectorAll('.risk-question').forEach(function(question) {
+        // Find all unique checkbox name attributes within this question
+        const names = Array.from(new Set(Array.from(question.querySelectorAll('input[type="checkbox"]')).map(cb => cb.name)));
+        names.forEach(function(name) {
+            const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+            group.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        group.forEach(function(other) {
+                            if (other !== checkbox) {
+                                other.checked = false;
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    });
+
+    // Accordion section progression with validation (every question is required)
+    document.querySelectorAll('.next-section').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var currentSection = btn.closest('.accordion-collapse');
+            var allQuestions = currentSection.querySelectorAll('.risk-question');
+            var allAnswered = true;
+
+            allQuestions.forEach(function(question) {
+                // For each group by name, check at least one is checked
+                const names = Array.from(new Set(Array.from(question.querySelectorAll('input[type="checkbox"]')).map(cb => cb.name)));
+                let questionAnswered = true;
+                names.forEach(function(name) {
+                    // Only require for visible groups (in case some are hidden)
+                    const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+                    if (group.length > 0 && !Array.from(group).some(cb => cb.checked)) {
+                        questionAnswered = false;
+                    }
+                });
+                if (!questionAnswered) {
+                    allAnswered = false;
+                    question.classList.add('border', 'border-danger');
+                } else {
+                    question.classList.remove('border', 'border-danger');
+                }
+            });
+
+            if (!allAnswered) {
+                alert("Please answer all required questions in this section before proceeding.");
+                return;
+            }
+
+            // Enable and open the next section
+            var nextSection = document.querySelector(btn.getAttribute('data-next'));
+            var nextAccordionItem = nextSection.closest('.accordion-item');
+            var nextHeaderBtn = nextAccordionItem.querySelector('.accordion-button');
+            nextHeaderBtn.removeAttribute('disabled');
+            var bsCollapse = new bootstrap.Collapse(nextSection, {toggle: true});
+            nextSection.scrollIntoView({behavior: "smooth"});
+        });
+    });
+
+    // Example modal functionality
+    const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    const exampleImage = document.getElementById('exampleImage');
+    const exampleDescription = document.getElementById('exampleDescription');
+    const exampleModalLabel = document.getElementById('exampleModalLabel');
+
+    const examples = {
+        'sugarMeals': {
+            title: 'Sugary Meal Examples',
+            image: "{% static 'images/examples/sugary_meal_example.jpg' %}",
+            description: 'Examples of meals containing sugar that are consumed more than 3 times per day'
+        },
+        'sugarSnacks': {
+            title: 'Sugary Snack Examples',
+            image: "{% static 'images/examples/sugary_snack_example.jpg' %}",
+            description: 'Examples of sugary snacks consumed more than 3 times per day'
+        },
+        'sugarDrinks': {
+            title: 'Sugary Drink Examples',
+            image: "{% static 'images/examples/sugary_drink_example.jpg' %}",
+            description: 'Examples of sugar-containing beverages consumed more than 3 times per day'
+        },
+        'appliance': {
+            title: 'Intraoral Appliances Examples',
+            image: "{% static 'images/examples/appliance_example.jpg' %}",
+            description: 'Examples of braces, retainers, and other intraoral appliances'
+        },
+        'plaque': {
+            title: 'Dental Plaque Examples',
+            image: "{% static 'images/examples/plaque_example.jpg' %}",
+            description: 'Visible dental plaque on teeth surfaces'
+        },
+        'enamelDefects': {
+            title: 'Enamel Defects Examples',
+            image: "{% static 'images/examples/enamel_defects_example.jpg' %}",
+            description: 'Examples of opacity, translucency, and discoloration'
+        },
+        'fluoride': {
+            title: 'Fluoride Water Examples',
+            image: "{% static 'images/examples/fluoride_example.jpg' %}",
+            description: 'Examples of fluoridated water sources and fluoride supplements'
+        },
+        'toothpaste': {
+            title: 'Fluoride Toothpaste Examples',
+            image: "{% static 'images/examples/toothpaste_example.jpg' %}",
+            description: 'Examples of fluoride-containing toothpaste brands'
+        },
+        'fissures': {
+            title: 'Pit and Fissure Sealants',
+            image: "{% static 'images/examples/fissures_example.jpg' %}",
+            description: 'Examples of sealed pits and fissures on teeth'
+        },
+        'restorative3': {
+            title: 'Dental Restorations Examples',
+            image: "{% static 'images/examples/restorative_example.jpg' %}",
+            description: 'Examples of fillings and other restorative procedures'
+        },
+        'enamelNoBreakdown': {
+            title: 'Enamel Changes Without Breakdown',
+            image: "{% static 'images/examples/no_enamel_breakdown_example.jpg' %}",
+            description: 'Examples of enamel opacity and discoloration without structural breakdown'
+        },
+        'internalDiscolouration': {
+            title: 'Internal Dentin Discoloration',
+            image: "{% static 'images/examples/internal_discoloration_example.jpg' %}",
+            description: 'Examples of internal dentin discoloration without enamel breach'
+        },
+        'whiteSpot': {
+            title: 'White Spot Lesions',
+            image: "{% static 'images/examples/white_spot_example.jpg' %}",
+            description: 'Examples of non-cavitated white-spot lesions on smooth surfaces'
+        },
+        'visibleLesions': {
+            title: 'Cavitated Lesions',
+            image: "{% static 'images/examples/visible_lesions_example.jpg' %}",
+            description: 'Examples of cavitated carious lesions visible on examination'
+        }
+    };
+
+    // Handle view examples clicks
+    document.querySelectorAll('.view-examples').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const exampleType = this.getAttribute('data-example');
+            const example = examples[exampleType];
+
+            if (example) {
+                exampleModalLabel.textContent = example.title;
+                exampleImage.src = example.image;
+                exampleDescription.textContent = example.description;
+                exampleModal.show();
+            }
+        });
+    });
+
+});
+</script>
+
+</body>
+</html>

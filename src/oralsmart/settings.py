@@ -160,4 +160,5 @@ EMAIL_HOST_USER =  'vhutalitsanwani01@gmail.com'
 EMAIL_HOST_PASSWORD = 'lgci mhgn elka jmpi'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'vhutalitsanwani01@gmail.com'
 PASSWORD_RESET_TIMEOUT = 14400
