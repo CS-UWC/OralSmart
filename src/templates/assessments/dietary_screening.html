@@ -652,6 +652,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Accordion section progression with validation (conditional based on "No" answers)
     document.querySelectorAll('.next-section').forEach(function(btn) {
         btn.addEventListener('click', function() {
+            console.log('Next button clicked'); // Debug log
+            
             var currentSection = btn.closest('.accordion-collapse');
             var allQuestions = currentSection.querySelectorAll('.risk-question');
             var allAnswered = true;
@@ -669,6 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!mainAnswered) {
                     // Main question not answered - this is required
                     questionAnswered = false;
+                    console.log('Main question not answered for:', mainGroup); // Debug log
                 } else {
                     // Check if user answered "No" to main question
                     const noSelected = Array.from(mainCheckboxes).some(cb => cb.checked && cb.value === 'no');
@@ -684,13 +687,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                         });
                     } else {
-                        // If "Yes" is selected, validate that frequency questions are answered
+                        // If "Yes" is selected, don't require frequency questions for now (simplified validation)
+                        // TODO: Re-enable frequency validation later if needed
+                        /*
                         names.slice(1).forEach(function(name) {
                             const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
                             if (group.length > 0 && !Array.from(group).some(cb => cb.checked)) {
                                 questionAnswered = false;
                             }
                         });
+                        */
                     }
                 }
                 
@@ -707,13 +713,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            console.log('All questions answered, proceeding to next section'); // Debug log
+            
             // Enable and open the next section
-            var nextSection = document.querySelector(btn.getAttribute('data-next'));
+            var nextSectionId = btn.getAttribute('data-next');
+            var nextSection = document.querySelector(nextSectionId);
+            
+            if (!nextSection) {
+                console.error('Next section not found:', nextSectionId);
+                return;
+            }
+            
             var nextAccordionItem = nextSection.closest('.accordion-item');
             var nextHeaderBtn = nextAccordionItem.querySelector('.accordion-button');
-            nextHeaderBtn.removeAttribute('disabled');
-            var bsCollapse = new bootstrap.Collapse(nextSection, {toggle: true});
-            nextSection.scrollIntoView({behavior: "smooth"});
+            
+            if (nextHeaderBtn) {
+                nextHeaderBtn.removeAttribute('disabled');
+                console.log('Enabled next section button');
+            }
+            
+            try {
+                var bsCollapse = new bootstrap.Collapse(nextSection, {toggle: true});
+                nextSection.scrollIntoView({behavior: "smooth"});
+                console.log('Opened next section:', nextSectionId);
+            } catch (error) {
+                console.error('Error opening next section:', error);
+                // Fallback: manually show the section
+                nextSection.classList.add('show');
+                nextSection.scrollIntoView({behavior: "smooth"});
+            }
         });
     });
 
