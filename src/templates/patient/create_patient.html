@@ -101,7 +101,7 @@
 
 <!--Div for entering the child's parent or guardian contact number-->
         <div class="form-floating mb-3">
-            <input type="tel" class="form-control" id="parent_contact" name="parent_contact" placeholder="Enter Parent Contact Number" required>
+            <input type="tel" class="form-control" id="parent_contact" name="parent_contact" placeholder="Enter Parent Contact Number" required pattern="\d{10}" maxlength="10" title="Please enter a 10-digit South African contact number">
             <label for="parent_contact">Enter the parent's Contact Number</label>
         </div>
 
