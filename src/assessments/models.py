@@ -9,21 +9,24 @@ class DentalScreening(models.Model):
 
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='screenings')
 
-    caregiver_treatment = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
-    income = models.CharField(max_length=20)
-    sugar_meals = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
-    sugar_snacks = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
-    sugar_beverages = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+    #Section 1
     sa_citizen = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     special_needs = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+    caregiver_treatment = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+
+    #Section 2
+    appliance = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     plaque = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     dry_mouth = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     enamel_defects = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
-    appliance = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+
+    #Section 3
     fluoride_water = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     fluoride_toothpaste = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     topical_fluoride = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     regular_checkups = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
+
+    #Section 4
     sealed_pits = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     restorative_procedures = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     enamel_change = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
@@ -33,6 +36,7 @@ class DentalScreening(models.Model):
     multiple_restorations = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     missing_teeth = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     
+    #Section 5
     teeth_data = models.JSONField()  #stores all tooth values as a dict
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -108,10 +112,5 @@ class DietaryScreening(models.Model):
     water = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
     water_timing = models.CharField(max_length=50, blank=True, null=True)
     water_glasses = models.CharField(max_length=20, blank=True, null=True)
-
-    # Section 12: Xylitol-containing Products
-    xylitol_products = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')])
-    xylitol_products_daily = models.CharField(max_length=20, blank=True, null=True)
-    xylitol_products_weekly = models.CharField(max_length=20, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
