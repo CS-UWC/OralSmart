@@ -47,5 +47,5 @@ class Command(BaseCommand):
             dental_screening = DentalScreening.objects.filter(patient_id=test_patient.pk).first()
             if dental_screening:
                 self.stdout.write(f"SA Citizen: {dental_screening.sa_citizen}")
-                self.stdout.write(f"Income: {dental_screening.income}")
+                self.stdout.write(f"Special Needs: {dental_screening.special_needs}")
                 self.stdout.write(f"Plaque: {dental_screening.plaque}")

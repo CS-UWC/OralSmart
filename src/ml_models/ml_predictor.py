@@ -19,8 +19,17 @@ class MLPRiskPredictor:
     """
     Multi-Layer Perceptron (MLP) Neural Network for oral health risk prediction.
     
-    This class implements a neural network model that predicts risk levels (high/low) 
+    This class implements a neural network model that predicts risk levels (low/medium/high) 
     based on dental assessment data, dietary information, and patient demographics.
+    
+    The model can work with:
+    - Only dental data
+    - Only dietary data  
+    - Both dental and dietary data
+    - Partial/missing data combinations
+    
+    Features include data availability indicators to help the model understand
+    when certain types of data are missing.
     """
     def __init__(self) -> None:
         self.model = None
@@ -28,31 +37,117 @@ class MLPRiskPredictor:
         self.is_trained = False
         self.model_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'risk_predictor.pkl')
         self.scaler_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'scaler.pkl')
-        self.feature_names = [
+        
+        # Define field categories as class attributes for reuse
+        self.dental_binary_fields = [
             'sa_citizen', 'special_needs', 'caregiver_treatment',
-            'sugar_meals', 'sugar_snacks', 'sugar_beverages',
             'appliance', 'plaque', 'dry_mouth', 'enamel_defects',
             'fluoride_water', 'fluoride_toothpaste', 'topical_fluoride',
             'regular_checkups', 'sealed_pits', 'restorative_procedures',
             'enamel_change', 'dentin_discoloration', 'white_spot_lesions',
+            'cavitated_lesions', 'multiple_restorations', 'missing_teeth'
+        ]
+        
+        self.dietary_yes_no_fields = [
+            'sweet_sugary_foods', 'sweet_sugary_foods_bedtime',
+            'takeaways_processed_foods',
+            'fresh_fruit', 'fresh_fruit_bedtime',
+            'cold_drinks_juices', 'cold_drinks_juices_bedtime',
+            'processed_fruit', 'processed_fruit_bedtime',
+            'spreads', 'spreads_bedtime',
+            'added_sugars', 'added_sugars_bedtime',
+            'salty_snacks',
+            'dairy_products',
+            'vegetables',
+            'water'
+        ]
+        
+        self.dietary_text_fields = [
+            'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly', 'sweet_sugary_foods_timing',
+            'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
+            'fresh_fruit_daily', 'fresh_fruit_weekly', 'fresh_fruit_timing',
+            'cold_drinks_juices_daily', 'cold_drinks_juices_weekly', 'cold_drinks_juices_timing',
+            'processed_fruit_daily', 'processed_fruit_weekly', 'processed_fruit_timing',
+            'spreads_daily', 'spreads_weekly', 'spreads_timing',
+            'added_sugars_daily', 'added_sugars_weekly', 'added_sugars_timing',
+            'salty_snacks_daily', 'salty_snacks_weekly', 'salty_snacks_timing',
+            'dairy_products_daily', 'dairy_products_weekly',
+            'vegetables_daily', 'vegetables_weekly',
+            'water_timing', 'water_glasses'
+        ]
+        
+        # Feature names mapping to assessment model fields
+        # DentalScreening model fields + calculated DMFT score + DietaryScreening model fields
+        self.feature_names = [
+            # Section 1 - DentalScreening Demographics
+            'sa_citizen', 'special_needs', 'caregiver_treatment',      
+
+            # Section 2 - DentalScreening Oral Health Status
+            'appliance', 'plaque', 'dry_mouth', 'enamel_defects',       
+
+            # Section 3 - DentalScreening Fluoride Exposure
+            'fluoride_water', 'fluoride_toothpaste', 'topical_fluoride', 'regular_checkups',
+            
+            # Section 4 - DentalScreening Clinical Findings
+            'sealed_pits', 'restorative_procedures',
+            'enamel_change', 'dentin_discoloration', 'white_spot_lesions',
             'cavitated_lesions', 'multiple_restorations', 'missing_teeth',
-            'income_0', 'income_1_2500', 'income_2501_5000',
-            'income_5000_10000', 'income_10001_20000', 'income_20001_40000',
-            'income_40001_70000', 'income_70001_plus',
-            'sweet_sugary_foods', 'cold_drinks_juices',
-            'takeaways_processed_foods', 'salty_snacks', 'spreads',
-            'total_dmft_score'
+
+            # Section 5 - DentalScreening Teeth Data (calculated DMFT score)
+            'total_dmft_score',
+
+            # DietaryScreening fields
+            # Section 1: Sweet/Sugary Foods
+            'sweet_sugary_foods', 'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly', 
+            'sweet_sugary_foods_timing', 'sweet_sugary_foods_bedtime',
+            
+            # Section 2: Take-aways and Processed Foods
+            'takeaways_processed_foods', 'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
+            
+            # Section 3: Fresh Fruit
+            'fresh_fruit', 'fresh_fruit_daily', 'fresh_fruit_weekly', 
+            'fresh_fruit_timing', 'fresh_fruit_bedtime',
+            
+            # Section 4: Cold Drinks, Juices and Flavoured Water and Milk
+            'cold_drinks_juices', 'cold_drinks_juices_daily', 'cold_drinks_juices_weekly',
+            'cold_drinks_juices_timing', 'cold_drinks_juices_bedtime',
+            
+            # Section 5: Processed Fruit
+            'processed_fruit', 'processed_fruit_daily', 'processed_fruit_weekly',
+            'processed_fruit_timing', 'processed_fruit_bedtime',
+            
+            # Section 6: Spreads
+            'spreads', 'spreads_daily', 'spreads_weekly', 'spreads_timing', 'spreads_bedtime',
+            
+            # Section 7: Added Sugars
+            'added_sugars', 'added_sugars_daily', 'added_sugars_weekly',
+            'added_sugars_timing', 'added_sugars_bedtime',
+            
+            # Section 8: Salty Snacks
+            'salty_snacks', 'salty_snacks_daily', 'salty_snacks_weekly', 'salty_snacks_timing',
+            
+            # Section 9: Dairy Products
+            'dairy_products', 'dairy_products_daily', 'dairy_products_weekly',
+            
+            # Section 10: Vegetables
+            'vegetables', 'vegetables_daily', 'vegetables_weekly',
+            
+            # Section 11: Water
+            'water', 'water_timing', 'water_glasses',
+            
+            # Data availability indicators
+            'has_dental_data', 'has_dietary_data'
         ]
         
         # Try to load existing model
         self.load_model()
 
-    def prepare_features(self, dental_data, dietary_data=None):
+    def prepare_features(self, dental_data=None, dietary_data=None):
         """
         Prepare features from dental and dietary data for ML prediction.
         
         Args:
-            dental_data: Object containing dental assessment data
+            dental_data: Optional object containing dental assessment data
             dietary_data: Optional object containing dietary assessment data
             
         Returns:
@@ -61,40 +156,43 @@ class MLPRiskPredictor:
         try:
             features = {}
 
-            # Yes/No → binary
-            binary_fields = [
-                'sa_citizen', 'special_needs', 'caregiver_treatment',
-                'sugar_meals', 'sugar_snacks', 'sugar_beverages',
-                'appliance', 'plaque', 'dry_mouth', 'enamel_defects',
-                'fluoride_water', 'fluoride_toothpaste', 'topical_fluoride',
-                'regular_checkups', 'sealed_pits', 'restorative_procedures',
-                'enamel_change', 'dentin_discoloration', 'white_spot_lesions',
-                'cavitated_lesions', 'multiple_restorations', 'missing_teeth'
-            ]
+            # Data availability indicators
+            has_dental_data = dental_data is not None
+            has_dietary_data = dietary_data is not None
+            features['has_dental_data'] = 1 if has_dental_data else 0
+            features['has_dietary_data'] = 1 if has_dietary_data else 0
 
-            for field in binary_fields:
-                value = getattr(dental_data, field, 'no')
-                features[field] = 1 if value == 'yes' else 0
+            # Handle dental data (can be None)
+            if dental_data:
+                for field in self.dental_binary_fields:
+                    value = getattr(dental_data, field, 'no')
+                    features[field] = 1 if value == 'yes' else 0
 
-            # Income one-hot encoding
-            income_categories = ['0', '1-2500', '2501-5000', '5000-10000',
-                               '10001-20000', '20001-40000', '40001-70000', '70001+']
-            for cat in income_categories:
-                key = f"income_{cat.replace('-', '_').replace('+', '_plus')}"
-                features[key] = 1 if dental_data.income == cat else 0
+                # DMFT score from teeth_data
+                features['total_dmft_score'] = self.calculate_dmft_score(dental_data.teeth_data)
+            else:
+                # Set all dental fields to 0 if no dental data provided
+                for field in self.dental_binary_fields:
+                    features[field] = 0
+                
+                # Set DMFT score to 0
+                features['total_dmft_score'] = 0
 
-            # DMFT score
-            features['total_dmft_score'] = self.calculate_dmft_score(dental_data.teeth_data)
-
-            # Dietary fields (optional)
+            # Handle dietary data (can be None)
             if dietary_data:
-                for field in ['sweet_sugary_foods', 'cold_drinks_juices',
-                            'takeaways_processed_foods', 'salty_snacks', 'spreads']:
+                # Process yes/no dietary fields
+                for field in self.dietary_yes_no_fields:
                     value = getattr(dietary_data, field, 'no')
                     features[field] = 1 if value == 'yes' else 0
+                
+                # Process text/quantity fields
+                for field in self.dietary_text_fields:
+                    value = getattr(dietary_data, field, None)
+                    features[field] = self._encode_frequency_quantity(value)
+                    
             else:
-                for field in ['sweet_sugary_foods', 'cold_drinks_juices',
-                            'takeaways_processed_foods', 'salty_snacks', 'spreads']:
+                # Set all dietary fields to 0 if no dietary data provided
+                for field in self.dietary_yes_no_fields + self.dietary_text_fields:
                     features[field] = 0
 
             # Convert to vector
@@ -109,7 +207,7 @@ class MLPRiskPredictor:
         Calculate DMFT (Decayed, Missing, Filled Teeth) score.
         
         Args:
-            teeth_data: Dictionary containing teeth status data
+            teeth_data: Dictionary containing teeth status data (can be None)
             
         Returns:
             int: DMFT score
@@ -162,9 +260,13 @@ class MLPRiskPredictor:
             X = df[self.feature_names].fillna(0)  # Fill missing values with 0
             y = df[target_column]
             
-            # Convert target to binary if needed (high risk = 1, low risk = 0)
+            # Convert target to 3-class if needed (low=0, medium=1, high=2)
             if y.dtype == 'object':
-                y = y.map({'high': 1, 'low': 0, 'High': 1, 'Low': 0})
+                y = y.map({
+                    'low': 0, 'Low': 0,
+                    'medium': 1, 'Medium': 1,
+                    'high': 2, 'High': 2
+                })
             
             # Split data
             X_train, X_test, y_train, y_test = train_test_split(
@@ -226,12 +328,12 @@ class MLPRiskPredictor:
             logger.error(f"Error training model from CSV: {str(e)}")
             raise ValueError(f"Failed to train model: {str(e)}")
     
-    def predict_risk(self, dental_data, dietary_data=None) -> Dict[str, Any]:
+    def predict_risk(self, dental_data=None, dietary_data=None) -> Dict[str, Any]:
         """
         Predict risk level for given patient data.
         
         Args:
-            dental_data: Object containing dental assessment data
+            dental_data: Optional object containing dental assessment data
             dietary_data: Optional object containing dietary assessment data
             
         Returns:
@@ -240,6 +342,10 @@ class MLPRiskPredictor:
         try:
             if not self.is_trained or self.model is None:
                 raise ValueError("Model is not trained. Please train the model first.")
+            
+            # Check that at least one type of data is provided
+            if dental_data is None and dietary_data is None:
+                raise ValueError("At least one of dental_data or dietary_data must be provided.")
             
             # Prepare features
             features = self.prepare_features(dental_data, dietary_data)
@@ -285,11 +391,16 @@ class MLPRiskPredictor:
                 logger.info("Model type doesn't provide feature importance scores")
                 top_features = [("Feature importance not available for this model type", 0.0)]
             
+            # Map prediction back to risk level
+            risk_levels = ['low', 'medium', 'high']
+            risk_level = risk_levels[prediction]
+            
             result = {
-                'risk_level': 'high' if prediction == 1 else 'low',
+                'risk_level': risk_level,
                 'confidence': float(max(prediction_proba)),
-                'probability_high_risk': float(prediction_proba[1] if len(prediction_proba) > 1 else 0),
                 'probability_low_risk': float(prediction_proba[0]),
+                'probability_medium_risk': float(prediction_proba[1] if len(prediction_proba) > 1 else 0),
+                'probability_high_risk': float(prediction_proba[2] if len(prediction_proba) > 2 else 0),
                 'top_risk_factors': top_features
             }
             
@@ -385,9 +496,13 @@ class MLPRiskPredictor:
             X_new = new_df[self.feature_names].fillna(0)
             y_new = new_df[target_column]
             
-            # Convert target to binary if needed
+            # Convert target to 3-class if needed
             if y_new.dtype == 'object':
-                y_new = y_new.map({'high': 1, 'low': 0, 'High': 1, 'Low': 0})
+                y_new = y_new.map({
+                    'low': 0, 'Low': 0,
+                    'medium': 1, 'Medium': 1,
+                    'high': 2, 'High': 2
+                })
             
             # If we have an existing model, we can either:
             # 1. Retrain from scratch with combined data
@@ -416,28 +531,41 @@ class MLPRiskPredictor:
             for _ in range(num_samples):
                 record = {}
                 
-                # Binary features (0 or 1)
+                # Handle different types of features
                 for feature in self.feature_names:
-                    if 'income_' in feature:
-                        continue  # Handle income separately
-                    elif feature == 'total_dmft_score':
+                    if feature == 'total_dmft_score':
                         record[feature] = random.randint(0, 32)  # Max 32 teeth
+                    elif feature in ['has_dental_data', 'has_dietary_data']:
+                        # Data availability indicators - simulate realistic scenarios
+                        if feature == 'has_dental_data':
+                            record[feature] = random.choice([0, 1])  # 50/50 chance
+                        else:  # has_dietary_data
+                            record[feature] = random.choice([0, 1])  # 50/50 chance
+                    elif any(suffix in feature for suffix in ['_daily', '_weekly', '_timing', '_glasses']):
+                        # Frequency/quantity fields (0-4 scale)
+                        record[feature] = random.randint(0, 4)
                     else:
+                        # Binary yes/no fields (0 or 1)
                         record[feature] = random.choice([0, 1])
                 
-                # Income (one-hot encoded, but only one should be 1)
-                income_features = [f for f in self.feature_names if f.startswith('income_')]
-                for feature in income_features:
-                    record[feature] = 0
-                
-                # Set one income category to 1
-                chosen_income = random.choice(income_features)
-                record[chosen_income] = 1
-                
                 # Add target variable (risk level)
-                # Simple rule: high risk if DMFT > 15 or multiple risk factors
-                risk_factors = sum([record[f] for f in self.feature_names if f not in income_features and f != 'total_dmft_score'])
-                if record['total_dmft_score'] > 15 or risk_factors > 10:
+                # Updated rule considering frequency fields and data availability
+                binary_risk_factors = sum([record[f] for f in self.feature_names 
+                                         if f != 'total_dmft_score' and 
+                                         f not in ['has_dental_data', 'has_dietary_data'] and
+                                         not any(suffix in f for suffix in ['_daily', '_weekly', '_timing', '_glasses'])])
+                frequency_risk_factors = sum([record[f] for f in self.feature_names 
+                                            if any(suffix in f for suffix in ['_daily', '_weekly', '_timing', '_glasses'])])
+                
+                # Consider data completeness in risk calculation
+                data_completeness = record['has_dental_data'] + record['has_dietary_data']
+                
+                total_risk_score = record['total_dmft_score'] + binary_risk_factors + (frequency_risk_factors * 0.5)
+                
+                # Higher threshold if less data is available (uncertainty factor)
+                risk_threshold = 20 if data_completeness == 2 else 15
+                
+                if record['total_dmft_score'] > 15 or total_risk_score > risk_threshold:
                     record['risk_level'] = 'high'
                 else:
                     record['risk_level'] = 'low'
@@ -454,3 +582,97 @@ class MLPRiskPredictor:
         except Exception as e:
             logger.error(f"Error creating sample data: {str(e)}")
             raise ValueError(f"Failed to create sample data: {str(e)}")
+    
+    def _encode_frequency_quantity(self, value):
+        """
+        Encode frequency/quantity text fields to numeric values.
+        
+        Args:
+            value: Text value representing frequency or quantity
+            
+        Returns:
+            int: Numeric encoding of the frequency/quantity
+        """
+        if not value or value is None or value == '':
+            return 0
+        
+        value = str(value).lower().strip()
+        
+        # Frequency mappings
+        frequency_map = {
+            'never': 0,
+            'rarely': 1,
+            'sometimes': 2,
+            'often': 3,
+            'daily': 4,
+            'always': 4,
+            
+            # Specific frequency terms
+            '1-2 times': 1,
+            '3-4 times': 2,
+            '5-6 times': 3,
+            '7+ times': 4,
+            
+            # Daily frequency
+            '0': 0,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5+': 5,
+            
+            # Weekly frequency  
+            '0 times': 0,
+            '1-2 times per week': 1,
+            '3-4 times per week': 2,
+            '5-6 times per week': 3,
+            'daily': 4,
+            
+            # Timing
+            'with meals': 1,
+            'between meals': 2,
+            'before bed': 3,
+            'anytime': 2,
+            
+            # Water glasses
+            '1-2 glasses': 1,
+            '3-4 glasses': 2,
+            '5-6 glasses': 3,
+            '7+ glasses': 4,
+            'throughout the day': 3,
+        }
+        
+        # Try exact match first
+        if value in frequency_map:
+            return frequency_map[value]
+        
+        # Try partial matches for common patterns
+        if any(term in value for term in ['never', 'no', 'none']):
+            return 0
+        elif any(term in value for term in ['rarely', 'seldom', '1-2']):
+            return 1
+        elif any(term in value for term in ['sometimes', 'occasionally', '3-4']):
+            return 2
+        elif any(term in value for term in ['often', 'frequently', '5-6']):
+            return 3
+        elif any(term in value for term in ['daily', 'always', 'every day', '7+']):
+            return 4
+        
+        # Try to extract numbers
+        import re
+        numbers = re.findall(r'\d+', value)
+        if numbers:
+            num = int(numbers[0])
+            if num == 0:
+                return 0
+            elif num <= 2:
+                return 1
+            elif num <= 4:
+                return 2
+            elif num <= 6:
+                return 3
+            else:
+                return 4
+        
+        # Default to moderate frequency if we can't parse
+        return 2

@@ -1,15 +1,29 @@
 # 🦷 OralSmart
 
-OralSmart is a Django web application that allows users to register patients, screen for dental/dietary conditions, and refer them for hospital treatment.
+OralSmart is a Django web application that allows users to register patients, screen for dental/dietary conditions, and predict oral health risk using machine learning.
 
 ## 🚀 Features
 
 - Patient Registration
 - Dental Screening
 - Dietary Screening
+- **AI-Powered Risk Assessment** (3-class: Low/Medium/High)
+- **Machine Learning Model Training**
 - Referral System
 - History & Reports
 - Admin Panel
+
+## 🧠 Documentation
+
+### For Everyone
+- 📖 **[How Risk Assessment Works](ORAL_HEALTH_RISK_EXPLAINED.md)** - Simple explanation of how the system determines oral health risk
+
+### For Healthcare Professionals  
+- 🏥 **[Clinical Algorithm Documentation](CLINICAL_ALGORITHM_DOCUMENTATION.md)** - Evidence-based clinical reasoning and algorithm details
+
+### For Developers
+- ⚙️ **[ML Model Training Guide](ML_EXPORT_README.md)** - Complete guide to training the machine learning model
+- 🔧 **[ML Predictor Documentation](ML_PREDICTOR_README.md)** - Technical ML implementation details
 
 ## 🛠️ Tech Stack
 

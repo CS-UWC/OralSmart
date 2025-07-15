@@ -399,10 +399,6 @@ def generate_pdf(request, patient_id):
                 
                 section1_data = [
                     f"<b>Caregiver treatment:</b> {dental_data.caregiver_treatment}",
-                    f"<b>Income:</b> {dental_data.income}",
-                    f"<b>Sugary meals:</b> {dental_data.sugar_meals}",
-                    f"<b>Sugar snacks:</b> {dental_data.sugar_snacks}",
-                    f"<b>Sugar beverages:</b> {dental_data.sugar_beverages}",
                     f"<b>South African Citizen:</b> {dental_data.sa_citizen}",
                     f"<b>Special needs:</b> {dental_data.special_needs}"
                 ]
@@ -804,10 +800,6 @@ def generate_pdf_buffer(patient, selected_sections):
             
             section1_data = [
                 f"<b>Caregiver treatment:</b> {dental_data.caregiver_treatment}",
-                f"<b>Income:</b> {dental_data.income}",
-                f"<b>Sugary meals:</b> {dental_data.sugar_meals}",
-                f"<b>Sugar snacks:</b> {dental_data.sugar_snacks}",
-                f"<b>Sugar beverages:</b> {dental_data.sugar_beverages}",
                 f"<b>South African Citizen:</b> {dental_data.sa_citizen}",
                 f"<b>Special needs:</b> {dental_data.special_needs}"
             ]

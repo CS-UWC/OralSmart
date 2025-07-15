@@ -18,8 +18,8 @@ def dental_screening(request, patient_id):
     primary_lower = ["85", "84", "83", "82", "81", "71", "72", "73", "74", "75"]
 
     required_fields = [
-        'caregiver_treatment', 'income', 'sugar_meals', 'sugar_snacks', 'sugar_beverages',
-        'sa_citizen', 'special_needs', 'plaque', 'dry_mouth', 'enamel_defects', 'appliance',
+        'sa_citizen', 'special_needs', 'caregiver_treatment',
+        'appliance', 'plaque', 'dry_mouth', 'enamel_defects',
         'fluoride_water', 'fluoride_toothpaste', 'topical_fluoride', 'regular_checkups',
         'sealed_pits', 'restorative_procedures', 'enamel_change', 'dentin_discoloration',
         'white_spot_lesions', 'cavitated_lesions', 'multiple_restorations', 'missing_teeth'
@@ -54,10 +54,6 @@ def dental_screening(request, patient_id):
                 patient=patient,
                 defaults={
                 'caregiver_treatment': request.POST.get('caregiver_treatment', ''),
-                'income': request.POST.get('income', ''),
-                'sugar_meals': request.POST.get('sugar_meals', ''),
-                'sugar_snacks': request.POST.get('sugar_snacks', ''),
-                'sugar_beverages': request.POST.get('sugar_beverages', ''),
                 'sa_citizen': request.POST.get('sa_citizen', ''),
                 'special_needs': request.POST.get('special_needs', ''),
                 'plaque': request.POST.get('plaque', ''),
@@ -83,8 +79,7 @@ def dental_screening(request, patient_id):
             if not created:
 
                 fields = [
-                    'caregiver_treatment', 'income', 'sugar_meals', 'sugar_snacks', 'sugar_beverages',
-                    'sa_citizen', 'special_needs', 'plaque', 'dry_mouth', 'enamel_defects', 'appliance',
+                    'caregiver_treatment', 'sa_citizen', 'special_needs', 'plaque', 'dry_mouth', 'enamel_defects', 'appliance',
                     'fluoride_water', 'fluoride_toothpaste', 'topical_fluoride', 'regular_checkups',
                     'sealed_pits', 'restorative_procedures', 'enamel_change', 'dentin_discoloration',
                     'white_spot_lesions', 'cavitated_lesions', 'multiple_restorations', 'missing_teeth'
