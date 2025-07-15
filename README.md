@@ -8,6 +8,8 @@ OralSmart is a Django web application that allows users to register patients, sc
 - Dental Screening
 - Dietary Screening
 - **AI-Powered Risk Assessment** (3-class: Low/Medium/High)
+- **Real-time ML Predictions in Reports**
+- **Professional vs Patient Report Versions**
 - **Machine Learning Model Training**
 - Referral System
 - History & Reports
@@ -24,6 +26,23 @@ OralSmart is a Django web application that allows users to register patients, sc
 ### For Developers
 - ⚙️ **[ML Model Training Guide](ML_EXPORT_README.md)** - Complete guide to training the machine learning model
 - 🔧 **[ML Predictor Documentation](ML_PREDICTOR_README.md)** - Technical ML implementation details
+- 🤖 **[AI Integration Guide](AI_INTEGRATION_GUIDE.md)** - Complete guide to AI risk assessment in reports
+
+## 🧪 Testing & Validation
+
+The system includes comprehensive testing tools for ML and report functionality:
+
+```bash
+# Test ML predictions with real patient data
+python test_3class_predictions.py
+
+# Test AI integration in reports (patient vs professional versions)
+cd src && python manage.py test_ai_integration
+
+# Export training data and train models
+cd src && python manage.py export_training_data
+cd src && python manage.py train_ml_model training_data.csv
+```
 
 ## 🛠️ Tech Stack
 
@@ -167,3 +186,155 @@ class TestPatientViews(TestCase):
 ```
 
 This factory system enables rapid generation of comprehensive test datasets for both development testing and machine learning model training.
+
+## 🧪 Quick Factory Usage Example
+
+Here's a practical example of using factories to test your 3-class ML system:
+
+```python
+# Open Django shell
+python manage.py shell
+
+# Generate test data and train the ML model
+from patient.factory import PatientWithAssessmentsFactory
+from ml_models.ml_predictor import MLPRiskPredictor
+
+# 1. Generate realistic test patients
+print("🏭 Creating test patients...")
+test_patients = PatientWithAssessmentsFactory.create_batch(500)
+print(f"✅ Created {len(test_patients)} patients with assessments")
+
+# 2. Export data for ML training
+from export_training_data import export_to_csv
+export_to_csv('test_training_data.csv')
+print("✅ Training data exported")
+
+# 3. Train the ML model
+predictor = MLPRiskPredictor()
+results = predictor.train_from_csv('test_training_data.csv')
+print(f"🧠 Model trained with {results['test_accuracy']:.1%} accuracy")
+
+# 4. Test prediction on a new patient
+new_patient = PatientWithAssessmentsFactory()
+dental_data = new_patient.dental_screenings.first()
+dietary_data = new_patient.dietary_screenings.first()
+
+prediction = predictor.predict_risk(dental_data, dietary_data)
+print(f"🎯 Prediction: {prediction['risk_level']} risk ({prediction['confidence']:.1%} confidence)")
+```
+
+This example demonstrates the complete workflow from data generation to ML prediction using the factory system.
+
+## 💻 Terminal Commands for Factory Usage
+
+You can also run factory commands directly from the terminal without opening the Django shell:
+
+### Quick Data Generation Commands
+
+```bash
+# Navigate to src directory first
+cd src
+
+# Generate 100 patients with assessments
+python manage.py shell -c "
+from patient.factory import PatientWithAssessmentsFactory
+patients = PatientWithAssessmentsFactory.create_batch(100)
+print(f'Created {len(patients)} patients with assessments')
+"
+
+# Export training data and train ML model
+python manage.py shell -c "
+from export_training_data import export_to_csv
+from ml_models.ml_predictor import MLPRiskPredictor
+export_to_csv('quick_training.csv')
+predictor = MLPRiskPredictor()
+results = predictor.train_from_csv('quick_training.csv')
+print(f'Model trained with {results[\"test_accuracy\"]:.1%} accuracy')
+"
+
+# Test a single prediction
+python manage.py shell -c "
+from patient.factory import PatientWithAssessmentsFactory
+from ml_models.ml_predictor import MLPRiskPredictor
+patient = PatientWithAssessmentsFactory()
+predictor = MLPRiskPredictor()
+dental = patient.dental_screenings.first()
+dietary = patient.dietary_screenings.first()
+prediction = predictor.predict_risk(dental, dietary)
+print(f'Prediction: {prediction[\"risk_level\"]} risk ({prediction[\"confidence\"]:.1%} confidence)')
+"
+```
+
+### Batch Processing Commands
+
+```bash
+# Generate large datasets in batches (PowerShell/Command Prompt)
+for /L %i in (1,1,10) do python manage.py shell -c "from patient.factory import PatientWithAssessmentsFactory; PatientWithAssessmentsFactory.create_batch(100); print('Batch %i completed')"
+
+# For Bash/Linux/Mac
+for i in {1..10}; do python manage.py shell -c "from patient.factory import PatientWithAssessmentsFactory; PatientWithAssessmentsFactory.create_batch(100); print(f'Batch $i completed')"; done
+```
+
+These terminal commands let you quickly generate test data and train models without interactive shell sessions.
+
+## 🤖 AI Risk Assessment in Reports
+
+OralSmart includes **real-time AI risk assessment integration** in the report system, providing clinical decision support for healthcare professionals while maintaining patient privacy.
+
+### Report Versions
+
+#### 👥 Patient Reports (Browser & Email)
+- **Clean, patient-friendly reports** without AI risk classifications
+- Focus on screening data and basic information
+- No technical risk scores or medical recommendations
+- Suitable for patient understanding and peace of mind
+
+#### 🏥 Professional Reports (Email to Healthcare Providers)
+- **Enhanced reports with full AI risk assessment**
+- Includes risk level classification (Low/Medium/High)
+- Confidence scores and probability breakdowns
+- Color-coded clinical recommendations
+- Professional subject line with `[PROFESSIONAL]` prefix
+- Designed for clinical decision support
+
+### How It Works
+
+1. **Patient Views Report**: Clean version without AI assessment
+2. **Patient Receives Email**: Same clean version without AI risk data
+3. **Healthcare Providers (CC)**: Receive separate enhanced report with AI analysis
+
+### Email Workflow
+
+```
+Patient Email: "OralSmart Dental Report - John Doe"
+├── Clean PDF without AI assessment
+└── Patient-friendly formatting
+
+Professional Email: "[PROFESSIONAL] OralSmart Dental Report - John Doe" 
+├── Enhanced PDF with AI risk assessment
+├── Risk level, confidence, and probabilities
+├── Clinical recommendations
+└── Decision support information
+```
+
+### AI Assessment Features
+
+- **3-Class Risk Prediction**: Low, Medium, High risk levels
+- **Confidence Scoring**: Model certainty percentage
+- **Probability Breakdown**: Individual class probabilities
+- **Clinical Recommendations**: Actionable guidance based on risk level
+- **Color-Coded Display**: Visual risk level indicators
+
+### Testing the Integration
+
+```bash
+# Test AI integration in reports
+cd src
+python manage.py test_ai_integration
+
+# View test output including:
+# ✅ ML prediction functionality
+# ✅ Patient PDF generation (without AI)
+# ✅ Professional PDF generation (with AI)
+# ✅ ML model status verification
+```

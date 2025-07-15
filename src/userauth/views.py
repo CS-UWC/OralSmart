@@ -126,7 +126,7 @@ def activateEmail(request, user, to_email):
 
     if email.send():
 
-        messages.success(request, f'Dear <b>{user}</b>, please go to your email <b>{to_email}</b> inbox and click on \
+        messages.success(request, f'Dear {user}, please go to your email {to_email} inbox and click on \
                         received activation link to confirm and complete the registration process.')
         
     else:

@@ -20,7 +20,58 @@ from django.conf import settings
 import logging
 import os
 
+# Import ML predictor
+from ml_models.ml_predictor import MLPRiskPredictor
+
 logger = logging.getLogger(__name__)
+
+def get_ml_risk_prediction(dental_data, dietary_data):
+    """Get ML risk prediction for a patient"""
+    try:
+        # Initialize ML predictor
+        predictor = MLPRiskPredictor()
+        
+        # Check if model is trained
+        if not predictor.is_trained:
+            return {
+                'risk_level': 'Unknown',
+                'confidence': 0.0,
+                'probability_low_risk': 0.0,
+                'probability_medium_risk': 0.0,
+                'probability_high_risk': 0.0,
+                'error': 'ML model not trained',
+                'available': False
+            }
+        
+        # Get prediction
+        prediction = predictor.predict_risk(dental_data, dietary_data)
+        prediction['available'] = True
+        prediction['error'] = None
+        
+        return prediction
+        
+    except Exception as e:
+        logger.error(f"ML prediction error: {e}")
+        return {
+            'risk_level': 'Error',
+            'confidence': 0.0,
+            'probability_low_risk': 0.0,
+            'probability_medium_risk': 0.0,
+            'probability_high_risk': 0.0,
+            'error': str(e),
+            'available': False
+        }
+
+def get_risk_color(risk_level):
+    """Get color for risk level"""
+    colors_map = {
+        'low': HexColor('#28a745'),      # Green
+        'medium': HexColor('#ffc107'),   # Yellow/Orange
+        'high': HexColor('#dc3545'),     # Red
+        'unknown': HexColor('#6c757d'),  # Gray
+        'error': HexColor('#6c757d')     # Gray
+    }
+    return colors_map.get(risk_level.lower(), HexColor('#6c757d'))
 
 class CustomPageTemplate:
     """Custom page template with blue borders and logo"""
@@ -353,6 +404,9 @@ def generate_pdf(request, patient_id):
         story.append(screening_table)
         story.append(Spacer(1, 12))
         
+        # Note: AI Risk Assessment is only included in professional reports sent to healthcare providers
+        # The patient-facing report does not include AI risk classification for privacy and clarity
+        
         # Helper function to create data tables
         def create_data_table(data_list):
             """Create a styled table for section data"""
@@ -591,8 +645,8 @@ def send_report_email(request, patient_id):
             'section1', 'section2', 'section3', 'section4', 'section5'
         ])
         
-        # Generate PDF report
-        pdf_buffer = generate_pdf_buffer(patient, selected_sections)
+        # Generate PDF report for patient (without AI risk assessment)
+        pdf_buffer_patient = generate_pdf_buffer(patient, selected_sections, include_ai_assessment=False)
         
         # Create email context
         email_context = {
@@ -609,25 +663,42 @@ def send_report_email(request, patient_id):
         html_message = render_to_string('reports/email_template.html', email_context)
         plain_message = strip_tags(html_message)
         
-        # Create email
-        email = EmailMessage(
+        # Create email for patient (without AI assessment)
+        patient_email = EmailMessage(
             subject=subject,
             body=plain_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[recipient_email],
-            cc=cc_list,
         )
         
-        # Attach PDF
-        filename = f"dental_report_{patient.name}_{patient.surname}_{patient_id}.pdf"
-        email.attach(filename, pdf_buffer.getvalue(), 'application/pdf')
+        # Attach patient PDF (without AI assessment)
+        patient_filename = f"dental_report_{patient.name}_{patient.surname}_{patient_id}.pdf"
+        patient_email.attach(patient_filename, pdf_buffer_patient.getvalue(), 'application/pdf')
         
-        # Send email
-        email.send()
+        # Send patient email
+        patient_email.send()
+        logger.info(f"Patient report email sent for patient {patient_id} to {recipient_email}")
         
-        logger.info(f"Report email sent for patient {patient_id} to {recipient_email}")
+        # Send separate email to health professionals with AI assessment if CC recipients exist
         if cc_list:
-            logger.info(f"CC recipients: {', '.join(cc_list)}")
+            # Generate PDF report for professionals (with AI risk assessment)
+            pdf_buffer_professional = generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True)
+            
+            # Create email for health professionals (with AI assessment)
+            professional_email = EmailMessage(
+                subject=f"[PROFESSIONAL] {subject}",
+                body=plain_message + "\n\nNote: This professional version includes AI risk assessment for clinical decision support.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=cc_list,
+            )
+            
+            # Attach professional PDF (with AI assessment)
+            professional_filename = f"dental_report_professional_{patient.name}_{patient.surname}_{patient_id}.pdf"
+            professional_email.attach(professional_filename, pdf_buffer_professional.getvalue(), 'application/pdf')
+            
+            # Send professional email
+            professional_email.send()
+            logger.info(f"Professional report email sent for patient {patient_id} to CC recipients: {', '.join(cc_list)}")
         
         return HttpResponse('Email sent successfully', status=200)
         
@@ -635,7 +706,7 @@ def send_report_email(request, patient_id):
         logger.error(f"Error sending email: {str(e)}")
         return HttpResponse(f'Error sending email: {str(e)}', status=500)
 
-def generate_pdf_buffer(patient, selected_sections):
+def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True):
     """Generate PDF buffer for email attachment"""
     try:
         dental_data = DentalScreening.objects.get(patient_id=patient.id)
@@ -791,6 +862,99 @@ def generate_pdf_buffer(patient, selected_sections):
     story.append(Paragraph("Available Screening Data", heading_style))
     story.append(Paragraph(f"<b>Completed Screenings:</b> {', '.join(available_screenings)}", normal_style))
     story.append(Spacer(1, 12))
+    
+    # Add ML Risk Assessment Section for Email PDF (only for professionals)
+    if include_ai_assessment and (dental_data or dietary_data):
+        story.append(Paragraph("AI Risk Assessment", heading_style))
+        
+        # Get ML prediction
+        ml_prediction = get_ml_risk_prediction(dental_data, dietary_data)
+        
+        if ml_prediction['available']:
+            # Create risk level display with color coding
+            risk_color = get_risk_color(ml_prediction['risk_level'])
+            
+            # Format confidence as percentage
+            confidence_pct = f"{ml_prediction['confidence']:.1f}%"
+            
+            # Create risk assessment table
+            risk_data = [
+                [Paragraph(f"<b>Risk Level:</b>", normal_style),
+                 Paragraph(f"<b>{ml_prediction['risk_level'].upper()}</b>", ParagraphStyle(
+                     'RiskLevel',
+                     parent=normal_style,
+                     fontSize=12,
+                     fontName='Helvetica-Bold',
+                     textColor=risk_color
+                 ))],
+                [Paragraph(f"<b>Confidence:</b>", normal_style),
+                 Paragraph(f"{confidence_pct}", normal_style)],
+                [Paragraph(f"<b>Low Risk Probability:</b>", normal_style),
+                 Paragraph(f"{ml_prediction['probability_low_risk']:.1f}%", normal_style)],
+                [Paragraph(f"<b>Medium Risk Probability:</b>", normal_style),
+                 Paragraph(f"{ml_prediction['probability_medium_risk']:.1f}%", normal_style)],
+                [Paragraph(f"<b>High Risk Probability:</b>", normal_style),
+                 Paragraph(f"{ml_prediction['probability_high_risk']:.1f}%", normal_style)]
+            ]
+            
+            risk_table = Table(risk_data, colWidths=[2.5*inch, 3.5*inch])
+            risk_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#F8F9FA')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, blue_color),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                # Highlight the risk level row
+                ('BACKGROUND', (0, 0), (1, 0), HexColor('#E3F2FD')),
+            ]))
+            story.append(risk_table)
+            
+            # Add clinical recommendations based on risk level
+            risk_level = ml_prediction['risk_level'].lower()
+            if risk_level == 'high':
+                recommendation_text = "⚠️ <b>HIGH RISK:</b> Immediate dental intervention recommended. Schedule comprehensive examination and treatment planning."
+                rec_color = HexColor('#dc3545')
+            elif risk_level == 'medium':
+                recommendation_text = "⚡ <b>MEDIUM RISK:</b> Regular monitoring recommended. Schedule follow-up in 3-6 months."
+                rec_color = HexColor('#ffc107')
+            else:
+                recommendation_text = "✅ <b>LOW RISK:</b> Continue preventive care. Regular dental check-ups recommended."
+                rec_color = HexColor('#28a745')
+            
+            recommendation_style = ParagraphStyle(
+                'Recommendation',
+                parent=normal_style,
+                fontSize=11,
+                fontName='Helvetica-Bold',
+                textColor=rec_color,
+                borderWidth=2,
+                borderColor=rec_color,
+                borderPadding=10,
+                backColor=HexColor('#FFFFFF'),
+                spaceAfter=12
+            )
+            
+            story.append(Spacer(1, 8))
+            story.append(Paragraph(recommendation_text, recommendation_style))
+            
+        else:
+            # ML prediction not available
+            error_text = f"AI Risk Assessment: {ml_prediction.get('error', 'Not available')}"
+            story.append(Paragraph(error_text, ParagraphStyle(
+                'ErrorStyle',
+                parent=normal_style,
+                fontSize=11,
+                textColor=HexColor('#6c757d'),
+                fontStyle='italic'
+            )))
+        
+        story.append(Spacer(1, 12))
     
     # Include dental screening sections if dental data exists
     if dental_data:

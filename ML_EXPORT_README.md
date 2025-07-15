@@ -87,6 +87,31 @@ With `--risk-threshold 15`:
 - Medium Risk: 39.7% (2,778 patients)
 - High Risk: 42.0% (2,946 patients)
 
+### Choosing the Right Threshold
+
+The risk threshold determines how strict your risk classification will be. Here's how to choose:
+
+#### 🎯 **By Use Case:**
+- **Clinical Practice**: Threshold 8-12 (balanced sensitivity/specificity)
+- **ML Model Training**: Threshold 15 (optimal class balance)
+- **Preventive Screening**: Threshold 6-8 (catch more potential cases)
+- **Resource Allocation**: Threshold 18-20 (focus on clear high-risk patients)
+
+#### 📊 **Expected Distributions:**
+- **Threshold 6**: ~70-80% high risk (very conservative)
+- **Threshold 8**: ~50-60% high risk (standard clinical)
+- **Threshold 15**: ~35-45% high risk (balanced for ML)
+- **Threshold 20**: ~15-25% high risk (strict)
+
+#### 🧪 **Testing Process:**
+1. Generate test data: `PatientWithAssessmentsFactory.create_batch(1000)`
+2. Test thresholds: `python manage.py export_training_data --dry-run --risk-threshold 15`
+3. Look for ideal distribution: 15-25% low, 35-45% medium, 35-45% high
+4. Export and train with your chosen threshold
+
+#### 💡 **Quick Recommendation:**
+For most users, **threshold 15** provides the best balance for ML training and clinical relevance.
+
 ## Output Format
 
 The generated CSV will include:
