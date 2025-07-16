@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.db.models import Q
+from django.core.paginator import Paginator
 from .forms import PatientForm
 from .models import Patient
 from django.contrib import messages
@@ -91,13 +92,39 @@ def create_patient(request):
 
 @login_required
 def patient_list_view(request):
-    """View to display all patients created by the current user"""
-    # Only show patients created by the current user
-    patients = Patient.objects.filter(created_by=request.user).order_by('-id')
+    """View to display all patients created by the current user with search functionality"""
+    # Get search query from GET parameters
+    search_query = request.GET.get('search', '').strip()
+    
+    # Base queryset - only show patients created by the current user
+    patients = Patient.objects.filter(created_by=request.user)
+    
+    # Apply search filter if search query exists
+    if search_query:
+        patients = patients.filter(
+            Q(name__icontains=search_query) |
+            Q(surname__icontains=search_query) |
+            Q(parent_id__icontains=search_query) |
+            Q(parent_contact__icontains=search_query) #|
+            # Q(parent_name__icontains=search_query) |
+            # Q(parent_surname__icontains=search_query)
+        )
+    
+    # Order by most recent
+    patients = patients.order_by('-id')
+    
+    # Pagination - 10 patients per page
+    paginator = Paginator(patients, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
     context = {
-        'patients': patients,
+        'patients': page_obj,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+        'search_query': search_query,
         'show_navbar': True,
+        'total_patients': paginator.count,
     }
     
     return render(request, "patient/patient_list.html", context)

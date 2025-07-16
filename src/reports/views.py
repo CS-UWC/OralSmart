@@ -17,6 +17,7 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+from userprofile.models import Profile
 import logging
 import os
 
@@ -377,6 +378,53 @@ def generate_pdf(request, patient_id):
         story.append(patient_table)
         story.append(Spacer(1, 12))
         
+        # Health Professional Information
+        if request.user.is_authenticated:
+            try:
+                health_professional = request.user
+                profile = Profile.objects.get(user=health_professional)
+                profession_display = dict(Profile.PROFESSIONS).get(profile.profession, profile.profession.replace('_', ' ').title())
+                
+                story.append(Paragraph("Health Professional Information", heading_style))
+                
+                professional_data = [
+                    [Paragraph(f"<b>Name:</b> {health_professional.first_name}", normal_style), 
+                     Paragraph(f"<b>Surname:</b> {health_professional.last_name}", normal_style)],
+                    [Paragraph(f"<b>Profession:</b> {profession_display}", normal_style), 
+                     Paragraph(f"<b>Registration No:</b> {profile.reg_num}", normal_style)]
+                ]
+                
+                professional_table = Table(professional_data, colWidths=[3*inch, 3*inch])
+                professional_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), HexColor('#E8F4FD')),
+                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('GRID', (0, 0), (-1, -1), 1, blue_color),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ]))
+                story.append(professional_table)
+                story.append(Spacer(1, 12))
+                
+            except Profile.DoesNotExist:
+                # If no profile exists, show basic user information
+                health_professional = request.user
+                story.append(Paragraph("Health Professional Information", heading_style))
+                professional_info = f"<b>Health Professional:</b> {health_professional.first_name} {health_professional.last_name}"
+                if health_professional.email:
+                    professional_info += f" ({health_professional.email})"
+                story.append(Paragraph(professional_info, normal_style))
+                story.append(Spacer(1, 12))
+            except Exception:
+                # If other error, skip this section
+                pass
+        
+        
         # Add screening availability info with styled display
         available_screenings = []
         if dental_data:
@@ -646,7 +694,7 @@ def send_report_email(request, patient_id):
         ])
         
         # Generate PDF report for patient (without AI risk assessment)
-        pdf_buffer_patient = generate_pdf_buffer(patient, selected_sections, include_ai_assessment=False)
+        pdf_buffer_patient = generate_pdf_buffer(patient, selected_sections, include_ai_assessment=False, user=request.user)
         
         # Create email context
         email_context = {
@@ -682,7 +730,7 @@ def send_report_email(request, patient_id):
         # Send separate email to health professionals with AI assessment if CC recipients exist
         if cc_list:
             # Generate PDF report for professionals (with AI risk assessment)
-            pdf_buffer_professional = generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True)
+            pdf_buffer_professional = generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, user=request.user)
             
             # Create email for health professionals (with AI assessment)
             professional_email = EmailMessage(
@@ -706,7 +754,7 @@ def send_report_email(request, patient_id):
         logger.error(f"Error sending email: {str(e)}")
         return HttpResponse(f'Error sending email: {str(e)}', status=500)
 
-def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True):
+def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, user=None):
     """Generate PDF buffer for email attachment"""
     try:
         dental_data = DentalScreening.objects.get(patient_id=patient.id)
@@ -851,6 +899,50 @@ def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True):
     ]))
     story.append(patient_table)
     story.append(Spacer(1, 12))
+    
+    # Health Professional Information
+    if user and user.is_authenticated:
+        try:
+            profile = Profile.objects.get(user=user)
+            profession_display = dict(Profile.PROFESSIONS).get(profile.profession, profile.profession.replace('_', ' ').title())
+            
+            story.append(Paragraph("Health Professional Information", heading_style))
+            
+            professional_data = [
+                [Paragraph(f"<b>Name:</b> {user.first_name}", normal_style), 
+                 Paragraph(f"<b>Surname:</b> {user.last_name}", normal_style)],
+                [Paragraph(f"<b>Profession:</b> {profession_display}", normal_style), 
+                 Paragraph(f"<b>Registration No:</b> {profile.reg_num}", normal_style)]
+            ]
+            
+            professional_table = Table(professional_data, colWidths=[3*inch, 3*inch])
+            professional_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#E8F4FD')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, blue_color),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            story.append(professional_table)
+            story.append(Spacer(1, 12))
+            
+        except Profile.DoesNotExist:
+            # If no profile exists, show basic user information
+            story.append(Paragraph("Health Professional Information", heading_style))
+            professional_info = f"<b>Health Professional:</b> {user.first_name} {user.last_name}"
+            if user.email:
+                professional_info += f" ({user.email})"
+            story.append(Paragraph(professional_info, normal_style))
+            story.append(Spacer(1, 12))
+        except Exception:
+            # If other error, skip this section
+            pass
     
     # Add screening availability info
     available_screenings = []

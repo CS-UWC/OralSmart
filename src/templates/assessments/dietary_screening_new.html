@@ -18,16 +18,6 @@
             </div>
         {% endfor %}
     {% endif %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
-                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                bsAlert.close();
-            });
-        }, 5000);
-    });
-    </script>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -98,6 +88,137 @@
         }
         .required-asterisk {
             color: red;
+            font-weight: bold;
+        }
+
+        /* Frequency question display and interaction styles */
+        .risk-question .question-text.mt-3,
+        .risk-question .question-text:not(:first-child),
+        .risk-question .d-flex.mt-2,
+        .risk-question .d-flex.gap-3.mt-2,
+        .risk-question .d-flex.flex-wrap.gap-3.mt-2,
+        .risk-question .d-flex.flex-wrap.gap-3:not(.main-yes-no) {
+            display: block;
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .risk-question .d-flex.flex-wrap.gap-3.mt-2,
+        .risk-question .d-flex.flex-wrap.gap-3:not(.main-yes-no) {
+            display: flex !important;
+        }
+
+        /* Disabled frequency questions styling */
+        .risk-question.disable-frequency .question-text.mt-3,
+        .risk-question.disable-frequency .question-text:not(:first-child),
+        .risk-question.disable-frequency .d-flex.mt-2,
+        .risk-question.disable-frequency .d-flex.gap-3.mt-2,
+        .risk-question.disable-frequency .d-flex.flex-wrap.gap-3.mt-2,
+        .risk-question.disable-frequency .d-flex.flex-wrap.gap-3:not(.main-yes-no) {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .risk-question.disable-frequency input[type="checkbox"]:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .risk-question.disable-frequency label {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Always show main yes/no questions */
+        .risk-question .question-text:first-child,
+        .risk-question .d-flex.align-items-center.gap-3:first-of-type,
+        .risk-question .d-flex.align-items-center.gap-3.main-yes-no {
+            display: block !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .risk-question .d-flex.align-items-center.gap-3:first-of-type,
+        .risk-question .d-flex.align-items-center.gap-3.main-yes-no {
+            display: flex !important;
+        }
+
+        .risk-question .d-flex.align-items-center.gap-3:first-of-type input[type="checkbox"],
+        .risk-question .d-flex.align-items-center.gap-3.main-yes-no input[type="checkbox"],
+        .risk-question .d-flex.align-items-center.gap-3:first-of-type label,
+        .risk-question .d-flex.align-items-center.gap-3.main-yes-no label {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+
+        /* Special cases for Water and other sections */
+        .risk-question .d-flex.flex-wrap.gap-3:not(.mt-2):not(.main-yes-no) {
+            display: flex !important;
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .risk-question.disable-frequency .d-flex.flex-wrap.gap-3:not(.mt-2):not(.main-yes-no) {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Validation and UI feedback */
+        .border-danger {
+            border-color: #dc3545 !important;
+            border-width: 2px !important;
+        }
+
+        .accordion-button.disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Example links */
+        .view-examples {
+            color: #0d6efd;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .view-examples:hover {
+            color: #0a58ca;
+        }
+
+        /* Checkbox styling */
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin: 0;
+        }
+
+        /* Risk category styling */
+        .high-risk {
+            border-left: 4px solid #dc3545;
+            padding-left: 1rem;
+        }
+
+        .moderate-risk {
+            border-left: 4px solid #fd7e14;
+            padding-left: 1rem;
+        }
+
+        .low-risk {
+            border-left: 4px solid #ffc107;
+            padding-left: 1rem;
+        }
+
+        .protective {
+            border-left: 4px solid #198754;
+            padding-left: 1rem;
         }
     </style>
 </head>
@@ -133,9 +254,8 @@
                         <div class="accordion-body">
 
                             <div class="risk-question high-risk">
-                                <div class="question-text">1. Does the child consume SWEET OR SUGARY FOODS such as sweets, sugary gum, chocolates, cakes, muffins, doughnuts, biscuits, sugary rusks, pudding, ice-cream, koeksisters, Milo, hot chocolate etc.?
+                                <div class="question-text">1. Does the child consume SWEET OR SUGARY FOODS such as sweets, sugary gum, chocolates, cakes, muffins, doughnuts, biscuits, sugary rusks, pudding, ice-cream, koeksisters, etc.?
                                     <span class="required-asterisk">*</span>
-                                    <a href="#" class="view-examples ms-2" data-example="sugarSnacks">View Examples</a>
                                 </div>
                                 <div class="d-flex align-items-center gap-3 main-yes-no">
                                     <div class="checkbox-item">
@@ -209,6 +329,11 @@
                                         <label for="sweet_bedtime_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="sugarSnacks">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionTwo">Next Section</button>
@@ -229,7 +354,6 @@
                             <div class="risk-question high-risk">
                                 <div class="question-text">2. Does the child consume TAKE-AWAYS AND PROCESSED FOODS such as; KFC (deep fried chicken), McDonalds, Romans Pizza, Debonairs, Wimpy, Hungry Lion or processed foods such as; potato chips, corn chips, hot chips, etc.?
                                     <span class="required-asterisk">*</span>
-                                    <a href="#" class="view-examples ms-2" data-example="processedFoods">View Examples</a>
                                 </div>
                                 <div class="d-flex align-items-center gap-3 main-yes-no">
                                     <div class="checkbox-item">
@@ -275,6 +399,11 @@
                                         <label for="takeaways_4_6_week">4-6 times/week</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="processedFoods">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionThree">Next Section</button>
@@ -295,7 +424,6 @@
                             <div class="risk-question protective">
                                 <div class="question-text">3. Does the child consume FRESH FRUIT such as apples, bananas, oranges, grapes, mangoes, pears, berries, etc.?
                                     <span class="required-asterisk">*</span>
-                                    <a href="#" class="view-examples ms-2" data-example="freshFruit">View Examples</a>
                                 </div>
                                 <div class="d-flex align-items-center gap-3 main-yes-no">
                                     <div class="checkbox-item">
@@ -369,6 +497,11 @@
                                         <label for="fruit_bedtime_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="freshFruit">View Examples</a></small>
+                                </div>
+
                             </div>
 
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionFour">Next Section</button>
@@ -380,15 +513,14 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingFour">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sectionFour" aria-expanded="false" aria-controls="sectionFour">
-                            Section 4: COLD DRINKS, JUICES AND FLAVOURED WATER AND MILK
+                            Section 4: COLD DRINKS, JUICES AND FLAVOURED WATER AND FLAVOURED MILK
                         </button>
                     </h2>
                     <div id="sectionFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#questionnaireAccordion">
                         <div class="accordion-body">
                             <div class="risk-question high-risk">
-                                <div class="question-text">4. Does the child consume COLD DRINKS, JUICES AND FLAVOURED WATER AND MILK, cool drinks such as; Coca-Cola, Tweezer, Sprite, Kingsley, Grapetiser, Appletiser or juices such as; LiquiFruit, Cappy, Tropika, Krush, Sir Fruit or flavoured water such as; Bonaqua, Aqualle, Thirsti, flavoured milk such as chocolate milk, strawberry milk, etc.?
+                                <div class="question-text">4. Does the child consume COLD DRINKS, JUICES AND FLAVOURED WATER AND FLAVOURED MILK, cool drinks such as; Coca-Cola, Tweezer, Sprite, Kingsley, Grapetiser, Appletiser or juices such as; LiquiFruit, Cappy, Tropika, Krush, Sir Fruit or flavoured water such as; Bonaqua, Aqualle, Thirsti, flavoured milk such as chocolate milk, strawberry milk, Hot sugary drinks such as , Milo or hot chocolate  etc.?
                                     <span class="required-asterisk">*</span>
-                                    <a href="#" class="view-examples ms-2" data-example="coldDrinks">View Examples</a>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="checkbox-item">
@@ -462,6 +594,11 @@
                                         <label for="cold_drinks_bedtime_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="coldDrinks">View Examples</a></small>
+                                </div>
+
                             </div>
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionFive">Next Section</button>
                         </div>
@@ -553,6 +690,11 @@
                                         <label for="processed_fruit_bedtime_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="processedFruit">View Examples</a></small>
+                                </div>
+
                             </div>
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionSix">Next Section</button>
                         </div>
@@ -644,6 +786,11 @@
                                         <label for="spreads_bedtime_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="spreads">View Examples</a></small>
+                                </div>
+
                             </div>
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionSeven">Next Section</button>
                         </div>
@@ -735,6 +882,11 @@
                                         <label for="added_sugars_bedtime_no">No</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="addedSugars">View Examples</a></small>
+                                </div>
+
                             </div>
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionEight">Next Section</button>
                         </div>
@@ -814,6 +966,11 @@
                                         <label for="salty_snacks_both">Both</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="saltySnacks">View Examples</a></small>
+                                </div>
+
                             </div>
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionNine">Next Section</button>
                         </div>
@@ -831,7 +988,6 @@
                         <div class="accordion-body">
                             <div class="risk-question low-risk">
                                 <div class="question-text">9. Does the child regularly consume DAIRY PRODUCTS such as plain milk, unsweetened yoghurt, cheese, amasi, etc.?<span class="required-asterisk">*</span>
-                                    <a href="#" class="view-examples ms-2" data-example="dairy">View Examples</a>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="checkbox-item">
@@ -874,6 +1030,11 @@
                                         <label for="dairy_4_6_week">4-6 times/week</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="dairy">View Examples</a></small>
+                                </div>
+
                             </div>
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionTen">Next Section</button>
                         </div>
@@ -932,6 +1093,11 @@
                                         <label for="vegetables_4_6_week">4-6 times/week</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="vegetables">View Examples</a></small>
+                                </div>
+
                             </div>
                             <button type="button" class="btn btn-primary next-section" data-target="#sectionEleven">Next Section</button>
                         </div>
@@ -995,8 +1161,13 @@
                                         <label for="water_5_plus">5+ glasses</label>
                                     </div>
                                 </div>
+
+                                <div class="text-center mt-2">
+                                    <small><a href="#" class="text-primary view-examples" data-example="water">View Examples</a></small>
+                                </div>
+
                             </div>
-                            <button type="button" class="btn btn-primary next-section" data-target="#sectionTwelve">Next Section</button>
+                            <!-- <button type="button" class="btn btn-primary next-section" data-target="#sectionTwelve">Next Section</button> -->
                         </div>
                     </div>
                 </div>
@@ -1037,7 +1208,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Automatically dismiss alerts
+    // Auto-dismiss alerts
     setTimeout(function() {
         document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
             var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
@@ -1045,141 +1216,161 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 3000);
 
-    // Make checkboxes behave like radio buttons within each logical group (by name) inside each question
+    initializeFrequencySections();
+    setupCheckboxBehavior();
+    setupSectionProgression();
+    setupExampleModals();
+    setupFormValidation();
+    disableSubsequentSections();
+});
+
+function initializeFrequencySections() {
     document.querySelectorAll('.risk-question').forEach(function(question) {
-        // Find all unique checkbox name attributes within this question
+        question.classList.add('show-frequency');
+        question.classList.remove('disable-frequency');
+        
+        const allInputs = question.querySelectorAll('input[type="checkbox"]');
+        allInputs.forEach(function(input) {
+            const isMainQuestion = input.value === 'yes' || input.value === 'no';
+            const isInMainContainer = input.closest('.main-yes-no') !== null;
+            
+            if (!isMainQuestion && !isInMainContainer) {
+                input.disabled = false;
+            }
+        });
+    });
+}
+
+function setupCheckboxBehavior() {
+    document.querySelectorAll('.risk-question').forEach(function(question) {
         const names = Array.from(new Set(Array.from(question.querySelectorAll('input[type="checkbox"]')).map(cb => cb.name)));
+        
         names.forEach(function(name) {
             const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+            
             group.forEach(function(checkbox) {
                 checkbox.addEventListener('change', function() {
                     if (this.checked) {
+                        // Uncheck other checkboxes in the same group
                         group.forEach(function(other) {
                             if (other !== checkbox) {
                                 other.checked = false;
                             }
                         });
                         
-                        // If this is a main yes/no question and "No" is selected, hide frequency questions
-                        if (this.value === 'no' && names[0] === name) {
-                            // Hide frequency questions by removing the show-frequency class
-                            question.classList.remove('show-frequency');
-                            
-                            // Clear any selected frequency options
-                            names.slice(1).forEach(function(freqName) {
-                                const freqGroup = question.querySelectorAll('input[type="checkbox"][name="' + freqName + '"]');
-                                freqGroup.forEach(function(cb) {
-                                    cb.checked = false;
-                                });
-                            });
-                        } else if (this.value === 'yes' && names[0] === name) {
-                            // Show frequency questions by adding the show-frequency class
-                            question.classList.add('show-frequency');
-                        }
+                        handleFrequencyToggle(this, question, names, name);
                     }
                 });
             });
         });
     });
+}
 
-    // Accordion section progression with validation
+function handleFrequencyToggle(checkbox, question, names, name) {
+    if (checkbox.value === 'no' && names[0] === name) {
+        // Disable frequency questions
+        question.classList.add('disable-frequency');
+        question.classList.remove('show-frequency');
+        
+        names.slice(1).forEach(function(freqName) {
+            const freqGroup = question.querySelectorAll('input[type="checkbox"][name="' + freqName + '"]');
+            freqGroup.forEach(function(cb) {
+                cb.checked = false;
+                cb.disabled = true;
+            });
+        });
+    } else if (checkbox.value === 'yes' && names[0] === name) {
+        // Enable frequency questions
+        question.classList.remove('disable-frequency');
+        question.classList.add('show-frequency');
+        
+        names.slice(1).forEach(function(freqName) {
+            const freqGroup = question.querySelectorAll('input[type="checkbox"][name="' + freqName + '"]');
+            freqGroup.forEach(function(cb) {
+                cb.disabled = false;
+            });
+        });
+    }
+}
+
+function setupSectionProgression() {
     document.querySelectorAll('.next-section').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            console.log('Next button clicked'); // Debug log
-            
             var currentSection = btn.closest('.accordion-collapse');
             var allQuestions = currentSection.querySelectorAll('.risk-question');
-            var allAnswered = true;
-
-            allQuestions.forEach(function(question) {
-                // Get all checkbox groups by name within this question
-                const names = Array.from(new Set(Array.from(question.querySelectorAll('input[type="checkbox"]')).map(cb => cb.name)));
-                let questionAnswered = true;
-                
-                // Check if the main question (first group) has been answered
-                const mainGroup = names[0]; // First group is typically the yes/no question
-                const mainCheckboxes = question.querySelectorAll('input[type="checkbox"][name="' + mainGroup + '"]');
-                const mainAnswered = Array.from(mainCheckboxes).some(cb => cb.checked);
-                
-                if (!mainAnswered) {
-                    // Main question not answered - this is required
-                    questionAnswered = false;
-                    console.log('Main question not answered for:', mainGroup); // Debug log
-                } else {
-                    // Check if user answered "No" to main question
-                    const noSelected = Array.from(mainCheckboxes).some(cb => cb.checked && cb.value === 'no');
-                    
-                    if (noSelected) {
-                        // If "No" is selected, we don't need to validate frequency questions
-                        // Set default values for frequency questions
-                        names.slice(1).forEach(function(name) {
-                            const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
-                            // Uncheck all frequency options when "No" is selected
-                            group.forEach(function(cb) {
-                                cb.checked = false;
-                            });
-                        });
-                    } else {
-                        // If "Yes" is selected, validate frequency questions for complete sections
-                        // Skip validation for simpler questions that don't have frequency options
-                        if (names.length > 1) {
-                            names.slice(1).forEach(function(name) {
-                                const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
-                                if (group.length > 0 && !Array.from(group).some(cb => cb.checked)) {
-                                    questionAnswered = false;
-                                }
-                            });
-                        }
-                    }
-                }
-                
-                if (!questionAnswered) {
-                    allAnswered = false;
-                    question.classList.add('border', 'border-danger');
-                } else {
-                    question.classList.remove('border', 'border-danger');
-                }
-            });
+            var allAnswered = validateSection(allQuestions);
 
             if (!allAnswered) {
                 alert("Please answer all required questions in this section before proceeding.");
                 return;
             }
-
-            console.log('All questions answered, proceeding to next section'); // Debug log
             
-            // Enable and open the next section
-            var nextSectionId = btn.getAttribute('data-target');
-            var nextSection = document.querySelector(nextSectionId);
-            
-            if (!nextSection) {
-                console.error('Next section not found:', nextSectionId);
-                return;
-            }
-            
-            var nextAccordionItem = nextSection.closest('.accordion-item');
-            var nextHeaderBtn = nextAccordionItem.querySelector('.accordion-button');
-            
-            if (nextHeaderBtn) {
-                nextHeaderBtn.removeAttribute('disabled');
-                nextHeaderBtn.classList.remove('disabled');
-                console.log('Enabled next section button');
-            }
-            
-            try {
-                var bsCollapse = new bootstrap.Collapse(nextSection, {toggle: true});
-                nextSection.scrollIntoView({behavior: "smooth"});
-                console.log('Opened next section:', nextSectionId);
-            } catch (error) {
-                console.error('Error opening next section:', error);
-                // Fallback: manually show the section
-                nextSection.classList.add('show');
-                nextSection.scrollIntoView({behavior: "smooth"});
-            }
+            openNextSection(btn);
         });
     });
+}
 
-    // Example modal functionality
+function validateSection(questions) {
+    var allAnswered = true;
+    
+    questions.forEach(function(question) {
+        const names = Array.from(new Set(Array.from(question.querySelectorAll('input[type="checkbox"]')).map(cb => cb.name)));
+        let questionAnswered = true;
+        
+        const mainGroup = names[0];
+        const mainCheckboxes = question.querySelectorAll('input[type="checkbox"][name="' + mainGroup + '"]');
+        const mainAnswered = Array.from(mainCheckboxes).some(cb => cb.checked);
+        
+        if (!mainAnswered) {
+            questionAnswered = false;
+        } else {
+            const noSelected = Array.from(mainCheckboxes).some(cb => cb.checked && cb.value === 'no');
+            
+            if (!noSelected && names.length > 1) {
+                names.slice(1).forEach(function(name) {
+                    const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+                    if (group.length > 0 && !Array.from(group).some(cb => cb.checked)) {
+                        questionAnswered = false;
+                    }
+                });
+            }
+        }
+        
+        if (!questionAnswered) {
+            allAnswered = false;
+            question.classList.add('border', 'border-danger');
+        } else {
+            question.classList.remove('border', 'border-danger');
+        }
+    });
+    
+    return allAnswered;
+}
+
+function openNextSection(btn) {
+    var nextSectionId = btn.getAttribute('data-target');
+    var nextSection = document.querySelector(nextSectionId);
+    
+    if (!nextSection) return;
+    
+    var nextAccordionItem = nextSection.closest('.accordion-item');
+    var nextHeaderBtn = nextAccordionItem.querySelector('.accordion-button');
+    
+    if (nextHeaderBtn) {
+        nextHeaderBtn.removeAttribute('disabled');
+        nextHeaderBtn.classList.remove('disabled');
+    }
+    
+    try {
+        var bsCollapse = new bootstrap.Collapse(nextSection, {toggle: true});
+        nextSection.scrollIntoView({behavior: "smooth"});
+    } catch (error) {
+        nextSection.classList.add('show');
+        nextSection.scrollIntoView({behavior: "smooth"});
+    }
+}
+
+function setupExampleModals() {
     const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
     const exampleImage = document.getElementById('exampleImage');
     const exampleDescription = document.getElementById('exampleDescription');
@@ -1253,7 +1444,6 @@ document.addEventListener('DOMContentLoaded', function() {
         },
     };
 
-    // Handle view examples clicks
     document.querySelectorAll('.view-examples').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1268,8 +1458,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+}
 
-    // Form submission validation
+function setupFormValidation() {
     document.querySelector('form').addEventListener('submit', function(e) {
         var allSections = document.querySelectorAll('.risk-question');
         var allValid = true;
@@ -1291,7 +1482,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const noSelected = Array.from(mainCheckboxes).some(cb => cb.checked && cb.value === 'no');
                     
                     if (!noSelected && names.length > 1) {
-                        // If "Yes" is selected, validate frequency questions
                         names.slice(1).forEach(function(name) {
                             const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
                             if (group.length > 0 && !Array.from(group).some(cb => cb.checked)) {
@@ -1302,7 +1492,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     }
                     
-                    if (allValid || noSelected) {
+                    if (mainAnswered && (noSelected || names.length === 1 || 
+                        names.slice(1).every(name => {
+                            const group = question.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+                            return group.length === 0 || Array.from(group).some(cb => cb.checked);
+                        }))) {
                         question.classList.remove('border', 'border-danger');
                     }
                 }
@@ -1315,133 +1509,17 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
     });
+}
 
-    // Disable subsequent accordion sections initially
+function disableSubsequentSections() {
     document.querySelectorAll('.accordion-button').forEach(function(btn, index) {
-        if (index > 0) { // Don't disable the first section
+        if (index > 0) {
             btn.setAttribute('disabled', 'true');
             btn.classList.add('disabled');
         }
     });
-
-});
+}
 </script>
-
-<style>
-/* CSS for conditional display of frequency questions - hide all follow-up questions when "No" is selected */
-.risk-question .question-text.mt-3,
-.risk-question .d-flex.mt-2,
-.risk-question .d-flex.gap-3.mt-2,
-.risk-question .d-flex.flex-wrap.gap-3.mt-2,
-.risk-question .d-flex.flex-wrap.gap-3:not(.main-yes-no) {
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-}
-
-.risk-question.show-frequency .question-text.mt-3,
-.risk-question.show-frequency .d-flex.mt-2,
-.risk-question.show-frequency .d-flex.gap-3.mt-2,
-.risk-question.show-frequency .d-flex.flex-wrap.gap-3.mt-2,
-.risk-question.show-frequency .d-flex.flex-wrap.gap-3:not(.main-yes-no) {
-    display: block;
-    opacity: 1;
-}
-
-.risk-question.show-frequency .d-flex.flex-wrap.gap-3.mt-2,
-.risk-question.show-frequency .d-flex.flex-wrap.gap-3:not(.main-yes-no) {
-    display: flex !important;
-}
-
-/* Always show the main yes/no question and its checkboxes */
-.risk-question .question-text:first-child,
-.risk-question .d-flex.align-items-center.gap-3:first-of-type,
-.risk-question .d-flex.align-items-center.gap-3.main-yes-no {
-    display: block !important;
-    opacity: 1 !important;
-}
-
-.risk-question .d-flex.align-items-center.gap-3:first-of-type,
-.risk-question .d-flex.align-items-center.gap-3.main-yes-no {
-    display: flex !important;
-}
-
-/* Special cases for Water and Xylitol sections that don't follow the typical pattern */
-.risk-question .d-flex.flex-wrap.gap-3:not(.mt-2):not(.main-yes-no) {
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-}
-
-.risk-question.show-frequency .d-flex.flex-wrap.gap-3:not(.mt-2):not(.main-yes-no) {
-    display: flex !important;
-    opacity: 1;
-}
-
-/* Visual feedback for validation errors */
-.border-danger {
-    border-color: #dc3545 !important;
-    border-width: 2px !important;
-}
-
-/* Disabled accordion buttons */
-.accordion-button.disabled {
-    background-color: #f8f9fa;
-    color: #6c757d;
-    pointer-events: none;
-    opacity: 0.6;
-}
-
-/* Example link styling */
-.view-examples {
-    color: #0d6efd;
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-
-.view-examples:hover {
-    color: #0a58ca;
-}
-
-/* Required asterisk styling */
-.required-asterisk {
-    color: #dc3545;
-    font-weight: bold;
-}
-
-/* Checkbox styling */
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.checkbox-item input[type="checkbox"] {
-    margin: 0;
-}
-
-/* Risk category styling */
-.high-risk {
-    border-left: 4px solid #dc3545;
-    padding-left: 1rem;
-}
-
-.moderate-risk {
-    border-left: 4px solid #fd7e14;
-    padding-left: 1rem;
-}
-
-.low-risk {
-    border-left: 4px solid #ffc107;
-    padding-left: 1rem;
-}
-
-.protective {
-    border-left: 4px solid #198754;
-    padding-left: 1rem;
-}
-</style>
 
 </body>
 </html>
