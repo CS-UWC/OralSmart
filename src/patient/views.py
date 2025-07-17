@@ -9,6 +9,9 @@ from django.contrib.auth.decorators import login_required
 # Create your views here.
 @login_required
 def create_patient_view(request):
+    """
+    This returns the "create_patient" template that allows the user to create a patient object. 
+    """
 
     form = PatientForm(request.POST or None)
 
