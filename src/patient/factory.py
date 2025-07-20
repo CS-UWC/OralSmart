@@ -16,7 +16,11 @@ class PatientFactory(factory.django.DjangoModelFactory):
     gender = LazyFunction(lambda: random.choice(['0', '1']))
     name = LazyAttribute(lambda o: StdFaker().first_name_female() if o.gender == "1" else StdFaker().first_name_male())
     surname = Faker("last_name")
-    age = LazyFunction(lambda: random.choice(["0", "1", "2", "3", "4", "5", "6"]))
+
+    age_distribution = ["0", "1", "2", "3", "4", "5", "6"]
+    age_weights = [0.22, 0.20, 0.18, 0.15, 0.12, 0.08, 0.05]
+
+    age = LazyFunction(lambda: random.choices(PatientFactory.age_distribution, weights=PatientFactory.age_weights, k=1)[0]) #Tried to use the distribution of the South African population
 
     parent_name = Faker("first_name")
     parent_surname = Faker("last_name")
