@@ -4,22 +4,22 @@ from django.http import FileResponse, HttpResponse
 import io
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Image, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.lib.colors import HexColor, white
+from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from assessments.models import DentalScreening, DietaryScreening
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.core.mail import EmailMessage
-from django.contrib import messages
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from userprofile.models import Profile
 import logging
 import os
+from django.contrib.auth.decorators import login_required
 
 # Import ML predictor
 from ml_models.ml_predictor import MLPRiskPredictor
@@ -66,13 +66,13 @@ def get_ml_risk_prediction(dental_data, dietary_data):
 def get_risk_color(risk_level):
     """Get color for risk level"""
     colors_map = {
-        'low': HexColor('#28a745'),      # Green
-        'medium': HexColor('#ffc107'),   # Yellow/Orange
-        'high': HexColor('#dc3545'),     # Red
-        'unknown': HexColor('#6c757d'),  # Gray
-        'error': HexColor('#6c757d')     # Gray
+        'low': '#28a745',      # Green
+        'medium': '#ffc107',   # Yellow/Orange
+        'high': '#dc3545',     # Red
+        'unknown': '#6c757d',  # Gray
+        'error': '#6c757d'     # Gray
     }
-    return colors_map.get(risk_level.lower(), HexColor('#6c757d'))
+    return colors_map.get(risk_level.lower(), '#6c757d')
 
 class CustomPageTemplate:
     """Custom page template with blue borders and logo"""
@@ -111,7 +111,7 @@ class CustomPageTemplate:
                 # Draw logo in top-left corner with better size and positioning
                 self.canvas.drawImage(logo_path, 60, height - 115, width=100, height=30, 
                                     preserveAspectRatio=True, mask='auto')
-            except Exception as e:
+            except Exception:
                 # Add text fallback if logo can't be loaded
                 self.canvas.setFillColor(blue_color)
                 self.canvas.setFont('Helvetica-Bold', 12)
@@ -140,45 +140,54 @@ class CustomPageTemplate:
         self.canvas.setFillColor(colors.black)
         self.canvas.setStrokeColor(colors.black)
 
-# Create your views here.
-
-# def view_report(request, patient_id):
-
-#     data = DentalScreening.objects.get(pk=patient_id)
-
-#     buf = io.BytesIO()
-
-#     c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
-
-#     textobj = c.beginText()
-#     textobj.setTextOrigin(inch, inch)
-#     textobj.setFont('Helvetica', 14)
-
-#     # Example: Add some data from the DentalScreening instance to the PDF
-#     textobj.textLine(f"Patient ID: {data.pk}")
-#     # Add more fields as needed, e.g. textobj.textLine(f"Field: {data.some_field}")
-
-#     c.drawText(textobj)
-#     c.showPage()
-#     c.save()
-#     buf.seek(0)
-
-#     return FileResponse(buf, as_attachment=True, filename='report.pdf')
-
+@login_required
 def view_report(request, patient_id):
+
+    dental_data = DentalScreening.objects.get(patient_id=patient_id)
+    dietary_data = DietaryScreening.objects.get(patient_id=patient_id)
+
+    ml_prediction = get_ml_risk_prediction(dental_data=dental_data, dietary_data=dietary_data)
+    risk_color = get_risk_color(ml_prediction['risk_level'])
+
     return render(
         request, 
         "reports/report.html", 
         {
             "patient_id": patient_id,
             'show_navbar': True,
+            'risk_prediction': ml_prediction,
+            'risk_color': risk_color,
         }
     )
 
-#@login_required
+@login_required
 @xframe_options_exempt
 def generate_pdf(request, patient_id):
-
+    """
+    Generates a PDF report for a given patient, including dental and dietary screening data.
+    This view handles both POST and GET requests:
+    - POST: Saves the selected report sections to the session (no PDF generated).
+    - GET: Generates and returns a PDF report based on the last selected sections.
+    The PDF includes:
+    - Patient information
+    - Health professional information (if available)
+    - Completed screening types (dental, dietary)
+    - Detailed screening results for selected sections
+    - DMFT (Decayed, Missing, Filled Teeth) assessment with tooth-level details
+    - Dietary screening results
+    If the patient does not exist or no screening data is available, a PDF with an error message is returned.
+    Args:
+        request (HttpRequest): The HTTP request object (supports GET and POST).
+        patient_id (int or str): The primary key of the patient for whom the report is generated.
+    Returns:
+        FileResponse: A Django FileResponse containing the generated PDF, or an error PDF if data is missing.
+    Notes:
+        - The function uses ReportLab for PDF generation.
+        - Only authenticated users' professional information is included.
+        - Section selection is managed via session and POST data.
+        - The report is styled with a blue color scheme and includes tables for clarity.
+    """
+    
     try:
         patient = Patient.objects.get(pk=patient_id)
     except Patient.DoesNotExist:
@@ -207,7 +216,7 @@ def generate_pdf(request, patient_id):
         selected_sections = request.POST.get('selected_sections', '').split(',')
         selected_sections = [s for s in selected_sections if s in allowed_sections]   
         request.session['selected_sections'] = selected_sections  # Save for GET
-        return HttpResponse(status=204)#return render(request, "reports/report.html", {"patient_id": patient_id})
+        return HttpResponse(status=204)
     else:
         #For GET, generate PDF with last selected sections
         selected_sections = request.session.get('selected_sections', [
@@ -310,29 +319,6 @@ def generate_pdf(request, patient_id):
             leftIndent=12,
             allowWidows=1,
             allowOrphans=1
-        )
-        
-        # Bold style for labels
-        bold_style = ParagraphStyle(
-            'BoldStyle',
-            parent=styles['Normal'],
-            fontSize=10,
-            spaceAfter=6,
-            leftIndent=12,
-            fontName='Helvetica-Bold'
-        )
-        
-        # Info box style for patient details
-        info_style = ParagraphStyle(
-            'InfoBox',
-            parent=styles['Normal'],
-            fontSize=11,
-            spaceAfter=6,
-            leftIndent=12,
-            backColor=HexColor('#F0F8FF'),
-            borderWidth=1,
-            borderColor=light_blue,
-            borderPadding=8
         )
         
         #Build story (content)
@@ -455,44 +441,6 @@ def generate_pdf(request, patient_id):
         # Note: AI Risk Assessment is only included in professional reports sent to healthcare providers
         # The patient-facing report does not include AI risk classification for privacy and clarity
         
-        # Helper function to create data tables
-        def create_data_table(data_list):
-            """Create a styled table for section data"""
-            table_data = []
-            for i in range(0, len(data_list), 2):
-                # Format the text to properly handle bold tags
-                row = [data_list[i]]
-                if i + 1 < len(data_list):
-                    row.append(data_list[i + 1])
-                else:
-                    row.append("")  # Empty cell for odd number of items
-                table_data.append(row)
-            
-            table = Table(table_data, colWidths=[3*inch, 3*inch])
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#FAFAFA')),
-                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('GRID', (0, 0), (-1, -1), 0.5, light_blue),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ]))
-            return table
-        
-        # Helper function to format data with proper bold formatting
-        def format_data_with_paragraphs(data_list):
-            """Convert data list to paragraphs for proper bold rendering"""
-            paragraphs = []
-            for item in data_list:
-                # Create individual paragraphs for each data item
-                paragraphs.append(Paragraph(item, normal_style))
-            return paragraphs
-
         # Include dental screening sections if dental data exists
         if dental_data:
             #Section 1: Social/Behavioural/Medical Risk Factors (Dental)
@@ -663,6 +611,7 @@ def generate_pdf(request, patient_id):
         filename = f"report_{patient.name}_{patient.surname}_{patient_id}.pdf"
         return FileResponse(buf, as_attachment=False, filename=filename, content_type='application/pdf')
 
+@login_required
 def send_report_email(request, patient_id):
     """Send report via email to user and CC health professionals"""
     if request.method != 'POST':
@@ -829,34 +778,6 @@ def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, 
         allowOrphans=1
     )
     
-    # Helper function to create data tables
-    def create_data_table(data_list):
-        """Create a styled table for section data"""
-        table_data = []
-        for i in range(0, len(data_list), 2):
-            row = [data_list[i]]
-            if i + 1 < len(data_list):
-                row.append(data_list[i + 1])
-            else:
-                row.append("")  # Empty cell for odd number of items
-            table_data.append(row)
-        
-        table = Table(table_data, colWidths=[3*inch, 3*inch])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#FAFAFA')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('GRID', (0, 0), (-1, -1), 0.5, light_blue),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ]))
-        return table
-    
     # Build story (content)
     story = []
     
@@ -977,7 +898,7 @@ def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, 
                      parent=normal_style,
                      fontSize=12,
                      fontName='Helvetica-Bold',
-                     textColor=risk_color
+                     textColor=HexColor(risk_color)
                  ))],
                 [Paragraph(f"<b>Confidence:</b>", normal_style),
                  Paragraph(f"{confidence_pct}", normal_style)],
