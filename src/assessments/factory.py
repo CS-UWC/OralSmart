@@ -64,7 +64,6 @@ class DentalFactory(factory.django.DjangoModelFactory):
     missing_teeth = LazyFunction(lambda: random.choice(["yes", "no"]))
     
     # Teeth data as JSON - using FDI numbering system to match dental screening form
-    # Format: "tooth_11": "0", "tooth_12": "1", etc.
     # Generates realistic teeth data based on random dentition type
     teeth_data = LazyFunction(lambda: {
         # Randomly choose dentition type (primary, mixed, or permanent)
@@ -76,7 +75,7 @@ class DentalFactory(factory.django.DjangoModelFactory):
         } if random.random() < 0.3 else {  # 30% chance primary only
             # Mixed dentition (ages 6-12) - some permanent, some primary
             **{f"tooth_{tooth}": fake.random_element(elements=["0", "1", "2", "6", "8"]) 
-               for tooth in ["16", "11", "21", "26", "36", "31", "41", "46"]},  # First molars and incisors erupt first
+               for tooth in ["16", "11", "21", "26", "36", "31", "41", "46"]},
             **{f"tooth_{tooth}": fake.random_element(elements=["A", "B", "C", "D", "E", "X", "F"]) 
                for tooth in ["54", "53", "52", "62", "63", "64", "74", "73", "72", "82", "83", "84"]}  # Remaining primary teeth
         } if random.random() < 0.4 else {    # 40% chance mixed (of remaining 70%)
@@ -86,7 +85,7 @@ class DentalFactory(factory.django.DjangoModelFactory):
                             "21", "22", "23", "24", "25", "26", "27", "28",
                             "48", "47", "46", "45", "44", "43", "42", "41", 
                             "31", "32", "33", "34", "35", "36", "37", "38"]}
-        })  # 30% chance permanent only
+        })
     })
 
 

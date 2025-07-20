@@ -27,9 +27,6 @@ class PatientFactory(factory.django.DjangoModelFactory):
     parent_id = LazyFunction(lambda: ''.join([str(random.randint(0, 9)) for _ in range(13)]))
     parent_contact = LazyFunction(lambda: ''.join([str(random.randint(0, 9)) for _ in range(10)]))
 
-    # Timestamp (auto_now_add will handle this, but we can set it if needed)
-    # created_at is handled automatically by Django
-
 class PatientWithAssessmentsFactory(PatientFactory):
     """Factory that creates a patient with both dental and dietary assessments"""
     
