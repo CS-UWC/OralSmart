@@ -3,6 +3,7 @@ from patient.models import Patient
 from django.http import FileResponse, HttpResponse
 import io
 from datetime import datetime
+from django.utils import timezone
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -155,6 +156,83 @@ def view_report(request, patient_id):
 
     ml_prediction = get_ml_risk_prediction(dental_data=dental_data, dietary_data=dietary_data)
     risk_color = get_risk_color(ml_prediction['risk_level'])
+    
+    # Get recommended professionals based on current user's profession
+    from userprofile.models import Profile
+    current_user_profile = getattr(request.user, 'profile', None)
+    
+    # Define recommended professionals based on the referrer's profession
+    recommended_professionals = []
+    if current_user_profile:
+        if current_user_profile.profession == 'dentist':
+            # Dentists typically refer to specialists
+            recommended_professionals = [
+                ('orthodontist', 'Orthodontist'),
+                ('oral_surgeon', 'Oral Surgeon'),
+                ('periodontist', 'Periodontist'),
+                ('endodontist', 'Endodontist'),
+                ('pediatric_dentist', 'Pediatric Dentist'),
+                ('prosthodontist', 'Prosthodontist'),
+                ('oral_pathologist', 'Oral Pathologist')
+            ]
+        elif current_user_profile.profession in ['registered_nurse', 'enrolled_nurse', 'nursing_assistant']:
+            # Nurses typically refer to dentists and doctors
+            recommended_professionals = [
+                ('dentist', 'General Dentist'),
+                ('pediatric_dentist', 'Pediatric Dentist'),
+                ('medical_doctor', 'Medical Doctor'),
+                ('pediatrician', 'Pediatrician')
+            ]
+        elif current_user_profile.profession == 'medical_doctor':
+            # Doctors typically refer to dental specialists
+            recommended_professionals = [
+                ('dentist', 'General Dentist'),
+                ('pediatric_dentist', 'Pediatric Dentist'),
+                ('orthodontist', 'Orthodontist'),
+                ('oral_surgeon', 'Oral Surgeon')
+            ]
+        else:
+            # Default recommendations for other health professionals
+            recommended_professionals = [
+                ('dentist', 'General Dentist'),
+                ('pediatric_dentist', 'Pediatric Dentist'),
+                ('orthodontist', 'Orthodontist'),
+                ('medical_doctor', 'Medical Doctor')
+            ]
+    else:
+        # Default if no profile
+        recommended_professionals = [
+            ('dentist', 'General Dentist'),
+            ('pediatric_dentist', 'Pediatric Dentist'),
+            ('orthodontist', 'Orthodontist'),
+            ('medical_doctor', 'Medical Doctor')
+        ]
+
+    # Get current recommendation from session
+    current_recommendation_code = request.session.get('recommended_professional', '')
+    current_recommendation = None
+    
+    # Debug logging
+    logger.info(f"Session data: {dict(request.session.items())}")
+    logger.info(f"Current recommendation code from session: '{current_recommendation_code}'")
+    
+    # Map professional codes to display names for current recommendation
+    professional_names = {
+        'orthodontist': 'Orthodontist',
+        'oral_surgeon': 'Oral Surgeon',
+        'periodontist': 'Periodontist',
+        'endodontist': 'Endodontist',
+        'pediatric_dentist': 'Pediatric Dentist',
+        'prosthodontist': 'Prosthodontist',
+        'oral_pathologist': 'Oral Pathologist',
+        'dentist': 'General Dentist',
+        'medical_doctor': 'Medical Doctor',
+        'pediatrician': 'Pediatrician'
+    }
+    
+    if current_recommendation_code:
+        current_recommendation = professional_names.get(current_recommendation_code, current_recommendation_code.replace('_', ' ').title())
+        logger.info(f"Current recommendation: '{current_recommendation}'")
 
     return render(
         request, 
@@ -164,6 +242,9 @@ def view_report(request, patient_id):
             'show_navbar': True,
             'risk_prediction': ml_prediction,
             'risk_color': risk_color,
+            'recommended_professionals': recommended_professionals,
+            'current_recommendation': current_recommendation,
+            'current_recommendation_code': current_recommendation_code,
         }
     )
 
@@ -217,21 +298,17 @@ def generate_pdf(request, patient_id):
         
         return FileResponse(buf, as_attachment=False, filename="error.pdf", content_type='application/pdf')
 
-    allowed_sections = {'section1', 'section2', 'section3', 'section4', 'section5'}
-
     if request.method == "POST":
-        selected_sections = request.POST.get('selected_sections', '').split(',')
-        selected_sections = [s for s in selected_sections if s in allowed_sections]   
-        request.session['selected_sections'] = selected_sections  # Save for GET
+        # Save recommended professional selection
+        recommended_professional = request.POST.get('recommended_professional', '')
+        logger.info(f"POST received - recommended_professional: '{recommended_professional}'")
+        request.session['recommended_professional'] = recommended_professional
+        request.session.save()  # Explicitly save the session
+        logger.info(f"Session after save: {dict(request.session.items())}")
+        
         return HttpResponse(status=204)
     else:
-        #For GET, generate PDF with last selected sections
-        selected_sections = request.session.get('selected_sections', [
-            'section1', 'section2', 'section3', 'section4', 'section5'
-        ])
-
-        selected_sections = [s for s in selected_sections if s in allowed_sections]
-
+        # For GET, generate PDF with all available sections
         try:
             dental_data = DentalScreening.objects.get(patient_id=patient_id)
         except DentalScreening.DoesNotExist:
@@ -378,6 +455,9 @@ def generate_pdf(request, patient_id):
                 profile = Profile.objects.get(user=health_professional)
                 profession_display = dict(Profile.PROFESSIONS).get(profile.profession, profile.profession.replace('_', ' ').title())
                 
+                # Get recommended professional from session
+                recommended_professional = request.session.get('recommended_professional', '')
+                
                 story.append(Paragraph("Health Professional Information", heading_style))
                 
                 professional_data = [
@@ -386,6 +466,27 @@ def generate_pdf(request, patient_id):
                     [Paragraph(f"<b>Profession:</b> {profession_display}", normal_style), 
                      Paragraph(f"<b>Registration No:</b> {profile.reg_num}", normal_style)]
                 ]
+                
+                # Add recommended professional if selected
+                if recommended_professional:
+                    # Map professional codes to display names
+                    professional_names = {
+                        'orthodontist': 'Orthodontist',
+                        'oral_surgeon': 'Oral Surgeon',
+                        'periodontist': 'Periodontist',
+                        'endodontist': 'Endodontist',
+                        'pediatric_dentist': 'Pediatric Dentist',
+                        'prosthodontist': 'Prosthodontist',
+                        'oral_pathologist': 'Oral Pathologist',
+                        'dentist': 'General Dentist',
+                        'medical_doctor': 'Medical Doctor',
+                        'pediatrician': 'Pediatrician'
+                    }
+                    recommended_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+                    professional_data.append([
+                        Paragraph(f"<b>Recommended Referral:</b> {recommended_name}", normal_style),
+                        Paragraph("", normal_style)  # Empty cell for layout
+                    ])
                 
                 professional_table = Table(professional_data, colWidths=[3*inch, 3*inch])
                 professional_table.setStyle(TableStyle([
@@ -411,6 +512,25 @@ def generate_pdf(request, patient_id):
                 professional_info = f"<b>Health Professional:</b> {health_professional.first_name} {health_professional.last_name}"
                 if health_professional.email:
                     professional_info += f" ({health_professional.email})"
+                
+                # Add recommended professional if selected
+                recommended_professional = request.session.get('recommended_professional', '')
+                if recommended_professional:
+                    professional_names = {
+                        'orthodontist': 'Orthodontist',
+                        'oral_surgeon': 'Oral Surgeon',
+                        'periodontist': 'Periodontist',
+                        'endodontist': 'Endodontist',
+                        'pediatric_dentist': 'Pediatric Dentist',
+                        'prosthodontist': 'Prosthodontist',
+                        'oral_pathologist': 'Oral Pathologist',
+                        'dentist': 'General Dentist',
+                        'medical_doctor': 'Medical Doctor',
+                        'pediatrician': 'Pediatrician'
+                    }
+                    recommended_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+                    professional_info += f"<br/><b>Recommended Referral:</b> {recommended_name}"
+                
                 story.append(Paragraph(professional_info, normal_style))
                 story.append(Spacer(1, 12))
             except Exception:
@@ -451,144 +571,139 @@ def generate_pdf(request, patient_id):
         # Include dental screening sections if dental data exists
         if dental_data:
             #Section 1: Social/Behavioural/Medical Risk Factors (Dental)
-            if 'section1' in selected_sections:
-                story.append(Paragraph("Social/Behavioural/Medical Risk Factors (Dental Screening)", heading_style))
-                
-                section1_data = [
-                    f"<b>Caregiver treatment:</b> {dental_data.caregiver_treatment}",
-                    f"<b>South African Citizen:</b> {dental_data.sa_citizen}",
-                    f"<b>Special needs:</b> {dental_data.special_needs}"
-                ]
-                
-                # Add each item as a paragraph for proper bold rendering
-                for item in section1_data:
-                    story.append(Paragraph(item, normal_style))
-                story.append(Spacer(1, 12))
+            story.append(Paragraph("Social/Behavioural/Medical Risk Factors (Dental Screening)", heading_style))
+            
+            section1_data = [
+                f"<b>Caregiver treatment:</b> {dental_data.caregiver_treatment}",
+                f"<b>South African Citizen:</b> {dental_data.sa_citizen}",
+                f"<b>Special needs:</b> {dental_data.special_needs}"
+            ]
+            
+            # Add each item as a paragraph for proper bold rendering
+            for item in section1_data:
+                story.append(Paragraph(item, normal_style))
+            story.append(Spacer(1, 12))
 
             #Section 2: Clinical Risk Factors (Dental)
-            if 'section2' in selected_sections:
-                story.append(Paragraph("Clinical Risk Factors (Dental Screening)", heading_style))
-                
-                section2_data = [
-                    f"<b>Plaque:</b> {dental_data.plaque}",
-                    f"<b>Dry mouth:</b> {dental_data.dry_mouth}",
-                    f"<b>Enamel defects:</b> {dental_data.enamel_defects}",
-                    f"<b>Intra-oral appliance:</b> {dental_data.appliance}"
-                ]
-                
-                # Add each item as a paragraph for proper bold rendering
-                for item in section2_data:
-                    story.append(Paragraph(item, normal_style))
-                story.append(Spacer(1, 12))
+            story.append(Paragraph("Clinical Risk Factors (Dental Screening)", heading_style))
+            
+            section2_data = [
+                f"<b>Plaque:</b> {dental_data.plaque}",
+                f"<b>Dry mouth:</b> {dental_data.dry_mouth}",
+                f"<b>Enamel defects:</b> {dental_data.enamel_defects}",
+                f"<b>Intra-oral appliance:</b> {dental_data.appliance}"
+            ]
+            
+            # Add each item as a paragraph for proper bold rendering
+            for item in section2_data:
+                story.append(Paragraph(item, normal_style))
+            story.append(Spacer(1, 12))
 
             #Section 3: Protective Factors (Dental)
-            if 'section3' in selected_sections:
-                story.append(Paragraph("Protective Factors (Dental Screening)", heading_style))
-                
-                section3_data = [
-                    f"<b>Fluoride water:</b> {dental_data.fluoride_water}",
-                    f"<b>Fluoride toothpaste:</b> {dental_data.fluoride_toothpaste}",
-                    f"<b>Topical fluoride:</b> {dental_data.topical_fluoride}",
-                    f"<b>Regular checkups:</b> {dental_data.regular_checkups}"
-                ]
+            story.append(Paragraph("Protective Factors (Dental Screening)", heading_style))
             
-                # Add each item as a paragraph for proper bold rendering
-                for item in section3_data:
-                    story.append(Paragraph(item, normal_style))
-                story.append(Spacer(1, 12))
+            section3_data = [
+                f"<b>Fluoride water:</b> {dental_data.fluoride_water}",
+                f"<b>Fluoride toothpaste:</b> {dental_data.fluoride_toothpaste}",
+                f"<b>Topical fluoride:</b> {dental_data.topical_fluoride}",
+                f"<b>Regular checkups:</b> {dental_data.regular_checkups}"
+            ]
+        
+            # Add each item as a paragraph for proper bold rendering
+            for item in section3_data:
+                story.append(Paragraph(item, normal_style))
+            story.append(Spacer(1, 12))
 
             #Section 4: Disease Indicators (Dental)
-            if 'section4' in selected_sections:
-                story.append(Paragraph("Disease Indicators (Dental Screening)", heading_style))
-                
-                section4_data = [
-                    f"<b>Sealed pits:</b> {dental_data.sealed_pits}",
-                    f"<b>Restorative procedures:</b> {dental_data.restorative_procedures}",
-                    f"<b>Enamel change:</b> {dental_data.enamel_change}",
-                    f"<b>Dentin discoloration:</b> {dental_data.dentin_discoloration}",
-                    f"<b>White spot lesions:</b> {dental_data.white_spot_lesions}",
-                    f"<b>Cavitated lesions:</b> {dental_data.cavitated_lesions}",
-                    f"<b>Multiple restorations:</b> {dental_data.multiple_restorations}",
-                    f"<b>Missing teeth:</b> {dental_data.missing_teeth}"
-                ]
-                
-                # Add each item as a paragraph for proper bold rendering
-                for item in section4_data:
-                    story.append(Paragraph(item, normal_style))
-                story.append(Spacer(1, 12))
+            story.append(Paragraph("Disease Indicators (Dental Screening)", heading_style))
+            
+            section4_data = [
+                f"<b>Sealed pits:</b> {dental_data.sealed_pits}",
+                f"<b>Restorative procedures:</b> {dental_data.restorative_procedures}",
+                f"<b>Enamel change:</b> {dental_data.enamel_change}",
+                f"<b>Dentin discoloration:</b> {dental_data.dentin_discoloration}",
+                f"<b>White spot lesions:</b> {dental_data.white_spot_lesions}",
+                f"<b>Cavitated lesions:</b> {dental_data.cavitated_lesions}",
+                f"<b>Multiple restorations:</b> {dental_data.multiple_restorations}",
+                f"<b>Missing teeth:</b> {dental_data.missing_teeth}"
+            ]
+            
+            # Add each item as a paragraph for proper bold rendering
+            for item in section4_data:
+                story.append(Paragraph(item, normal_style))
+            story.append(Spacer(1, 12))
 
             #Section 5: DMFT Assessment (Dental only)
-            if 'section5' in selected_sections:
-                tooth_names = {
-                    #Permanent Teeth
-                    "tooth_18": "Upper Right Third Molar (Wisdom Tooth)",
-                    "tooth_17": "Upper Right Second Molar",
-                    "tooth_16": "Upper Right First Molar",
-                    "tooth_15": "Upper Right Second Premolar",
-                    "tooth_14": "Upper Right First Premolar",
-                    "tooth_13": "Upper Right Canine",
-                    "tooth_12": "Upper Right Lateral Incisor",
-                    "tooth_11": "Upper Right Central Incisor",
-                    "tooth_21": "Upper Left Central Incisor",
-                    "tooth_22": "Upper Left Lateral Incisor",
-                    "tooth_23": "Upper Left Canine",
-                    "tooth_24": "Upper Left First Premolar",
-                    "tooth_25": "Upper Left Second Premolar",
-                    "tooth_26": "Upper Left First Molar",
-                    "tooth_27": "Upper Left Second Molar",
-                    "tooth_28": "Upper Left Third Molar (Wisdom Tooth)",
-                    "tooth_48": "Lower Right Third Molar (Wisdom Tooth)",
-                    "tooth_47": "Lower Right Second Molar",
-                    "tooth_46": "Lower Right First Molar",
-                    "tooth_45": "Lower Right Second Premolar",
-                    "tooth_44": "Lower Right First Premolar",
-                    "tooth_43": "Lower Right Canine",
-                    "tooth_42": "Lower Right Lateral Incisor",
-                    "tooth_41": "Lower Right Central Incisor",
-                    "tooth_31": "Lower Left Central Incisor",
-                    "tooth_32": "Lower Left Lateral Incisor",
-                    "tooth_33": "Lower Left Canine",
-                    "tooth_34": "Lower Left First Premolar",
-                    "tooth_35": "Lower Left Second Premolar",
-                    "tooth_36": "Lower Left First Molar",
-                    "tooth_37": "Lower Left Second Molar",
-                    "tooth_38": "Lower Left Third Molar (Wisdom Tooth)",
-                    #Primary Teeth
-                    "tooth_55": "Upper Right Second Primary Molar",
-                    "tooth_54": "Upper Right First Primary Molar",
-                    "tooth_53": "Upper Right Primary Canine",
-                    "tooth_52": "Upper Right Lateral Primary Incisor",
-                    "tooth_51": "Upper Right Central Primary Incisor",
-                    "tooth_61": "Upper Left Central Primary Incisor",
-                    "tooth_62": "Upper Left Lateral Primary Incisor",
-                    "tooth_63": "Upper Left Primary Canine",
-                    "tooth_64": "Upper Left First Primary Molar",
-                    "tooth_65": "Upper Left Second Primary Molar",
-                    "tooth_85": "Lower Right Second Primary Molar",
-                    "tooth_84": "Lower Right First Primary Molar",
-                    "tooth_83": "Lower Right Primary Canine",
-                    "tooth_82": "Lower Right Lateral Primary Incisor",
-                    "tooth_81": "Lower Right Central Primary Incisor",
-                    "tooth_71": "Lower Left Central Primary Incisor",
-                    "tooth_72": "Lower Left Lateral Primary Incisor",
-                    "tooth_73": "Lower Left Primary Canine",
-                    "tooth_74": "Lower Left First Primary Molar",
-                    "tooth_75": "Lower Left Second Primary Molar"
-                }
+            tooth_names = {
+                #Permanent Teeth
+                "tooth_18": "Upper Right Third Molar (Wisdom Tooth)",
+                "tooth_17": "Upper Right Second Molar",
+                "tooth_16": "Upper Right First Molar",
+                "tooth_15": "Upper Right Second Premolar",
+                "tooth_14": "Upper Right First Premolar",
+                "tooth_13": "Upper Right Canine",
+                "tooth_12": "Upper Right Lateral Incisor",
+                "tooth_11": "Upper Right Central Incisor",
+                "tooth_21": "Upper Left Central Incisor",
+                "tooth_22": "Upper Left Lateral Incisor",
+                "tooth_23": "Upper Left Canine",
+                "tooth_24": "Upper Left First Premolar",
+                "tooth_25": "Upper Left Second Premolar",
+                "tooth_26": "Upper Left First Molar",
+                "tooth_27": "Upper Left Second Molar",
+                "tooth_28": "Upper Left Third Molar (Wisdom Tooth)",
+                "tooth_48": "Lower Right Third Molar (Wisdom Tooth)",
+                "tooth_47": "Lower Right Second Molar",
+                "tooth_46": "Lower Right First Molar",
+                "tooth_45": "Lower Right Second Premolar",
+                "tooth_44": "Lower Right First Premolar",
+                "tooth_43": "Lower Right Canine",
+                "tooth_42": "Lower Right Lateral Incisor",
+                "tooth_41": "Lower Right Central Incisor",
+                "tooth_31": "Lower Left Central Incisor",
+                "tooth_32": "Lower Left Lateral Incisor",
+                "tooth_33": "Lower Left Canine",
+                "tooth_34": "Lower Left First Premolar",
+                "tooth_35": "Lower Left Second Premolar",
+                "tooth_36": "Lower Left First Molar",
+                "tooth_37": "Lower Left Second Molar",
+                "tooth_38": "Lower Left Third Molar (Wisdom Tooth)",
+                #Primary Teeth
+                "tooth_55": "Upper Right Second Primary Molar",
+                "tooth_54": "Upper Right First Primary Molar",
+                "tooth_53": "Upper Right Primary Canine",
+                "tooth_52": "Upper Right Lateral Primary Incisor",
+                "tooth_51": "Upper Right Central Primary Incisor",
+                "tooth_61": "Upper Left Central Primary Incisor",
+                "tooth_62": "Upper Left Lateral Primary Incisor",
+                "tooth_63": "Upper Left Primary Canine",
+                "tooth_64": "Upper Left First Primary Molar",
+                "tooth_65": "Upper Left Second Primary Molar",
+                "tooth_85": "Lower Right Second Primary Molar",
+                "tooth_84": "Lower Right First Primary Molar",
+                "tooth_83": "Lower Right Primary Canine",
+                "tooth_82": "Lower Right Lateral Primary Incisor",
+                "tooth_81": "Lower Right Central Primary Incisor",
+                "tooth_71": "Lower Left Central Primary Incisor",
+                "tooth_72": "Lower Left Lateral Primary Incisor",
+                "tooth_73": "Lower Left Primary Canine",
+                "tooth_74": "Lower Left First Primary Molar",
+                "tooth_75": "Lower Left Second Primary Molar"
+            }
 
-                story.append(Paragraph("DMFT Assessment (Dental Screening)", heading_style))
-                
-                #add a new page for tooth data
-                story.append(PageBreak())
-                story.append(Paragraph("Tooth Assessment", heading_style))
+            story.append(Paragraph("DMFT Assessment (Dental Screening)", heading_style))
+            
+            #add a new page for tooth data
+            story.append(PageBreak())
+            story.append(Paragraph("Tooth Assessment", heading_style))
 
-                for code, status in dental_data.teeth_data.items():
-                    if status:
-                        text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> {status}"
-                        story.append(Paragraph(text, normal_style))
-                    elif status == "":
-                        text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> No Issue (Assumed)"
-                        story.append(Paragraph(text, normal_style))
+            for code, status in dental_data.teeth_data.items():
+                if status:
+                    text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> {status}"
+                    story.append(Paragraph(text, normal_style))
+                elif status == "":
+                    text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> No Issue (Assumed)"
+                    story.append(Paragraph(text, normal_style))
                         
         # Include dietary screening sections if dietary data exists
         if dietary_data:
@@ -644,23 +759,35 @@ def send_report_email(request, patient_id):
         cc_list = [email.strip() for email in cc_emails.split(',') if email.strip()]
     
     try:
-        # Get selected sections from session
-        selected_sections = request.session.get('selected_sections', [
-            'section1', 'section2', 'section3', 'section4', 'section5'
-        ])
-        
         # Generate PDF report for patient (without AI risk assessment)
-        pdf_buffer_patient = generate_pdf_buffer(patient, selected_sections, include_ai_assessment=False, user=request.user)
+        recommended_professional = request.session.get('recommended_professional', '')
+        pdf_buffer_patient = generate_pdf_buffer(patient, include_ai_assessment=False, user=request.user, recommended_professional=recommended_professional)
         
         # Create email context
+        recommended_professional = request.session.get('recommended_professional', '')
+        recommended_professional_name = ''
+        if recommended_professional:
+            professional_names = {
+                'orthodontist': 'Orthodontist',
+                'oral_surgeon': 'Oral Surgeon',
+                'periodontist': 'Periodontist',
+                'endodontist': 'Endodontist',
+                'pediatric_dentist': 'Pediatric Dentist',
+                'prosthodontist': 'Prosthodontist',
+                'oral_pathologist': 'Oral Pathologist',
+                'dentist': 'General Dentist',
+                'medical_doctor': 'Medical Doctor',
+                'pediatrician': 'Pediatrician'
+            }
+            recommended_professional_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+        
         email_context = {
             'patient_name': f'{patient.name} {patient.surname}',
             'patient_id': patient_id,
             'message': message_text,
-            'sections_included': ', '.join([
-                section.replace('section', 'Section ') for section in selected_sections
-            ]),
-            'sender_name': request.user.get_full_name() if request.user.is_authenticated else 'OralSmart Team'
+            'sections_included': 'All available screening data',
+            'sender_name': request.user.get_full_name() if request.user.is_authenticated else 'OralSmart Team',
+            'recommended_professional': recommended_professional_name
         }
         
         # Render email template
@@ -686,7 +813,7 @@ def send_report_email(request, patient_id):
         # Send separate email to health professionals with AI assessment if CC recipients exist
         if cc_list:
             # Generate PDF report for professionals (with AI risk assessment)
-            pdf_buffer_professional = generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, user=request.user)
+            pdf_buffer_professional = generate_pdf_buffer(patient, include_ai_assessment=True, user=request.user, recommended_professional=recommended_professional)
             
             # Create email for health professionals (with AI assessment)
             professional_email = EmailMessage(
@@ -704,13 +831,17 @@ def send_report_email(request, patient_id):
             professional_email.send()
             logger.info(f"Professional report email sent for patient {patient_id} to CC recipients: {', '.join(cc_list)}")
         
+        # Clear the recommended professional from session after successful email sending
+        if 'recommended_professional' in request.session:
+            del request.session['recommended_professional']
+        
         return HttpResponse('Email sent successfully', status=200)
         
     except Exception as e:
         logger.error(f"Error sending email: {str(e)}")
         return HttpResponse(f'Error sending email: {str(e)}', status=500)
 
-def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, user=None):
+def generate_pdf_buffer(patient, include_ai_assessment=True, user=None, recommended_professional=''):
     """Generate PDF buffer for email attachment"""
     try:
         dental_data = DentalScreening.objects.get(patient_id=patient.id)
@@ -843,6 +974,26 @@ def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, 
                  Paragraph(f"<b>Registration No:</b> {profile.reg_num}", normal_style)]
             ]
             
+            # Add recommended professional if available
+            if recommended_professional:
+                professional_names = {
+                    'orthodontist': 'Orthodontist',
+                    'oral_surgeon': 'Oral Surgeon',
+                    'periodontist': 'Periodontist',
+                    'endodontist': 'Endodontist',
+                    'pediatric_dentist': 'Pediatric Dentist',
+                    'prosthodontist': 'Prosthodontist',
+                    'oral_pathologist': 'Oral Pathologist',
+                    'dentist': 'General Dentist',
+                    'medical_doctor': 'Medical Doctor',
+                    'pediatrician': 'Pediatrician'
+                }
+                recommended_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+                professional_data.append([
+                    Paragraph(f"<b>Recommended Referral:</b> {recommended_name}", normal_style),
+                    Paragraph(f"<b>Date:</b> {timezone.now().strftime('%Y-%m-%d')}", normal_style)
+                ])
+            
             professional_table = Table(professional_data, colWidths=[3*inch, 3*inch])
             professional_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, -1), HexColor('#E8F4FD')),
@@ -867,6 +1018,25 @@ def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, 
             if user.email:
                 professional_info += f" ({user.email})"
             story.append(Paragraph(professional_info, normal_style))
+            
+            # Add recommended professional if available
+            if recommended_professional:
+                professional_names = {
+                    'orthodontist': 'Orthodontist',
+                    'oral_surgeon': 'Oral Surgeon',
+                    'periodontist': 'Periodontist',
+                    'endodontist': 'Endodontist',
+                    'pediatric_dentist': 'Pediatric Dentist',
+                    'prosthodontist': 'Prosthodontist',
+                    'oral_pathologist': 'Oral Pathologist',
+                    'dentist': 'General Dentist',
+                    'medical_doctor': 'Medical Doctor',
+                    'pediatrician': 'Pediatrician'
+                }
+                recommended_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+                recommended_info = f"<b>Recommended Referral:</b> {recommended_name} (Date: {timezone.now().strftime('%Y-%m-%d')})"
+                story.append(Paragraph(recommended_info, normal_style))
+            
             story.append(Spacer(1, 12))
         except Exception:
             # If other error, skip this section
@@ -979,75 +1149,70 @@ def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, 
     # Include dental screening sections if dental data exists
     if dental_data:
         # Section 1: Social/Behavioural/Medical Risk Factors (Dental)
-        if 'section1' in selected_sections:
-            story.append(Paragraph("Social/Behavioural/Medical Risk Factors (Dental Screening)", heading_style))
-            
-            section1_data = [
-                f"<b>Caregiver treatment:</b> {dental_data.caregiver_treatment}",
-                f"<b>South African Citizen:</b> {dental_data.sa_citizen}",
-                f"<b>Special needs:</b> {dental_data.special_needs}"
-            ]
-            
-            # Add each item as a paragraph for proper bold rendering
-            for item in section1_data:
-                story.append(Paragraph(item, normal_style))
-            story.append(Spacer(1, 12))
+        story.append(Paragraph("Social/Behavioural/Medical Risk Factors (Dental Screening)", heading_style))
+        
+        section1_data = [
+            f"<b>Caregiver treatment:</b> {dental_data.caregiver_treatment}",
+            f"<b>South African Citizen:</b> {dental_data.sa_citizen}",
+            f"<b>Special needs:</b> {dental_data.special_needs}"
+        ]
+        
+        # Add each item as a paragraph for proper bold rendering
+        for item in section1_data:
+            story.append(Paragraph(item, normal_style))
+        story.append(Spacer(1, 12))
 
         # Section 2: Clinical Risk Factors (Dental)
-        if 'section2' in selected_sections:
-            story.append(Paragraph("Clinical Risk Factors (Dental Screening)", heading_style))
-            
-            section2_data = [
-                f"<b>Plaque:</b> {dental_data.plaque}",
-                f"<b>Dry mouth:</b> {dental_data.dry_mouth}",
-                f"<b>Enamel defects:</b> {dental_data.enamel_defects}",
-                f"<b>Intra-oral appliance:</b> {dental_data.appliance}"
-            ]
-            
-            # Add each item as a paragraph for proper bold rendering
-            for item in section2_data:
-                story.append(Paragraph(item, normal_style))
-            story.append(Spacer(1, 12))
+        story.append(Paragraph("Clinical Risk Factors (Dental Screening)", heading_style))
+        
+        section2_data = [
+            f"<b>Plaque:</b> {dental_data.plaque}",
+            f"<b>Dry mouth:</b> {dental_data.dry_mouth}",
+            f"<b>Enamel defects:</b> {dental_data.enamel_defects}",
+            f"<b>Intra-oral appliance:</b> {dental_data.appliance}"
+        ]
+        
+        # Add each item as a paragraph for proper bold rendering
+        for item in section2_data:
+            story.append(Paragraph(item, normal_style))
+        story.append(Spacer(1, 12))
 
         # Section 3: Protective Factors (Dental)
-        if 'section3' in selected_sections:
-            story.append(Paragraph("Protective Factors (Dental Screening)", heading_style))
-            
-            section3_data = [
-                f"<b>Fluoride water:</b> {dental_data.fluoride_water}",
-                f"<b>Fluoride toothpaste:</b> {dental_data.fluoride_toothpaste}",
-                f"<b>Topical fluoride:</b> {dental_data.topical_fluoride}",
-                f"<b>Regular checkups:</b> {dental_data.regular_checkups}"
-            ]
+        story.append(Paragraph("Protective Factors (Dental Screening)", heading_style))
         
-            # Add each item as a paragraph for proper bold rendering
-            for item in section3_data:
-                story.append(Paragraph(item, normal_style))
-            story.append(Spacer(1, 12))
+        section3_data = [
+            f"<b>Fluoride water:</b> {dental_data.fluoride_water}",
+            f"<b>Fluoride toothpaste:</b> {dental_data.fluoride_toothpaste}",
+            f"<b>Topical fluoride:</b> {dental_data.topical_fluoride}",
+            f"<b>Regular checkups:</b> {dental_data.regular_checkups}"
+        ]
+    
+        # Add each item as a paragraph for proper bold rendering
+        for item in section3_data:
+            story.append(Paragraph(item, normal_style))
+        story.append(Spacer(1, 12))
 
         # Section 4: Disease Indicators (Dental)
-        if 'section4' in selected_sections:
-            story.append(Paragraph("Disease Indicators (Dental Screening)", heading_style))
-            
-            section4_data = [
-                f"<b>Sealed pits:</b> {dental_data.sealed_pits}",
-                f"<b>Restorative procedures:</b> {dental_data.restorative_procedures}",
-                f"<b>Enamel change:</b> {dental_data.enamel_change}",
-                f"<b>Dentin discoloration:</b> {dental_data.dentin_discoloration}",
-                f"<b>White spot lesions:</b> {dental_data.white_spot_lesions}",
-                f"<b>Cavitated lesions:</b> {dental_data.cavitated_lesions}",
-                f"<b>Multiple restorations:</b> {dental_data.multiple_restorations}",
-                f"<b>Missing teeth:</b> {dental_data.missing_teeth}"
-            ]
-            
-            # Add each item as a paragraph for proper bold rendering
-            for item in section4_data:
-                story.append(Paragraph(item, normal_style))
-            story.append(Spacer(1, 12))
+        story.append(Paragraph("Disease Indicators (Dental Screening)", heading_style))
+        
+        section4_data = [
+            f"<b>Sealed pits:</b> {dental_data.sealed_pits}",
+            f"<b>Restorative procedures:</b> {dental_data.restorative_procedures}",
+            f"<b>Enamel change:</b> {dental_data.enamel_change}",
+            f"<b>Dentin discoloration:</b> {dental_data.dentin_discoloration}",
+            f"<b>White spot lesions:</b> {dental_data.white_spot_lesions}",
+            f"<b>Cavitated lesions:</b> {dental_data.cavitated_lesions}",
+            f"<b>Multiple restorations:</b> {dental_data.multiple_restorations}",
+            f"<b>Missing teeth:</b> {dental_data.missing_teeth}"
+        ]
+        
+        # Add each item as a paragraph for proper bold rendering
+        for item in section4_data:
+            story.append(Paragraph(item, normal_style))
+        story.append(Spacer(1, 12))
 
         # Section 5: DMFT Assessment (Dental only)
-        if 'section5' in selected_sections:
-            tooth_names = {
+        tooth_names = {
                 # Permanent Teeth
                 "tooth_18": "Upper Right Third Molar (Wisdom Tooth)",
                 "tooth_17": "Upper Right Second Molar",
@@ -1104,19 +1269,19 @@ def generate_pdf_buffer(patient, selected_sections, include_ai_assessment=True, 
                 "tooth_75": "Lower Left Second Primary Molar"
             }
 
-            story.append(Paragraph("DMFT Assessment (Dental Screening)", heading_style))
-            
-            # Add a new page for tooth data
-            story.append(PageBreak())
-            story.append(Paragraph("Tooth Assessment", heading_style))
+        story.append(Paragraph("DMFT Assessment (Dental Screening)", heading_style))
+        
+        # Add a new page for tooth data
+        story.append(PageBreak())
+        story.append(Paragraph("Tooth Assessment", heading_style))
 
-            for code, status in dental_data.teeth_data.items():
-                if status:
-                    text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> {status}"
-                    story.append(Paragraph(text, normal_style))
-                elif status == "":
-                    text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> No Issue (Assumed)"
-                    story.append(Paragraph(text, normal_style))
+        for code, status in dental_data.teeth_data.items():
+            if status:
+                text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> {status}"
+                story.append(Paragraph(text, normal_style))
+            elif status == "":
+                text = f"<b>{tooth_names.get(code, 'Unknown Tooth')} ({code}):</b> No Issue (Assumed)"
+                story.append(Paragraph(text, normal_style))
                     
     # Include dietary screening sections if dietary data exists
     if dietary_data:

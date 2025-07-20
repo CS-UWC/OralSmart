@@ -14,6 +14,11 @@ Message from {{ sender_name }}:
 {{ message }}
 {% endif %}
 
+{% if recommended_professional %}
+Professional Referral Recommendation:
+Based on the screening findings, a referral to a {{ recommended_professional }} is recommended for further evaluation and treatment.
+{% endif %}
+
 Important Information:
 - This report contains confidential medical information
 - Please handle in accordance with privacy regulations
