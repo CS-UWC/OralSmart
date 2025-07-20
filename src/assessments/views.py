@@ -33,7 +33,13 @@ def dental_screening(request, patient_id):
             if missing:
                 #show error and re-render form
                 messages.error(request, f"Please answer all required questions: {', '.join(missing)}")
-                return render(request, 'assessments/dental_screening.html', {
+
+                # Determine which template to use based on user's profession
+                is_dental_professional = (hasattr(request.user, 'profile') and 
+                                        request.user.profile.profession == 'dentist')
+                template_name = 'assessments/dental_screening.html' if is_dental_professional else 'assessments/non_pro_dental_screening.html'
+                
+                return render(request, template_name, {
                     'permanent_upper': permanent_upper,
                     'permanent_lower': permanent_lower,
                     'primary_upper': primary_upper,
@@ -100,7 +106,12 @@ def dental_screening(request, patient_id):
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
 
-    return render(request, 'assessments/dental_screening.html', {
+    # Determine which template to use based on user's profession
+    is_dental_professional = (hasattr(request.user, 'profile') and 
+                            request.user.profile.profession == 'dentist')
+    template_name = 'assessments/dental_screening.html' if is_dental_professional else 'assessments/non_pro_dental_screening.html'
+
+    return render(request, template_name, {
         'permanent_upper': permanent_upper,
         'permanent_lower': permanent_lower,
         'primary_upper': primary_upper,

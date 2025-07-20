@@ -143,8 +143,15 @@ class CustomPageTemplate:
 @login_required
 def view_report(request, patient_id):
 
-    dental_data = DentalScreening.objects.get(patient_id=patient_id)
-    dietary_data = DietaryScreening.objects.get(patient_id=patient_id)
+    try:
+        dental_data = DentalScreening.objects.get(patient_id=patient_id)
+    except DentalScreening.DoesNotExist:
+        dental_data = None
+        
+    try:
+        dietary_data = DietaryScreening.objects.get(patient_id=patient_id)
+    except DietaryScreening.DoesNotExist:
+        dietary_data = None
 
     ml_prediction = get_ml_risk_prediction(dental_data=dental_data, dietary_data=dietary_data)
     risk_color = get_risk_color(ml_prediction['risk_level'])
