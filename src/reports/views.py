@@ -21,11 +21,123 @@ from userprofile.models import Profile
 import logging
 import os
 from django.contrib.auth.decorators import login_required
+import logging
+import os
+import io
 
 # Import ML predictor
 from ml_models.ml_predictor import MLPRiskPredictor
 
 logger = logging.getLogger(__name__)
+
+
+class ProfessionalRecommendationService:
+    """Service class to handle professional recommendations logic"""
+    
+    # Centralized professional definitions - using exactly the professions you specified
+    PROFESSIONALS = {
+        'medical_doctor': 'Medical Doctor',
+        'dentist': 'Dentist',
+        'psychologist': 'Psychologist',
+        'physiotherapist': 'Physiotherapist',
+        'radiographer': 'Radiographer',
+        'occupational_therapist': 'Occupational Therapist',
+        'biokineticist': 'Biokineticist',
+        'clinical_technologist': 'Clinical Technologist',
+        'dietitian': 'Dietitian',
+        'audiologist': 'Audiologist',
+        'optometrist': 'Optometrist',
+        'emergency_care_practitioner': 'Emergency Care Practitioner',
+        'registered_nurse': 'Registered Nurse',
+        'enrolled_nurse': 'Enrolled Nurse',
+        'nursing_assistant': 'Nursing Assistant',
+        'midwife': 'Midwife',
+        # Additional dental specialists that may be used in recommendations
+        'orthodontist': 'Orthodontist',
+        'oral_surgeon': 'Oral Surgeon',
+        'periodontist': 'Periodontist',
+        'endodontist': 'Endodontist',
+        'pediatric_dentist': 'Pediatric Dentist',
+        'prosthodontist': 'Prosthodontist',
+        'oral_pathologist': 'Oral Pathologist',
+        'pediatrician': 'Pediatrician'
+    }
+    
+    # Define recommendation rules based on user profession
+    RECOMMENDATION_RULES = {
+        'dentist': {
+            'exclude': ['dentist'],
+            'primary': ['orthodontist', 'oral_surgeon', 'periodontist', 'endodontist', 'pediatric_dentist', 'medical_doctor']
+        },
+        'medical_doctor': {
+            'include': ['dentist', 'pediatric_dentist', 'orthodontist', 'oral_surgeon']
+        },
+        'registered_nurse': {
+            'exclude': ['registered_nurse'],
+            'primary': ['dentist', 'medical_doctor']
+        },
+        'enrolled_nurse': {
+            'exclude': ['enrolled_nurse'],
+            'primary': ['dentist', 'medical_doctor']
+        },
+        'nursing_assistant': {
+            'exclude': ['nursing_assistant'],
+            'primary': ['dentist', 'medical_doctor']
+        },
+        'default': {
+            'include': ['dentist', 'pediatric_dentist', 'orthodontist', 'medical_doctor']
+        }
+    }
+    
+    @classmethod
+    def get_recommended_professionals(cls, user_profession=None):
+        """Get list of recommended professionals based on user's profession"""
+        if not user_profession or user_profession not in cls.RECOMMENDATION_RULES:
+            rule = cls.RECOMMENDATION_RULES['default']
+        else:
+            rule = cls.RECOMMENDATION_RULES[user_profession]
+        
+        if 'include' in rule:
+            # Use specific include list
+            professional_codes = rule['include']
+        else:
+            # Start with your specified list and apply exclusions
+            base_professionals = [
+                'medical_doctor', 'dentist', 'psychologist', 'physiotherapist',
+                'radiographer', 'occupational_therapist', 'biokineticist',
+                'clinical_technologist', 'dietitian', 'audiologist', 'optometrist',
+                'emergency_care_practitioner', 'registered_nurse', 'enrolled_nurse',
+                'nursing_assistant', 'midwife'
+            ]
+            
+            professional_codes = base_professionals.copy()
+            if 'exclude' in rule:
+                professional_codes = [p for p in professional_codes if p not in rule['exclude']]
+            
+            # Apply primary recommendations if specified
+            if 'primary' in rule:
+                primary = [p for p in rule['primary'] if p in cls.PROFESSIONALS]
+                others = [p for p in professional_codes if p not in primary]
+                professional_codes = primary + others
+        
+        # Convert to tuple format for compatibility with existing template
+        return [(code, cls.PROFESSIONALS[code]) for code in professional_codes if code in cls.PROFESSIONALS]
+    
+    @classmethod
+    def get_professional_display_name(cls, code):
+        """Get display name for a professional code"""
+        return cls.PROFESSIONALS.get(code, code.replace('_', ' ').title())
+    
+    @classmethod
+    def get_current_recommendation(cls, session):
+        """Get current recommendation from session"""
+        code = session.get('recommended_professional', '')
+        if code:
+            return {
+                'code': code,
+                'name': cls.get_professional_display_name(code)
+            }
+        return None
 
 def get_ml_risk_prediction(dental_data, dietary_data):
     """Get ML risk prediction for a patient"""
@@ -157,82 +269,16 @@ def view_report(request, patient_id):
     ml_prediction = get_ml_risk_prediction(dental_data=dental_data, dietary_data=dietary_data)
     risk_color = get_risk_color(ml_prediction['risk_level'])
     
-    # Get recommended professionals based on current user's profession
-    from userprofile.models import Profile
+    # Get recommended professionals using the service
     current_user_profile = getattr(request.user, 'profile', None)
+    user_profession = current_user_profile.profession if current_user_profile else None
     
-    # Define recommended professionals based on the referrer's profession
-    recommended_professionals = []
-    if current_user_profile:
-        if current_user_profile.profession == 'dentist':
-            # Dentists typically refer to specialists
-            recommended_professionals = [
-                ('orthodontist', 'Orthodontist'),
-                ('oral_surgeon', 'Oral Surgeon'),
-                ('periodontist', 'Periodontist'),
-                ('endodontist', 'Endodontist'),
-                ('pediatric_dentist', 'Pediatric Dentist'),
-                ('prosthodontist', 'Prosthodontist'),
-                ('oral_pathologist', 'Oral Pathologist')
-            ]
-        elif current_user_profile.profession in ['registered_nurse', 'enrolled_nurse', 'nursing_assistant']:
-            # Nurses typically refer to dentists and doctors
-            recommended_professionals = [
-                ('dentist', 'General Dentist'),
-                ('pediatric_dentist', 'Pediatric Dentist'),
-                ('medical_doctor', 'Medical Doctor'),
-                ('pediatrician', 'Pediatrician')
-            ]
-        elif current_user_profile.profession == 'medical_doctor':
-            # Doctors typically refer to dental specialists
-            recommended_professionals = [
-                ('dentist', 'General Dentist'),
-                ('pediatric_dentist', 'Pediatric Dentist'),
-                ('orthodontist', 'Orthodontist'),
-                ('oral_surgeon', 'Oral Surgeon')
-            ]
-        else:
-            # Default recommendations for other health professionals
-            recommended_professionals = [
-                ('dentist', 'General Dentist'),
-                ('pediatric_dentist', 'Pediatric Dentist'),
-                ('orthodontist', 'Orthodontist'),
-                ('medical_doctor', 'Medical Doctor')
-            ]
-    else:
-        # Default if no profile
-        recommended_professionals = [
-            ('dentist', 'General Dentist'),
-            ('pediatric_dentist', 'Pediatric Dentist'),
-            ('orthodontist', 'Orthodontist'),
-            ('medical_doctor', 'Medical Doctor')
-        ]
-
-    # Get current recommendation from session
-    current_recommendation_code = request.session.get('recommended_professional', '')
-    current_recommendation = None
+    recommended_professionals = ProfessionalRecommendationService.get_recommended_professionals(user_profession)
+    current_recommendation = ProfessionalRecommendationService.get_current_recommendation(request.session)
     
     # Debug logging
     logger.info(f"Session data: {dict(request.session.items())}")
-    logger.info(f"Current recommendation code from session: '{current_recommendation_code}'")
-    
-    # Map professional codes to display names for current recommendation
-    professional_names = {
-        'orthodontist': 'Orthodontist',
-        'oral_surgeon': 'Oral Surgeon',
-        'periodontist': 'Periodontist',
-        'endodontist': 'Endodontist',
-        'pediatric_dentist': 'Pediatric Dentist',
-        'prosthodontist': 'Prosthodontist',
-        'oral_pathologist': 'Oral Pathologist',
-        'dentist': 'General Dentist',
-        'medical_doctor': 'Medical Doctor',
-        'pediatrician': 'Pediatrician'
-    }
-    
-    if current_recommendation_code:
-        current_recommendation = professional_names.get(current_recommendation_code, current_recommendation_code.replace('_', ' ').title())
-        logger.info(f"Current recommendation: '{current_recommendation}'")
+    logger.info(f"Current recommendation: {current_recommendation}")
 
     return render(
         request, 
@@ -243,8 +289,8 @@ def view_report(request, patient_id):
             'risk_prediction': ml_prediction,
             'risk_color': risk_color,
             'recommended_professionals': recommended_professionals,
-            'current_recommendation': current_recommendation,
-            'current_recommendation_code': current_recommendation_code,
+            'current_recommendation': current_recommendation['name'] if current_recommendation else None,
+            'current_recommendation_code': current_recommendation['code'] if current_recommendation else '',
         }
     )
 
@@ -469,20 +515,7 @@ def generate_pdf(request, patient_id):
                 
                 # Add recommended professional if selected
                 if recommended_professional:
-                    # Map professional codes to display names
-                    professional_names = {
-                        'orthodontist': 'Orthodontist',
-                        'oral_surgeon': 'Oral Surgeon',
-                        'periodontist': 'Periodontist',
-                        'endodontist': 'Endodontist',
-                        'pediatric_dentist': 'Pediatric Dentist',
-                        'prosthodontist': 'Prosthodontist',
-                        'oral_pathologist': 'Oral Pathologist',
-                        'dentist': 'General Dentist',
-                        'medical_doctor': 'Medical Doctor',
-                        'pediatrician': 'Pediatrician'
-                    }
-                    recommended_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+                    recommended_name = ProfessionalRecommendationService.get_professional_display_name(recommended_professional)
                     professional_data.append([
                         Paragraph(f"<b>Recommended Referral:</b> {recommended_name}", normal_style),
                         Paragraph("", normal_style)  # Empty cell for layout
@@ -516,19 +549,7 @@ def generate_pdf(request, patient_id):
                 # Add recommended professional if selected
                 recommended_professional = request.session.get('recommended_professional', '')
                 if recommended_professional:
-                    professional_names = {
-                        'orthodontist': 'Orthodontist',
-                        'oral_surgeon': 'Oral Surgeon',
-                        'periodontist': 'Periodontist',
-                        'endodontist': 'Endodontist',
-                        'pediatric_dentist': 'Pediatric Dentist',
-                        'prosthodontist': 'Prosthodontist',
-                        'oral_pathologist': 'Oral Pathologist',
-                        'dentist': 'General Dentist',
-                        'medical_doctor': 'Medical Doctor',
-                        'pediatrician': 'Pediatrician'
-                    }
-                    recommended_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+                    recommended_name = ProfessionalRecommendationService.get_professional_display_name(recommended_professional)
                     professional_info += f"<br/><b>Recommended Referral:</b> {recommended_name}"
                 
                 story.append(Paragraph(professional_info, normal_style))
@@ -767,19 +788,7 @@ def send_report_email(request, patient_id):
         recommended_professional = request.session.get('recommended_professional', '')
         recommended_professional_name = ''
         if recommended_professional:
-            professional_names = {
-                'orthodontist': 'Orthodontist',
-                'oral_surgeon': 'Oral Surgeon',
-                'periodontist': 'Periodontist',
-                'endodontist': 'Endodontist',
-                'pediatric_dentist': 'Pediatric Dentist',
-                'prosthodontist': 'Prosthodontist',
-                'oral_pathologist': 'Oral Pathologist',
-                'dentist': 'General Dentist',
-                'medical_doctor': 'Medical Doctor',
-                'pediatrician': 'Pediatrician'
-            }
-            recommended_professional_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+            recommended_professional_name = ProfessionalRecommendationService.get_professional_display_name(recommended_professional)
         
         email_context = {
             'patient_name': f'{patient.name} {patient.surname}',
@@ -976,19 +985,7 @@ def generate_pdf_buffer(patient, include_ai_assessment=True, user=None, recommen
             
             # Add recommended professional if available
             if recommended_professional:
-                professional_names = {
-                    'orthodontist': 'Orthodontist',
-                    'oral_surgeon': 'Oral Surgeon',
-                    'periodontist': 'Periodontist',
-                    'endodontist': 'Endodontist',
-                    'pediatric_dentist': 'Pediatric Dentist',
-                    'prosthodontist': 'Prosthodontist',
-                    'oral_pathologist': 'Oral Pathologist',
-                    'dentist': 'General Dentist',
-                    'medical_doctor': 'Medical Doctor',
-                    'pediatrician': 'Pediatrician'
-                }
-                recommended_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+                recommended_name = ProfessionalRecommendationService.get_professional_display_name(recommended_professional)
                 professional_data.append([
                     Paragraph(f"<b>Recommended Referral:</b> {recommended_name}", normal_style),
                     Paragraph(f"<b>Date:</b> {timezone.now().strftime('%Y-%m-%d')}", normal_style)
@@ -1021,19 +1018,7 @@ def generate_pdf_buffer(patient, include_ai_assessment=True, user=None, recommen
             
             # Add recommended professional if available
             if recommended_professional:
-                professional_names = {
-                    'orthodontist': 'Orthodontist',
-                    'oral_surgeon': 'Oral Surgeon',
-                    'periodontist': 'Periodontist',
-                    'endodontist': 'Endodontist',
-                    'pediatric_dentist': 'Pediatric Dentist',
-                    'prosthodontist': 'Prosthodontist',
-                    'oral_pathologist': 'Oral Pathologist',
-                    'dentist': 'General Dentist',
-                    'medical_doctor': 'Medical Doctor',
-                    'pediatrician': 'Pediatrician'
-                }
-                recommended_name = professional_names.get(recommended_professional, recommended_professional.replace('_', ' ').title())
+                recommended_name = ProfessionalRecommendationService.get_professional_display_name(recommended_professional)
                 recommended_info = f"<b>Recommended Referral:</b> {recommended_name} (Date: {timezone.now().strftime('%Y-%m-%d')})"
                 story.append(Paragraph(recommended_info, normal_style))
             
