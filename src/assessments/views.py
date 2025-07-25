@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from patient.models import Patient
 from .models import DentalScreening, DietaryScreening
 
 # Create your views here.
 
+@login_required
 def dental_screening(request, patient_id):
 
     patient = Patient.objects.get(pk=patient_id)
@@ -119,6 +121,7 @@ def dental_screening(request, patient_id):
         'from_dietary': from_dietary,
     })
 
+@login_required
 def dietary_screening(request, patient_id):
     patient = Patient.objects.get(pk=patient_id)
     

@@ -1,8 +1,8 @@
+from django.conf import settings
 from django.db import models
-
 from django.contrib.auth.models import User
-
 from django.db import models
+import os
 
 # Create your models here.
 
@@ -11,9 +11,6 @@ class Profile(models.Model):
     HEALTH_BODIES = [
         ('HPCSA', 'Health Professions Council of South Africa'),
         ('SANC', 'South African Nursing Council'),
-        # ('SAPC', 'South African Pharmacy Council'),
-        # ('SADTC', 'South African Dental Technicians Council'),
-        # ('AHPCSA', 'Allied Health Professions Council of South African'),
     ]
 
     PROFESSIONS = [
@@ -62,3 +59,18 @@ class Profile(models.Model):
     address = models.CharField(max_length=64, null=True)
     
     tel = models.CharField(max_length=64, null=True)
+
+    profile_pic = models.ImageField(upload_to='profile/', default='images/default/default_profile_pic.jpg',null=True, blank=True)
+
+    def get_profile_picture_url(self):
+        """
+        Returns profile picture URL or default if none exists
+        """
+        if self.profile_pic and os.path.exists(self.profile_pic.path):
+            return self.profile_pic.url
+        return f"{settings.MEDIA_URL}images/default/default_profile_pic.jpg"
+    
+    @property
+    def profile_picture_url(self):
+        """Property version of get_profile_picture_url"""
+        return self.get_profile_picture_url()

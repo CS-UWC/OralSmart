@@ -22,6 +22,8 @@ from assessments.views import dental_screening, dietary_screening
 from reports.views import generate_pdf, view_report, send_report_email 
 from userauth.views import activate, change_password, req_password_reset, confirm_password_reset
 from facility.views import clinic_list, refer_patient
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -71,4 +73,4 @@ urlpatterns = [
     #for ML models
     path('ml/', include('ml_models.urls')),
 
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,55 @@
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasProfile" aria-labelledby="offcanvasProfileLabel">
+    
+    <div class="offcanvas-header">
+
+        <h5 class="offcanvas-title" id="offcanvasProfileLabel">Profile Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+
+    </div>
+
+    <div class="offcanvas-body d-flex flex-column">
+
+        <div class="flex-grow-1">
+            <div class="text-center mb-3">
+                <a href="{% url 'profile' %}" class="d-inline-block">
+                    <div class="position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#profilePictureModal">
+                        <img src="{{ request.user.profile.profile_picture_url }}" 
+                             class="rounded-circle img-fluid" 
+                             alt="avatar" 
+                             loading="lazy" 
+                             style="width: 200px; height: 200px; object-fit: cover;">
+                    </div>
+                </a>
+            </div>
+
+            <div class="text-center">
+
+                <h5 class="my-3">{{ request.user.first_name|default:'No first name' }} {{ request.user.last_name|default:'No last name' }}</h5>
+                <p class="text-muted">{{ request.user.email|default:'No email provided' }}</p>
+
+            </div>
+            
+            <div class="text-center">
+
+                <a href="{% url 'profile' %}">View Profile</a>
+
+            </div>
+
+            <div class="text-center">
+
+                <a href="{% url 'home' %}">Go to Home page</a>
+
+            </div>
+        </div>
+
+        <!-- Logout button at the bottom -->
+        <div class="mt-auto">
+            <form action="{% url 'logout' %}" method="POST"> 
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger w-100">Log out</button>
+            </form>
+        </div>
+
+    </div>
+
+</div>

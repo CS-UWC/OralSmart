@@ -1,15 +1,5 @@
 {% load static %}
 
-<!-- <style>
-.navbar {
-  overflow: hidden;
-  background-color: #333;
-  position: fixed; /* Set the navbar to fixed position */
-  top: 0; /* Position the navbar at the top of the page */
-  width: 100%; /* Full width */
-}
-</style> -->
-
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
@@ -45,11 +35,17 @@
         <div class="d-flex align-items-center">
 
             <div class="dropdown">
-                <a href="{% url 'profile' %}" class="d-flex align-items-center">
-                    <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp"
-                         class="rounded-circle" height="45" alt="avatar" loading="lazy" />
+                <a href="#" class="d-flex align-items-center" data-bs-toggle="offcanvas" data-bs-target="#offcanvasProfile" aria-controls="offcanvasProfile">
+                    <img src="{{ request.user.profile.profile_picture_url }}" 
+                         class="rounded-circle igm-fluid" 
+                         alt="avatar" 
+                         loading="lazy"
+                         style="width: 70px; height: 70px; object-fit: cover;" />
                 </a>
             </div>
         </div>
     </div>
 </nav>
+
+<!-- Include Profile Drawer -->
+{% include "profile_drawer.html" %}

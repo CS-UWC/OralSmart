@@ -1,7 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from userprofile.models import Profile
-
+from .forms import ProfilePictureForm
+from django.contrib import messages
 from django.http import JsonResponse
 
 # Create your views here.
@@ -10,7 +11,18 @@ from django.http import JsonResponse
 def profile_view(request):
 
     user = request.user #gets user instance that is currently logged in and their details
-    profile, created = Profile.objects.get_or_create(user=user) #gets extra user profile data for profile viewing
+    profile, _ = Profile.objects.get_or_create(user=user) #gets extra user profile data for profile viewing
+
+    if request.method == 'POST':
+        form = ProfilePictureForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile picture updated successfully!')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Error updating profile picture. Please try again.')
+    else:
+        form = ProfilePictureForm(instance=profile)
 
     #gives the profile.html template context data it can use to populate itself
     context = {
@@ -20,7 +32,8 @@ def profile_view(request):
         'phone': profile.tel,
         'address': profile.address,
         'profession': profile.profession,
-        'show_navbar': False
+        'show_navbar': False,
+        'form': form
     }
     
     return render(request, 'userprofile/profile.html', context)

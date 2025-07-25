@@ -7,22 +7,18 @@
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success alert-dismissible fade show auto-dismiss-alert" role="alert">
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger alert-dismissible fade show auto-dismiss-alert" role="alert">
+            {% else %}
+                <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
+            {% endif %}
                 <strong>{{ message }}</strong>
                 <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endfor %}
     {% endif %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
-                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                bsAlert.close();
-            });
-        }, 3000); //3 seconds
-    });
-    </script>
 
     <section style="background-color: #eee;">
     <div class="container py-5">
@@ -43,8 +39,19 @@
         <div class="col-lg-4">
             <div class="card mb-4">
             <div class="card-body text-center">
-                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp" alt="avatar"
-                class="rounded-circle img-fluid" style="width: 150px;">
+                <!-- Make profile picture clickable with hover effect -->
+                <div class="position-relative d-inline-block" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#profilePictureModal">
+                    <img src="{{ request.user.profile.profile_picture_url }}" 
+                         class="rounded-circle img-fluid" 
+                         height="60" 
+                         alt="avatar" 
+                         loading="lazy" 
+                         style="width: 250px;">
+                    <!-- Hover overlay -->
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded-circle profile-hover-overlay">
+                        <span class="text-white fw-bold">View/Edit</span>
+                    </div>
+                </div>
                 <h5 class="my-3">{{ first_name|default:'No first name provided' }} {{ last_name|default:'No last name provided' }}</h5>
                 <p class="text-muted mb-1">{{ profession|default:'No profession provided' }}</p>
                 <p class="text-muted mb-4">{{ address|default:'No address provided' }}</p>
@@ -108,9 +115,119 @@
             </div>
             </div>
         
-        </div>
+            </div>
         </div>
     </div>
     </section>
 
-{% endblock %}
+    <!-- Profile Picture Modal -->
+    <div class="modal fade" id="profilePictureModal" tabindex="-1" aria-labelledby="profilePictureModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profilePictureModalLabel">Profile Picture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <!-- Full size profile picture -->
+                    <img src="{{ request.user.profile.profile_picture_url }}" 
+                         class="img-fluid rounded" 
+                         alt="Profile" 
+                         style="max-height: 400px; max-width: 100%;">
+                    
+                    <!-- Buttons section -->
+                    <div class="mt-4">
+                        <button type="button" 
+                                class="btn btn-primary me-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#changePictureModal"
+                                data-bs-dismiss="modal">
+                            Change Picture
+                        </button>
+                        <a href="{{ request.user.profile.profile_picture_url }}" 
+                           download="profile_picture.jpg" 
+                           class="btn btn-outline-secondary">
+                            Download Picture
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Picture Modal -->
+    <div class="modal fade" id="changePictureModal" tabindex="-1" aria-labelledby="changePictureModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePictureModalLabel">Change Profile Picture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" enctype="multipart/form-data" id="profilePictureForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.profile_pic.id_for_label }}" class="form-label">Select new profile picture:</label>
+                            {{ form.profile_pic }}
+                        </div>
+                        
+                        <!-- Preview area -->
+                        <div class="text-center mb-3" id="imagePreview" style="display: none;">
+                            <img id="previewImg" class="img-fluid rounded" style="max-height: 200px; max-width: 100%;" alt="Preview">
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Picture</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom CSS and JavaScript -->
+    <style>
+        .profile-hover-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .position-relative:hover .profile-hover-overlay {
+            opacity: 1;
+        }
+    </style>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-dismiss alerts after 3 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.auto-dismiss-alert').forEach(function(alert) {
+                var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 3000);
+
+        // Image preview functionality for profile picture upload
+        const fileInput = document.querySelector('input[type="file"]');
+        const previewDiv = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        previewDiv.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewDiv.style.display = 'none';
+                }
+            });
+        }
+    });
+    </script>{% endblock %}

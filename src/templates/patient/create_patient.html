@@ -14,7 +14,7 @@
         {% endfor %}
     {% endif %}
 
-    <form action="{% url 'create_patient' %}" method="POST"> 
+    <form id="patient-form" action="{% url 'create_patient' %}" method="POST"> 
         {% csrf_token %}
 
         <div class="text-center mb-4">
@@ -34,22 +34,6 @@
             <input type="text" class="form-control" id="surname" name='surname' placeholder="Enter Child Surname" required>
             <label for="surname">Enter the child's Surname</label>
         </div>
-
-<!--
-    Dropdown Div for choosing the child gender
-        <div class="dropdown mb-3 d-flex justify-content-center">
-            <button type="button" id="genderDropdown" class="btn btn-secondary dropdown-toggle px-5" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Choose Child Gender
-            </button>
-
-            <input type="hidden" id="genderInput" name="gender" value="" required>
-
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#" onclick="setGender('0', 'Male')">Male</a></li>
-                <li><a class="dropdown-item" href="#" onclick="setGender('1', 'Female')">Female</a></li>
-            </ul>
-        </div>
--->
 
 <!--Div for choosing the child age-->
         <div class="form-floating mb-3">
@@ -104,14 +88,7 @@
             <input type="tel" class="form-control" id="parent_contact" name="parent_contact" placeholder="Enter Parent Contact Number" required pattern="\d{10}" maxlength="10" title="Please enter a 10-digit South African contact number">
             <label for="parent_contact">Enter the parent's Contact Number</label>
         </div>
-
-<!--Div for saving the child's details-->
-<!--
-        <div class="d-flex justify-content-center mb-3">
-            <button type="submit" class="btn btn-success px-4 py-2">Save Patient Information</button>
-        </div>
--->
-        
+  
 <!--submit info-->
         <div class="d-flex justify-content-center" style="gap: 1.5rem;">
             <button type="button" class="btn btn-success px-4 py-2" onclick="submitAndRedirect('dietary')">Start Dietary Screening</button>
@@ -120,11 +97,6 @@
         </div>
 
     <script>
-
-        // function setGender(value, display) {
-        //     document.getElementById('genderDropdown').textContent = display;
-        //     document.getElementById('genderInput').value = value;
-        // }
 
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
@@ -139,7 +111,7 @@
             // Validate Parent ID for exactly 13 digits
             const parentIdInput = document.getElementById('parent_id');
             const parentIdValue = parentIdInput.value;
-            const form = document.querySelector('form');
+            const form = document.getElementById('patient-form');
             if (!/^\d{13}$/.test(parentIdValue)) {
                 parentIdInput.setCustomValidity('Parent ID must be exactly 13 digits.');
                 form.reportValidity();

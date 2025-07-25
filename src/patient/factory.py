@@ -6,6 +6,10 @@ from django.contrib.auth.models import User
 import random
 from faker import Faker as StdFaker
 
+# Age distribution data for South African population
+AGE_DISTRIBUTION = ["0", "1", "2", "3", "4", "5", "6"]
+AGE_WEIGHTS = [0.22, 0.20, 0.18, 0.15, 0.12, 0.08, 0.05]
+
 class PatientFactory(factory.django.DjangoModelFactory):
 
     class Meta: # type: ignore
@@ -17,10 +21,7 @@ class PatientFactory(factory.django.DjangoModelFactory):
     name = LazyAttribute(lambda o: StdFaker().first_name_female() if o.gender == "1" else StdFaker().first_name_male())
     surname = Faker("last_name")
 
-    age_distribution = ["0", "1", "2", "3", "4", "5", "6"]
-    age_weights = [0.22, 0.20, 0.18, 0.15, 0.12, 0.08, 0.05]
-
-    age = LazyFunction(lambda: random.choices(PatientFactory.age_distribution, weights=PatientFactory.age_weights, k=1)[0]) #Tried to use the distribution of the South African population
+    age = LazyFunction(lambda: random.choices(AGE_DISTRIBUTION, weights=AGE_WEIGHTS, k=1)[0]) #Tried to use the distribution of the South African population
 
     parent_name = Faker("first_name")
     parent_surname = Faker("last_name")
