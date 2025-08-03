@@ -3,6 +3,10 @@ superuserDetails.txt
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc 
+
+#databse
+*.sqlite
 
 # Django stuff:
 *.log
