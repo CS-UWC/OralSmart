@@ -8,7 +8,7 @@ from faker import Faker as StdFaker
 
 # Age distribution data for South African population
 AGE_DISTRIBUTION = ["0", "1", "2", "3", "4", "5", "6"]
-AGE_WEIGHTS = [0.22, 0.20, 0.18, 0.15, 0.12, 0.08, 0.05]
+AGE_WEIGHTS = [0.25, 0.23, 0.17, 0.12, 0.10, 0.08, 0.05]
 
 class PatientFactory(factory.django.DjangoModelFactory):
 

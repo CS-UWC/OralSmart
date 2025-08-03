@@ -102,7 +102,7 @@ def _calculate_risk_level_from_features(feature_dict, min_dmft=None, risk_thresh
         # For 3-class system, treat risk_threshold as the high threshold
         # Medium threshold is typically 60-70% of high threshold
         high_threshold = risk_threshold
-        medium_threshold = risk_threshold * 0.65  # 65% of high threshold
+        medium_threshold = risk_threshold * 0.5  # 65% of high threshold
     else:
         # More conservative thresholds when data is incomplete
         base_high_threshold = 8

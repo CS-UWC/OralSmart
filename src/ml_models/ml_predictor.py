@@ -6,8 +6,10 @@ import logging
 from typing import Optional, Dict, Any, Tuple
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, StratifiedKFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.feature_selection import SelectKBest, f_classif, RFE
+from sklearn.ensemble import RandomForestClassifier
 from django.db import models
 from django.conf import settings
 
@@ -169,13 +171,14 @@ class MLPRiskPredictor:
                     features[field] = 1 if value == 'yes' else 0
 
                 # DMFT score from teeth_data
-                features['total_dmft_score'] = self.calculate_dmft_score(dental_data.teeth_data)
+                dmft_result = self.calculate_dmft_score(dental_data.teeth_data)
+                features['total_dmft_score'] = dmft_result['dmft']
             else:
                 # Set all dental fields to 0 if no dental data provided
                 for field in self.dental_binary_fields:
                     features[field] = 0
                 
-                # Set DMFT score to 0
+                # Set DMFT scores to 0
                 features['total_dmft_score'] = 0
 
             # Handle dietary data (can be None)
@@ -201,43 +204,386 @@ class MLPRiskPredictor:
         except Exception as e:
             logger.error(f"Error preparing features: {str(e)}")
             raise ValueError(f"Failed to prepare features: {str(e)}")
+        
+    # def calculate_dmft_score(self, teeth_data):
+    # """
+    # Calculate DMFT (Decayed, Missing, Filled Teeth) score according to WHO standards.
+    
+    # DMFT Components:
+    # - D (Decayed): Teeth with caries/decay
+    # - M (Missing): Teeth extracted due to caries
+    # - F (Filled): Teeth with restorations due to caries
+    
+    # Args:
+    #     teeth_data: Dictionary containing teeth status data (can be None)
+        
+    # Returns:
+    #     dict: Dictionary with breakdown of D, M, F scores and total DMFT
+    # """
+    # try:
+    #     d_score = 0  # Decayed
+    #     m_score = 0  # Missing due to caries
+    #     f_score = 0  # Filled
+        
+    #     if not teeth_data:
+    #         return {
+    #             'decayed': 0,
+    #             'missing': 0,
+    #             'filled': 0,
+    #             'total_dmft': 0
+    #         }
+
+    #     for tooth, status in teeth_data.items():
+    #         # Decayed teeth
+    #         if status in ['1', 'B']:  # Caries/decay codes
+    #             d_score += 1
+    #         # Filled teeth (restorations)
+    #         elif status in ['2', 'C']:  # Filled/restoration codes
+    #             f_score += 1
+    #         # Missing due to caries
+    #         elif status in ['3', '4', 'D', 'E']:  # Missing tooth codes
+    #             m_score += 1
+    #         # Note: Status '0' or 'A' typically means sound/healthy tooth (not counted)
+
+    #     total_dmft = d_score + m_score + f_score
+        
+    #     return {
+    #         'decayed': d_score,
+    #         'missing': m_score,
+    #         'filled': f_score,
+    #         'total_dmft': total_dmft
+    #     }
+    
+    # except Exception as e:
+    #     logger.error(f"Error calculating DMFT score: {str(e)}")
+    #     return {
+    #         'decayed': 0,
+    #         'missing': 0,
+    #         'filled': 0,
+    #         'total_dmft': 0
+    #     }
 
     def calculate_dmft_score(self, teeth_data):
         """
-        Calculate DMFT (Decayed, Missing, Filled Teeth) score.
+        Calculate DMFT (Decayed, Missing, Filled Teeth) score with components.
         
         Args:
             teeth_data: Dictionary containing teeth status data (can be None)
             
         Returns:
-            int: DMFT score
+            dict: {'d': decayed_count, 'm': missing_count, 'f': filled_count, 'dmft': total}
         """
         try:
-            score = 0
+            d = m = f = 0  # Initialize decayed, missing, filled
+            
             if not teeth_data:
-                return 0
+                return {'d': 0, 'm': 0, 'f': 0, 'dmft': 0}
 
             for tooth, status in teeth_data.items():
                 if status in ['1', 'B']:  # Decayed
-                    score += 1
+                    d += 1
                 elif status in ['2', 'C']:  # Filled
-                    score += 1
+                    f += 1
                 elif status in ['3', '4', 'D', 'E']:  # Missing
-                    score += 1
+                    m += 1
 
-            return score
+            dmft = d + m + f
+            return {
+                'd': d,
+                'm': m,
+                'f': f,
+                'dmft': dmft
+            }
         
         except Exception as e:
             logger.error(f"Error calculating DMFT score: {str(e)}")
-            return 0
+            return {'d': 0, 'm': 0, 'f': 0, 'dmft': 0}
 
-    def train_from_csv(self, csv_file_path: str, target_column: str = 'risk_level') -> Dict[str, Any]:
+    def perform_feature_selection(self, X, y, method='importance', k_features=50):
         """
-        Train the model using data from a CSV file.
+        Perform feature selection using various methods.
+        
+        Args:
+            X: Features dataframe
+            y: Target variable
+            method: Method to use ('importance', 'kbest', 'rfe')
+            k_features: Number of features to select
+            
+        Returns:
+            Tuple containing (selected_features_mask, feature_importance_scores, selected_feature_names)
+        """
+        try:
+            logger.info(f"Performing feature selection using {method} method...")
+            
+            if method == 'importance':
+                # Use Random Forest feature importance
+                rf = RandomForestClassifier(n_estimators=100, random_state=42)
+                rf.fit(X, y)
+                
+                # Get feature importance scores
+                importance_scores = rf.feature_importances_
+                
+                # Select top k features
+                feature_indices = np.argsort(importance_scores)[::-1][:k_features]
+                selected_mask = np.zeros(len(self.feature_names), dtype=bool)
+                selected_mask[feature_indices] = True
+                
+                selected_features = [self.feature_names[i] for i in feature_indices]
+                
+                logger.info(f"Selected {k_features} features using Random Forest importance")
+                
+            elif method == 'kbest':
+                # Use K-best features based on ANOVA F-statistic
+                selector = SelectKBest(score_func=f_classif, k=k_features)
+                selector.fit(X, y)
+                
+                selected_mask = selector.get_support()
+                importance_scores = selector.scores_
+                selected_features = [self.feature_names[i] for i, selected in enumerate(selected_mask) if selected]
+                
+                logger.info(f"Selected {k_features} features using K-best ANOVA F-statistic")
+                
+            elif method == 'rfe':
+                # Use Recursive Feature Elimination
+                estimator = RandomForestClassifier(n_estimators=50, random_state=42)
+                selector = RFE(estimator, n_features_to_select=k_features)
+                selector.fit(X, y)
+                
+                selected_mask = selector.support_
+                importance_scores = selector.ranking_
+                selected_features = [self.feature_names[i] for i, selected in enumerate(selected_mask) if selected]
+                
+                logger.info(f"Selected {k_features} features using Recursive Feature Elimination")
+                
+            else:
+                raise ValueError(f"Unknown feature selection method: {method}")
+            
+            return selected_mask, importance_scores, selected_features
+            
+        except Exception as e:
+            logger.error(f"Error in feature selection: {str(e)}")
+            raise
+    
+    def perform_hyperparameter_tuning(self, X_train, y_train):
+        """
+        Perform hyperparameter tuning using GridSearchCV.
+        
+        Args:
+            X_train: Training features
+            y_train: Training targets
+            
+        Returns:
+            Best parameters and best estimator
+        """
+        try:
+            logger.info("Starting hyperparameter tuning with GridSearchCV...")
+            
+            # Define parameter grid for MLPClassifier
+            param_grid = {
+                'hidden_layer_sizes': [
+                    (64, 32),
+                    (64, 32, 16),
+                    (100, 50),
+                    (128, 64, 32)
+                ],
+                'alpha': [0.0001, 0.001, 0.01],
+                'learning_rate_init': [0.001, 0.01, 0.1],
+                'activation': ['relu', 'tanh'],
+                'solver': ['adam', 'lbfgs'],
+                'max_iter': [500, 1000]
+            }
+            
+            # Create base model
+            mlp = MLPClassifier(
+                random_state=42,
+                early_stopping=True,
+                validation_fraction=0.1,
+                n_iter_no_change=10
+            )
+            
+            # Create GridSearchCV with 5-fold cross-validation
+            grid_search = GridSearchCV(
+                estimator=mlp,
+                param_grid=param_grid,
+                cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
+                scoring='accuracy',
+                n_jobs=-1,
+                verbose=1
+            )
+            
+            # Fit grid search
+            logger.info("Fitting GridSearchCV (this may take a while)...")
+            grid_search.fit(X_train, y_train)
+            
+            logger.info(f"Best parameters: {grid_search.best_params_}")
+            logger.info(f"Best cross-validation score: {grid_search.best_score_:.4f}")
+            
+            return grid_search.best_params_, grid_search.best_estimator_
+            
+        except Exception as e:
+            logger.error(f"Error in hyperparameter tuning: {str(e)}")
+            raise
+    
+    def perform_cross_validation(self, X, y, model, cv_folds=5):
+        """
+        Perform k-fold cross-validation.
+        
+        Args:
+            X: Features
+            y: Target variable
+            model: Model to validate
+            cv_folds: Number of cross-validation folds
+            
+        Returns:
+            Dictionary containing CV results
+        """
+        try:
+            logger.info(f"Performing {cv_folds}-fold cross-validation...")
+            
+            # Create stratified k-fold
+            skf = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=42)
+            
+            # Perform cross-validation
+            cv_scores = cross_val_score(model, X, y, cv=skf, scoring='accuracy')
+            
+            cv_results = {
+                'cv_scores': cv_scores.tolist(),
+                'cv_mean': cv_scores.mean(),
+                'cv_std': cv_scores.std(),
+                'cv_min': cv_scores.min(),
+                'cv_max': cv_scores.max()
+            }
+            
+            logger.info(f"Cross-validation results:")
+            logger.info(f"  Mean accuracy: {cv_results['cv_mean']:.4f} (+/- {cv_results['cv_std'] * 2:.4f})")
+            logger.info(f"  Min accuracy: {cv_results['cv_min']:.4f}")
+            logger.info(f"  Max accuracy: {cv_results['cv_max']:.4f}")
+            
+            return cv_results
+            
+        except Exception as e:
+            logger.error(f"Error in cross-validation: {str(e)}")
+            raise
+    
+    def display_feature_importance(self, feature_importance_scores, selected_features, method='importance', top_n=20):
+        """
+        Display feature importance results in a readable format.
+        
+        Args:
+            feature_importance_scores: Array of importance scores
+            selected_features: List of selected feature names
+            method: Method used for feature selection
+            top_n: Number of top features to display
+        """
+        try:
+            if feature_importance_scores is None or selected_features is None:
+                logger.info("No feature importance data available")
+                return
+            
+            logger.info(f"\n=== TOP {top_n} FEATURES ({method.upper()}) ===")
+            
+            # Create feature-score pairs and sort based on method
+            feature_scores = list(zip(selected_features, feature_importance_scores))
+            
+            if method in ['importance', 'kbest']:
+                # For Random Forest importance and ANOVA F-statistic, higher is better
+                feature_scores.sort(key=lambda x: x[1], reverse=True)
+            elif method == 'rfe':
+                # For RFE, lower ranking is better (1 is best)
+                feature_scores.sort(key=lambda x: x[1])
+            
+            # Display top features
+            for i, (feature, score) in enumerate(feature_scores[:top_n], 1):
+                if method == 'rfe':
+                    logger.info(f"{i:2d}. {feature:<30} (Rank: {score})")
+                else:
+                    logger.info(f"{i:2d}. {feature:<30} (Score: {score:.4f})")
+            
+            logger.info("=" * 50)
+            
+        except Exception as e:
+            logger.error(f"Error displaying feature importance: {str(e)}")
+    
+    def get_model_validation_summary(self, results):
+        """
+        Generate a comprehensive validation summary.
+        
+        Args:
+            results: Training results dictionary
+            
+        Returns:
+            Formatted validation summary string
+        """
+        try:
+            summary = []
+            summary.append("=" * 60)
+            summary.append("MODEL VALIDATION SUMMARY")
+            summary.append("=" * 60)
+            
+            # Basic metrics
+            summary.append(f"Training Accuracy:     {results['train_accuracy']:.4f}")
+            summary.append(f"Test Accuracy:         {results['test_accuracy']:.4f}")
+            
+            # Cross-validation metrics
+            if 'cross_validation' in results:
+                cv = results['cross_validation']
+                summary.append(f"CV Mean Accuracy:      {cv['cv_mean']:.4f} (+/- {cv['cv_std'] * 2:.4f})")
+                summary.append(f"CV Min Accuracy:       {cv['cv_min']:.4f}")
+                summary.append(f"CV Max Accuracy:       {cv['cv_max']:.4f}")
+            
+            # Data info
+            summary.append(f"Training Samples:      {results['train_samples']}")
+            summary.append(f"Test Samples:          {results['test_samples']}")
+            
+            # Feature info
+            if results.get('selected_features'):
+                summary.append(f"Original Features:     {results['original_features']}")
+                summary.append(f"Selected Features:     {results['features_used']}")
+                summary.append(f"Feature Reduction:     {(1 - results['features_used']/results['original_features'])*100:.1f}%")
+            else:
+                summary.append(f"Features Used:         {results['features_used']}")
+            
+            # Model info
+            summary.append(f"Model Type:            {results['model_type']}")
+            summary.append(f"Training Iterations:   {results.get('iterations', 'N/A')}")
+            
+            # Hyperparameter tuning
+            if results.get('hyperparameter_tuning_used'):
+                summary.append("Hyperparameter Tuning: Enabled")
+                if results.get('best_params'):
+                    summary.append("Best Parameters:")
+                    for param, value in results['best_params'].items():
+                        summary.append(f"  {param}: {value}")
+            else:
+                summary.append("Hyperparameter Tuning: Disabled")
+            
+            # Feature selection
+            if results.get('feature_selection_method'):
+                summary.append(f"Feature Selection:     {results['feature_selection_method']}")
+            else:
+                summary.append("Feature Selection:     None")
+            
+            summary.append("=" * 60)
+            
+            return "\n".join(summary)
+            
+        except Exception as e:
+            logger.error(f"Error generating validation summary: {str(e)}")
+            return "Error generating validation summary"
+
+    def train_from_csv(self, csv_file_path: str, target_column: str = 'risk_level', 
+                      use_feature_selection: bool = True, use_hyperparameter_tuning: bool = True,
+                      feature_selection_method: str = 'importance', n_features: int = 50) -> Dict[str, Any]:
+        """
+        Train the model using data from a CSV file with enhanced validation, feature selection, and hyperparameter tuning.
         
         Args:
             csv_file_path: Path to the CSV file containing training data
             target_column: Name of the column containing the target variable (risk levels)
+            use_feature_selection: Whether to perform feature selection
+            use_hyperparameter_tuning: Whether to perform hyperparameter tuning
+            feature_selection_method: Method for feature selection ('importance', 'kbest', 'rfe')
+            n_features: Number of features to select
             
         Returns:
             Dict containing training metrics and model information
@@ -268,6 +614,26 @@ class MLPRiskPredictor:
                     'high': 2, 'High': 2
                 })
             
+            logger.info(f"Dataset shape: {X.shape}")
+            logger.info(f"Class distribution: {y.value_counts().to_dict()}")
+            
+            # Feature Selection
+            selected_features = None
+            feature_importance_scores = None
+            if use_feature_selection and n_features < len(self.feature_names):
+                logger.info(f"Performing feature selection...")
+                selected_mask, importance_scores, selected_feature_names = self.perform_feature_selection(
+                    X, y, method=feature_selection_method, k_features=n_features
+                )
+                
+                # Update features to use only selected ones
+                X = X.iloc[:, selected_mask]
+                selected_features = selected_feature_names
+                feature_importance_scores = importance_scores
+                
+                logger.info(f"Reduced features from {len(self.feature_names)} to {len(selected_features)}")
+                logger.info(f"Top 10 selected features: {selected_features[:10]}")
+            
             # Split data
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=0.2, random_state=42, stratify=y
@@ -275,53 +641,103 @@ class MLPRiskPredictor:
             
             # Scale features (crucial for neural networks)
             self.scaler = StandardScaler()
-            X_train_scaled = self.scaler.fit_transform(X_train)
-            X_test_scaled = self.scaler.transform(X_test)
+            x_train_scaled = self.scaler.fit_transform(X_train)
+            x_test_scaled = self.scaler.transform(X_test)
             
-            # Train MLP model
-            self.model = MLPClassifier(
-                hidden_layer_sizes=(64, 32, 16),  # 3 hidden layers
-                activation='relu',                 # ReLU activation
-                solver='adam',                     # Adam optimizer
-                alpha=0.001,                      # L2 regularization
-                batch_size='auto',                # Automatic batch size
-                learning_rate='adaptive',         # Adaptive learning rate
-                max_iter=1000,                    # Maximum iterations
-                random_state=42,                  # Reproducibility
-                early_stopping=True,              # Early stopping
-                validation_fraction=0.1,          # Validation set size
-                n_iter_no_change=10              # Patience for early stopping
-            )
+            # Hyperparameter Tuning
+            best_params = None
+            if use_hyperparameter_tuning:
+                logger.info("Performing hyperparameter tuning...")
+                best_params, best_model = self.perform_hyperparameter_tuning(x_train_scaled, y_train)
+                self.model = best_model
+            else:
+                # Use default parameters
+                logger.info("Using default parameters...")
+                self.model = MLPClassifier(
+                    hidden_layer_sizes=(64, 32, 16),  # 3 hidden layers
+                    activation='relu',                 # ReLU activation
+                    solver='adam',                     # Adam optimizer
+                    alpha=0.001,                      # L2 regularization
+                    batch_size='auto',                # Automatic batch size
+                    learning_rate='adaptive',         # Adaptive learning rate
+                    max_iter=1000,                    # Maximum iterations
+                    random_state=42,                  # Reproducibility
+                    early_stopping=True,              # Early stopping
+                    validation_fraction=0.1,          # Validation set size
+                    n_iter_no_change=10              # Patience for early stopping
+                )
+                
+                logger.info("Training MLP model with default parameters...")
+                self.model.fit(x_train_scaled, y_train)
             
-            logger.info("Training MLP model...")
-            self.model.fit(X_train_scaled, y_train)
+            # Cross-validation on the full training set
+            logger.info("Performing 5-fold cross-validation...")
+            cv_results = self.perform_cross_validation(x_train_scaled, y_train, self.model, cv_folds=5)
             
-            # Evaluate model
-            train_pred = self.model.predict(X_train_scaled)
-            test_pred = self.model.predict(X_test_scaled)
+            # Final evaluation on test set
+            train_pred = self.model.predict(x_train_scaled)
+            test_pred = self.model.predict(x_test_scaled)
             
             train_accuracy = accuracy_score(y_train, train_pred)
             test_accuracy = accuracy_score(y_test, test_pred)
             
-            # Save model
+            # Update feature names if feature selection was used
+            if use_feature_selection and selected_features:
+                self.feature_names = selected_features
+            
+            # Save model and scaler
             self.save_model()
             self.is_trained = True
             
+            # Convert feature importance scores to list for JSON serialization
+            feature_importance_list = None
+            if feature_importance_scores is not None:
+                try:
+                    # Convert numpy array or similar to list
+                    feature_importance_list = np.array(feature_importance_scores).tolist()
+                except Exception as e:
+                    logger.warning(f"Could not convert feature importance scores to list: {e}")
+                    feature_importance_list = None
+            
+            # Get classification report as dict for precision, recall, f1
+            classification_report_str = classification_report(y_test, test_pred)
+            classification_report_dict = classification_report(y_test, test_pred, output_dict=True)
+
             results = {
                 'train_accuracy': train_accuracy,
                 'test_accuracy': test_accuracy,
                 'train_samples': len(X_train),
                 'test_samples': len(X_test),
+                'original_features': len(df[self.feature_names].columns) if not use_feature_selection else len(df.columns) - 1,
                 'features_used': len(self.feature_names),
-                'classification_report': classification_report(y_test, test_pred),
+                'selected_features': selected_features if use_feature_selection else None,
+                'feature_importance_scores': feature_importance_list,
+                'best_params': best_params,
+                'cross_validation': cv_results,
+                'classification_report': classification_report_str,
+                'classification_report_dict': classification_report_dict,
                 'confusion_matrix': confusion_matrix(y_test, test_pred).tolist(),
                 'model_type': 'MLPClassifier',
                 'iterations': self.model.n_iter_,
-                'loss': self.model.loss_
+                'loss': self.model.loss_,
+                'feature_selection_method': feature_selection_method if use_feature_selection else None,
+                'hyperparameter_tuning_used': use_hyperparameter_tuning
             }
             
-            logger.info(f"MLP model trained successfully. Test accuracy: {test_accuracy:.4f}")
-            logger.info(f"Training completed in {self.model.n_iter_} iterations")
+            logger.info(f"Model training completed successfully!")
+            logger.info(f"Final test accuracy: {test_accuracy:.4f}")
+            logger.info(f"Cross-validation mean accuracy: {cv_results['cv_mean']:.4f} (+/- {cv_results['cv_std'] * 2:.4f})")
+            if use_feature_selection:
+                logger.info(f"Feature selection reduced features from {results['original_features']} to {results['features_used']}")
+                # Display top features
+                self.display_feature_importance(feature_importance_scores, selected_features, feature_selection_method)
+            if use_hyperparameter_tuning:
+                logger.info(f"Best hyperparameters: {best_params}")
+            
+            # Display comprehensive validation summary
+            validation_summary = self.get_model_validation_summary(results)
+            logger.info(f"\n{validation_summary}")
+            
             return results
             
         except Exception as e:
@@ -412,7 +828,7 @@ class MLPRiskPredictor:
             raise ValueError(f"Failed to make prediction: {str(e)}")
     
     def save_model(self):
-        """Save the trained model and scaler to disk."""
+        """Save the trained model, scaler, and feature names to disk."""
         try:
             # Create directory if it doesn't exist
             os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
@@ -425,15 +841,23 @@ class MLPRiskPredictor:
             with open(self.scaler_path, 'wb') as f:
                 pickle.dump(self.scaler, f)
             
+            # Save feature names (important for feature selection)
+            feature_names_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'feature_names.pkl')
+            with open(feature_names_path, 'wb') as f:
+                pickle.dump(self.feature_names, f)
+            
             logger.info(f"Model saved to {self.model_path}")
+            logger.info(f"Feature names saved to {feature_names_path}")
             
         except Exception as e:
             logger.error(f"Error saving model: {str(e)}")
             raise ValueError(f"Failed to save model: {str(e)}")
     
     def load_model(self):
-        """Load the trained model and scaler from disk."""
+        """Load the trained model, scaler, and feature names from disk."""
         try:
+            feature_names_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'feature_names.pkl')
+            
             if os.path.exists(self.model_path) and os.path.exists(self.scaler_path):
                 # Load model
                 with open(self.model_path, 'rb') as f:
@@ -442,6 +866,12 @@ class MLPRiskPredictor:
                 # Load scaler
                 with open(self.scaler_path, 'rb') as f:
                     self.scaler = pickle.load(f)
+                
+                # Load feature names if available (for backward compatibility)
+                if os.path.exists(feature_names_path):
+                    with open(feature_names_path, 'rb') as f:
+                        self.feature_names = pickle.load(f)
+                    logger.info(f"Loaded {len(self.feature_names)} features from saved model")
                 
                 self.is_trained = True
                 logger.info("Model loaded successfully from disk")
@@ -534,7 +964,28 @@ class MLPRiskPredictor:
                 # Handle different types of features
                 for feature in self.feature_names:
                     if feature == 'total_dmft_score':
-                        record[feature] = random.randint(0, 32)  # Max 32 teeth
+                        # Generate realistic DMFT values based on age distribution
+                        dmft_total = random.choices([0, 1, 2, 3, 4, 5, 6], weights=[0.3, 0.25, 0.2, 0.15, 0.05, 0.03, 0.02], k=1)[0]
+                        record[feature] = dmft_total
+                    elif feature == 'decayed_teeth':
+                        # Decayed teeth usually 0-3 for healthy populations
+                        dmft_total = record.get('total_dmft_score', 0)
+                        max_d = min(dmft_total, 3)  # Cap at 3 decayed teeth
+                        record[feature] = random.randint(0, max_d)
+                    elif feature == 'filled_teeth':
+                        # Filled teeth based on remaining DMFT after decayed
+                        dmft_total = record.get('total_dmft_score', 0)
+                        decayed = record.get('decayed_teeth', 0)
+                        remaining_dmft = dmft_total - decayed
+                        max_f = max(0, remaining_dmft)
+                        record[feature] = random.randint(0, max_f) if max_f > 0 else 0
+                    elif feature == 'missing_teeth_count':
+                        # Missing teeth based on remaining DMFT after decayed and filled
+                        dmft_total = record.get('total_dmft_score', 0)
+                        decayed = record.get('decayed_teeth', 0)
+                        filled = record.get('filled_teeth', 0)
+                        missing = dmft_total - decayed - filled
+                        record[feature] = max(0, missing)
                     elif feature in ['has_dental_data', 'has_dietary_data']:
                         # Data availability indicators - simulate realistic scenarios
                         if feature == 'has_dental_data':
