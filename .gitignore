@@ -6,7 +6,7 @@ __pycache__/
 *.pyc 
 
 #databse
-*.sqlite
+*.sqlite3
 
 # Django stuff:
 *.log
