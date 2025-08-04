@@ -1051,65 +1051,42 @@ class MLPRiskPredictor:
         
         # Frequency mappings
         frequency_map = {
-            'never': 0,
-            'rarely': 1,
-            'sometimes': 2,
-            'often': 3,
-            'daily': 4,
-            'always': 4,
+            # Form template values - Daily frequencies (from dietary_screening_new.html)
+            '1-3_day': 2,  # 1-3 servings/day -> moderate frequency
+            '3-4_day': 3,  # 3-4 servings/day -> high frequency
+            '4-6_day': 4,  # 4-6 servings/day -> very high frequency
             
-            # Specific frequency terms
-            '1-2 times': 1,
-            '3-4 times': 2,
-            '5-6 times': 3,
-            '7+ times': 4,
+            # Form template values - Weekly frequencies (from dietary_screening_new.html)
+            '1-3_week': 1,  # 1-3 times/week -> low frequency
+            '3-4_week': 2,  # 3-4 times/week -> moderate frequency
+            '4-6_week': 3,  # 4-6 times/week -> high frequency
             
-            # Daily frequency
+            # Form template values - Timing (from dietary_screening_new.html)
+            'with_meals': 1,        # With meals -> lower risk
+            'between_meals': 2,     # Between meals -> moderate risk
+            'both': 3,              # Both -> higher risk
+            'after_sweets': 2,      # After eating sweets/snacks -> moderate risk
+            'before_bedtime': 3,    # Before bedtime -> higher risk
+            
+            # Form template values - Water glasses (from dietary_screening_new.html)
+            '<2': 1,     # Less than 2 glasses -> low intake
+            '2-4': 2,    # 2-4 glasses -> moderate intake
+            '5+': 3,     # 5+ glasses -> high intake
+            
+            # Numeric strings for direct numeric input
             '0': 0,
             '1': 1,
             '2': 2,
             '3': 3,
             '4': 4,
-            '5+': 5,
-            
-            # Weekly frequency  
-            '0 times': 0,
-            '1-2 times per week': 1,
-            '3-4 times per week': 2,
-            '5-6 times per week': 3,
-            'daily': 4,
-            
-            # Timing
-            'with meals': 1,
-            'between meals': 2,
-            'before bed': 3,
-            'anytime': 2,
-            
-            # Water glasses
-            '1-2 glasses': 1,
-            '3-4 glasses': 2,
-            '5-6 glasses': 3,
-            '7+ glasses': 4,
-            'throughout the day': 3,
+            '5': 5,
         }
         
         # Try exact match first
         if value in frequency_map:
             return frequency_map[value]
         
-        # Try partial matches for common patterns
-        if any(term in value for term in ['never', 'no', 'none']):
-            return 0
-        elif any(term in value for term in ['rarely', 'seldom', '1-2']):
-            return 1
-        elif any(term in value for term in ['sometimes', 'occasionally', '3-4']):
-            return 2
-        elif any(term in value for term in ['often', 'frequently', '5-6']):
-            return 3
-        elif any(term in value for term in ['daily', 'always', 'every day', '7+']):
-            return 4
-        
-        # Try to extract numbers
+        # Try to extract numbers for any numeric input
         import re
         numbers = re.findall(r'\d+', value)
         if numbers:
@@ -1125,5 +1102,5 @@ class MLPRiskPredictor:
             else:
                 return 4
         
-        # Default to moderate frequency if we can't parse
-        return 2
+        # Default to low frequency if we can't parse
+        return 1

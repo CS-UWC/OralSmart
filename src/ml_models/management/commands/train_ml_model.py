@@ -187,11 +187,21 @@ class Command(BaseCommand):
             # Feature selection results
             if use_feature_selection and results.get('selected_features'):
                 self.stdout.write('')
-                self.stdout.write(self.style.HTTP_INFO('🎯 FEATURE SELECTION RESULTS'))
+                self.stdout.write(self.style.HTTP_INFO('\n🎯 FEATURE SELECTION RESULTS'))
                 self.stdout.write('-' * 40)
                 self.stdout.write(f'🔬 Method used: {feature_selection_method}')
                 self.stdout.write('🏆 Top 10 selected features:')
                 for i, feature in enumerate(results['selected_features'][:10], 1):
+                    self.stdout.write(f'   {i:2d}. {feature}')
+
+            # Feature selection results
+            if use_feature_selection and results.get('selected_features'):
+                self.stdout.write('')
+                self.stdout.write(self.style.HTTP_INFO('\n🎯 FEATURE SELECTION RESULTS'))
+                self.stdout.write('-' * 40)
+                self.stdout.write(f'🔬 Method used: {feature_selection_method}')
+                self.stdout.write('All selected features:')
+                for i, feature in enumerate(results['selected_features'], 1):
                     self.stdout.write(f'   {i:2d}. {feature}')
             
             # Hyperparameter tuning results
