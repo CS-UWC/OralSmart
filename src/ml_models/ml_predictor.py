@@ -4,6 +4,17 @@ import pickle
 import os
 import logging
 from typing import Optional, Dict, Any, Tuple
+import os
+import pickle
+import logging
+import numpy as np
+import pandas as pd
+import random
+import re
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, StratifiedKFold
@@ -16,6 +27,40 @@ from django.conf import settings
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Check GPU availability
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+logger.info(f"🚀 Using device: {device}")
+if torch.cuda.is_available():
+    logger.info(f"GPU: {torch.cuda.get_device_name()}")
+    logger.info(f"PyTorch version: {torch.__version__}")
+
+class MLPNet(nn.Module):
+    """
+    PyTorch GPU-accelerated Multi-Layer Perceptron for oral health risk prediction.
+    """
+    def __init__(self, input_size, hidden_sizes, num_classes=3, dropout=0.2):
+        super(MLPNet, self).__init__()
+        layers = []
+        
+        # Input layer
+        layers.append(nn.Linear(input_size, hidden_sizes[0]))
+        layers.append(nn.ReLU())
+        layers.append(nn.Dropout(dropout))
+        
+        # Hidden layers
+        for i in range(len(hidden_sizes) - 1):
+            layers.append(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1]))
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(dropout))
+        
+        # Output layer
+        layers.append(nn.Linear(hidden_sizes[-1], num_classes))
+        
+        self.network = nn.Sequential(*layers)
+    
+    def forward(self, x):
+        return self.network(x)
 
 class MLPRiskPredictor:
     """
@@ -35,9 +80,13 @@ class MLPRiskPredictor:
     """
     def __init__(self) -> None:
         self.model = None
+        self.pytorch_model = None  # GPU-accelerated PyTorch model
         self.scaler = None
         self.is_trained = False
+        self.use_gpu = torch.cuda.is_available()
+        self.device = device
         self.model_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'risk_predictor.pkl')
+        self.pytorch_model_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'pytorch_model.pth')
         self.scaler_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'scaler.pkl')
         
         # Define field categories as class attributes for reuse
@@ -205,63 +254,6 @@ class MLPRiskPredictor:
             logger.error(f"Error preparing features: {str(e)}")
             raise ValueError(f"Failed to prepare features: {str(e)}")
         
-    # def calculate_dmft_score(self, teeth_data):
-    # """
-    # Calculate DMFT (Decayed, Missing, Filled Teeth) score according to WHO standards.
-    
-    # DMFT Components:
-    # - D (Decayed): Teeth with caries/decay
-    # - M (Missing): Teeth extracted due to caries
-    # - F (Filled): Teeth with restorations due to caries
-    
-    # Args:
-    #     teeth_data: Dictionary containing teeth status data (can be None)
-        
-    # Returns:
-    #     dict: Dictionary with breakdown of D, M, F scores and total DMFT
-    # """
-    # try:
-    #     d_score = 0  # Decayed
-    #     m_score = 0  # Missing due to caries
-    #     f_score = 0  # Filled
-        
-    #     if not teeth_data:
-    #         return {
-    #             'decayed': 0,
-    #             'missing': 0,
-    #             'filled': 0,
-    #             'total_dmft': 0
-    #         }
-
-    #     for tooth, status in teeth_data.items():
-    #         # Decayed teeth
-    #         if status in ['1', 'B']:  # Caries/decay codes
-    #             d_score += 1
-    #         # Filled teeth (restorations)
-    #         elif status in ['2', 'C']:  # Filled/restoration codes
-    #             f_score += 1
-    #         # Missing due to caries
-    #         elif status in ['3', '4', 'D', 'E']:  # Missing tooth codes
-    #             m_score += 1
-    #         # Note: Status '0' or 'A' typically means sound/healthy tooth (not counted)
-
-    #     total_dmft = d_score + m_score + f_score
-        
-    #     return {
-    #         'decayed': d_score,
-    #         'missing': m_score,
-    #         'filled': f_score,
-    #         'total_dmft': total_dmft
-    #     }
-    
-    # except Exception as e:
-    #     logger.error(f"Error calculating DMFT score: {str(e)}")
-    #     return {
-    #         'decayed': 0,
-    #         'missing': 0,
-    #         'filled': 0,
-    #         'total_dmft': 0
-    #     }
 
     def calculate_dmft_score(self, teeth_data):
         """
@@ -379,18 +371,22 @@ class MLPRiskPredictor:
             logger.info("Starting hyperparameter tuning with GridSearchCV...")
             
             # Define parameter grid for MLPClassifier
+            # Testing multiple solvers: Adam (best for high-dim data), SGD (good for large datasets)
+            # L-BFGS excluded as it doesn't converge well with many features (68+)
             param_grid = {
                 'hidden_layer_sizes': [
                     (64, 32),
                     (64, 32, 16),
                     (100, 50),
-                    (128, 64, 32)
+                    (128, 64, 32),
+                    (64, 64),
+                    (128, 64)
                 ],
-                'alpha': [0.0001, 0.001, 0.01],
-                'learning_rate_init': [0.001, 0.01, 0.1],
-                'activation': ['relu', 'tanh'],
-                'solver': ['adam', 'lbfgs'],
-                'max_iter': [500, 1000]
+                'alpha': [0.0001, 0.001, 0.01, 0.0005, 0.005, 0.05],
+                'learning_rate_init': [0.005, 0.05, 0.5, 0.001, 0.01, 0.1],
+                'activation': ['relu', 'tanh', 'logistic'],
+                'solver': ['adam', 'sgd'],  # Test both Adam and SGD solvers
+                'max_iter': [1000, 2000, 3000]  # Increased iterations for better convergence
             }
             
             # Create base model
@@ -398,7 +394,8 @@ class MLPRiskPredictor:
                 random_state=42,
                 early_stopping=True,
                 validation_fraction=0.1,
-                n_iter_no_change=10
+                n_iter_no_change=15,  # Increased patience
+                tol=1e-4             # Tolerance for optimization
             )
             
             # Create GridSearchCV with 5-fold cross-validation
@@ -423,6 +420,200 @@ class MLPRiskPredictor:
         except Exception as e:
             logger.error(f"Error in hyperparameter tuning: {str(e)}")
             raise
+    
+    def perform_gpu_hyperparameter_tuning(self, X_train, y_train):
+        """
+        Perform GPU-accelerated hyperparameter tuning using PyTorch.
+        
+        Args:
+            X_train: Training features (numpy array or pandas DataFrame)
+            y_train: Training targets (numpy array or pandas Series)
+            
+        Returns:
+            Best parameters and trained PyTorch model
+        """
+        try:
+            import time
+            start_time = time.time()
+            
+            logger.info("🚀 Starting GPU-accelerated hyperparameter tuning with PyTorch...")
+            
+            # Convert data to PyTorch tensors
+            if hasattr(X_train, 'values'):
+                X_tensor = torch.FloatTensor(X_train.values).to(self.device)
+            else:
+                # X_train is already a numpy array
+                X_tensor = torch.FloatTensor(X_train).to(self.device)
+            
+            if hasattr(y_train, 'values'):
+                y_tensor = torch.LongTensor(y_train.values).to(self.device)
+            else:
+                # y_train is already a numpy array
+                y_tensor = torch.LongTensor(y_train).to(self.device)
+            
+            # Define parameter grid for PyTorch model
+            param_grid = {
+                'hidden_sizes': [
+                    [64, 32],
+                    [64, 32, 16],
+                    # [100, 50],
+                    # [128, 64, 32],
+                    # # [64, 64],
+                    [128, 64]
+                ],
+                'learning_rate': [0.001, 0.01, 0.1],
+                'dropout': [0.2, 0.1],
+                'batch_size': [128],
+                'epochs': [150],
+                'optimizer': ['adam', "adamw"] # 'optimizer': ['adam', 'adamw']  # Test both Adam and AdamW optimizers
+            }
+            
+            # Calculate total combinations
+            total_combinations = (len(param_grid['hidden_sizes']) * 
+                                len(param_grid['learning_rate']) * 
+                                len(param_grid['dropout']) * 
+                                len(param_grid['batch_size']) * 
+                                len(param_grid['epochs']) *
+                                len(param_grid['optimizer']))
+            
+            logger.info(f"🎯 Testing {total_combinations} parameter combinations on GPU")
+            
+            best_score = 0
+            best_params = None
+            best_model = None
+            
+            combination_count = 0
+            
+            # Grid search with 5-fold cross-validation
+            for hidden_sizes in param_grid['hidden_sizes']:
+                for lr in param_grid['learning_rate']:
+                    for dropout in param_grid['dropout']:
+                        for batch_size in param_grid['batch_size']:
+                            for epochs in param_grid['epochs']:
+                                for optimizer_name in param_grid['optimizer']:
+                                    combination_count += 1
+                                    
+                                    # 5-fold cross-validation
+                                    cv_scores = []
+                                    kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+                                    
+                                    for train_idx, val_idx in kf.split(X_train, y_train):
+                                        # Split data for this fold
+                                        X_fold_train = X_tensor[train_idx]
+                                        X_fold_val = X_tensor[val_idx]
+                                        y_fold_train = y_tensor[train_idx]
+                                        y_fold_val = y_tensor[val_idx]
+                                        
+                                        # Create and train model
+                                        input_size = X_tensor.shape[1]
+                                        model = MLPNet(input_size, hidden_sizes, dropout=dropout).to(self.device)
+                                        criterion = nn.CrossEntropyLoss()
+                                        
+                                        # Create optimizer based on parameter
+                                        if optimizer_name == 'adam':
+                                            optimizer = optim.Adam(model.parameters(), lr=lr)
+                                        elif optimizer_name == 'adamw':
+                                            optimizer = optim.AdamW(model.parameters(), lr=lr)
+                                        else:
+                                            optimizer = optim.Adam(model.parameters(), lr=lr)  # fallback
+                                        
+                                        # Create data loader
+                                        train_dataset = TensorDataset(X_fold_train, y_fold_train)
+                                        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+                                        
+                                        # Training loop
+                                        model.train()
+                                        for epoch in range(epochs):
+                                            for batch_X, batch_y in train_loader:
+                                                optimizer.zero_grad()
+                                                outputs = model(batch_X)
+                                                loss = criterion(outputs, batch_y)
+                                                loss.backward()
+                                                optimizer.step()
+                                            
+                                            # Early stopping check (every 100 epochs)
+                                            if epoch % 100 == 0:
+                                                model.eval()
+                                                with torch.no_grad():
+                                                    val_outputs = model(X_fold_val)
+                                                    val_loss = criterion(val_outputs, y_fold_val)
+                                                    if val_loss.item() < 0.01:  # Good enough, stop early
+                                                        break
+                                                model.train()
+                                        
+                                        # Evaluate on validation set
+                                        model.eval()
+                                        with torch.no_grad():
+                                            val_outputs = model(X_fold_val)
+                                            _, val_predicted = torch.max(val_outputs.data, 1)
+                                            val_accuracy = (val_predicted == y_fold_val).float().mean().item()
+                                            cv_scores.append(val_accuracy)
+                                    
+                                    # Calculate mean CV score for this parameter combination
+                                    mean_cv_score = sum(cv_scores) / len(cv_scores)
+                                    
+                                    # Update best parameters if this is better
+                                    if mean_cv_score > best_score:
+                                        best_score = mean_cv_score
+                                        best_params = {
+                                            'hidden_sizes': hidden_sizes,
+                                            'learning_rate': lr,
+                                            'dropout': dropout,
+                                            'batch_size': batch_size,
+                                            'epochs': epochs,
+                                            'optimizer': optimizer_name
+                                        }
+                                        
+                                        # Train final model with best parameters
+                                        input_size = X_tensor.shape[1]
+                                        best_model = MLPNet(input_size, hidden_sizes, dropout=dropout).to(self.device)
+                                        criterion = nn.CrossEntropyLoss()
+                                        
+                                        # Create optimizer for final model
+                                        if optimizer_name == 'adam':
+                                            optimizer = optim.Adam(best_model.parameters(), lr=lr)
+                                        elif optimizer_name == 'adamw':
+                                            optimizer = optim.AdamW(best_model.parameters(), lr=lr)
+                                        else:
+                                            optimizer = optim.Adam(best_model.parameters(), lr=lr)
+                                        
+                                        # Train final model with full dataset
+                                        train_dataset = TensorDataset(X_tensor, y_tensor)
+                                        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+                                        
+                                        best_model.train()
+                                        for epoch in range(epochs):
+                                            for batch_X, batch_y in train_loader:
+                                                optimizer.zero_grad()
+                                                outputs = best_model(batch_X)
+                                                loss = criterion(outputs, batch_y)
+                                                loss.backward()
+                                                optimizer.step()
+                                    
+                                    # Progress logging
+                                    if combination_count % 5 == 0:  # Log more frequently since we have fewer combinations
+                                        elapsed_time = time.time() - start_time
+                                        logger.info(f"⚡ Progress: {combination_count}/{total_combinations} "
+                                                  f"({combination_count/total_combinations*100:.1f}%) "
+                                                  f"Best score: {best_score:.4f} "
+                                                  f"Time: {elapsed_time/60:.1f}m")
+            
+            end_time = time.time()
+            total_time = end_time - start_time
+            
+            logger.info(f"🏁 GPU hyperparameter tuning completed!")
+            logger.info(f"⏱️  Total time: {total_time/3600:.2f} hours ({total_time/60:.1f} minutes)")
+            logger.info(f"🎯 Best parameters: {best_params}")
+            logger.info(f"📊 Best CV score: {best_score:.4f}")
+            logger.info(f"🚀 GPU performance: {total_combinations*5/total_time:.2f} models/second")
+            
+            return best_params, best_model
+            
+        except Exception as e:
+            logger.error(f"Error in GPU hyperparameter tuning: {str(e)}")
+            # Fallback to CPU if GPU fails
+            logger.info("Falling back to CPU hyperparameter tuning...")
+            return self.perform_hyperparameter_tuning(X_train, y_train)
     
     def perform_cross_validation(self, X, y, model, cv_folds=5):
         """
@@ -647,24 +838,41 @@ class MLPRiskPredictor:
             # Hyperparameter Tuning
             best_params = None
             if use_hyperparameter_tuning:
-                logger.info("Performing hyperparameter tuning...")
-                best_params, best_model = self.perform_hyperparameter_tuning(x_train_scaled, y_train)
-                self.model = best_model
+                if self.use_gpu:
+                    logger.info("🚀 Using GPU-accelerated hyperparameter tuning...")
+                    best_params, best_pytorch_model = self.perform_gpu_hyperparameter_tuning(x_train_scaled, y_train)
+                    self.pytorch_model = best_pytorch_model
+                    
+                    # Create equivalent sklearn model for compatibility
+                    self.model = MLPClassifier(
+                        hidden_layer_sizes=tuple(best_params['hidden_sizes']),
+                        learning_rate_init=best_params['learning_rate'],
+                        random_state=42,
+                        max_iter=best_params['epochs']
+                    )
+                    # Fit sklearn model for compatibility with existing code
+                    self.model.fit(x_train_scaled, y_train)
+                else:
+                    logger.info("Using CPU hyperparameter tuning...")
+                    best_params, best_model = self.perform_hyperparameter_tuning(x_train_scaled, y_train)
+                    self.model = best_model
             else:
                 # Use default parameters
                 logger.info("Using default parameters...")
                 self.model = MLPClassifier(
                     hidden_layer_sizes=(64, 32, 16),  # 3 hidden layers
                     activation='relu',                 # ReLU activation
-                    solver='adam',                     # Adam optimizer
+                    solver='adam',                     # Adam optimizer (better for large datasets)
                     alpha=0.001,                      # L2 regularization
                     batch_size='auto',                # Automatic batch size
                     learning_rate='adaptive',         # Adaptive learning rate
-                    max_iter=1000,                    # Maximum iterations
+                    learning_rate_init=0.001,         # Initial learning rate
+                    max_iter=2000,                    # Increased maximum iterations
                     random_state=42,                  # Reproducibility
                     early_stopping=True,              # Early stopping
                     validation_fraction=0.1,          # Validation set size
-                    n_iter_no_change=10              # Patience for early stopping
+                    n_iter_no_change=15,              # Increased patience for early stopping
+                    tol=1e-4                          # Tolerance for optimization
                 )
                 
                 logger.info("Training MLP model with default parameters...")
@@ -773,8 +981,20 @@ class MLPRiskPredictor:
             features_scaled = self.scaler.transform(features)
             
             # Make prediction
-            prediction = self.model.predict(features_scaled)[0]
-            prediction_proba = self.model.predict_proba(features_scaled)[0]
+            if self.use_gpu and self.pytorch_model is not None:
+                # Use GPU PyTorch model
+                features_tensor = torch.FloatTensor(features_scaled).to(self.device)
+                self.pytorch_model.eval()
+                with torch.no_grad():
+                    outputs = self.pytorch_model(features_tensor)
+                    prediction_proba = torch.softmax(outputs, dim=1).cpu().numpy()[0]
+                    prediction = prediction_proba.argmax()
+                logger.info("🚀 Using GPU PyTorch model for prediction")
+            else:
+                # Use CPU sklearn model
+                prediction = self.model.predict(features_scaled)[0]
+                prediction_proba = self.model.predict_proba(features_scaled)[0]
+                logger.info("Using CPU sklearn model for prediction")
             
             # Get feature importance (different approaches for different models)
             feature_importance = {}
@@ -833,9 +1053,16 @@ class MLPRiskPredictor:
             # Create directory if it doesn't exist
             os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
             
-            # Save model
-            with open(self.model_path, 'wb') as f:
-                pickle.dump(self.model, f)
+            # Save sklearn model
+            if self.model is not None:
+                with open(self.model_path, 'wb') as f:
+                    pickle.dump(self.model, f)
+                logger.info(f"sklearn model saved to {self.model_path}")
+            
+            # Save PyTorch model
+            if self.pytorch_model is not None:
+                torch.save(self.pytorch_model.state_dict(), self.pytorch_model_path)
+                logger.info(f"PyTorch model saved to {self.pytorch_model_path}")
             
             # Save scaler
             with open(self.scaler_path, 'wb') as f:
@@ -846,8 +1073,18 @@ class MLPRiskPredictor:
             with open(feature_names_path, 'wb') as f:
                 pickle.dump(self.feature_names, f)
             
-            logger.info(f"Model saved to {self.model_path}")
-            logger.info(f"Feature names saved to {feature_names_path}")
+            # Save model metadata
+            metadata_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'model_metadata.pkl')
+            metadata = {
+                'use_gpu': self.use_gpu,
+                'has_pytorch_model': self.pytorch_model is not None,
+                'has_sklearn_model': self.model is not None,
+                'feature_count': len(self.feature_names)
+            }
+            with open(metadata_path, 'wb') as f:
+                pickle.dump(metadata, f)
+            
+            logger.info("Model metadata saved")
             
         except Exception as e:
             logger.error(f"Error saving model: {str(e)}")
@@ -857,9 +1094,10 @@ class MLPRiskPredictor:
         """Load the trained model, scaler, and feature names from disk."""
         try:
             feature_names_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'feature_names.pkl')
+            metadata_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'model_metadata.pkl')
             
             if os.path.exists(self.model_path) and os.path.exists(self.scaler_path):
-                # Load model
+                # Load sklearn model
                 with open(self.model_path, 'rb') as f:
                     self.model = pickle.load(f)
                 
@@ -867,11 +1105,32 @@ class MLPRiskPredictor:
                 with open(self.scaler_path, 'rb') as f:
                     self.scaler = pickle.load(f)
                 
-                # Load feature names if available (for backward compatibility)
+                # Load feature names if available
                 if os.path.exists(feature_names_path):
                     with open(feature_names_path, 'rb') as f:
                         self.feature_names = pickle.load(f)
                     logger.info(f"Loaded {len(self.feature_names)} features from saved model")
+                
+                # Load PyTorch model if available and GPU is enabled
+                if self.use_gpu and os.path.exists(self.pytorch_model_path):
+                    try:
+                        # Create model architecture (we need to know the architecture)
+                        # For now, use default architecture - in production, save architecture too
+                        input_size = len(self.feature_names)
+                        hidden_sizes = [128, 64, 32]  # Default architecture
+                        self.pytorch_model = MLPNet(input_size, hidden_sizes).to(self.device)
+                        self.pytorch_model.load_state_dict(torch.load(self.pytorch_model_path, map_location=self.device))
+                        self.pytorch_model.eval()
+                        logger.info("PyTorch GPU model loaded successfully")
+                    except Exception as e:
+                        logger.warning(f"Could not load PyTorch model: {e}")
+                        self.pytorch_model = None
+                
+                # Load metadata if available
+                if os.path.exists(metadata_path):
+                    with open(metadata_path, 'rb') as f:
+                        metadata = pickle.load(f)
+                        logger.info(f"Model metadata: {metadata}")
                 
                 self.is_trained = True
                 logger.info("Model loaded successfully from disk")
@@ -882,6 +1141,7 @@ class MLPRiskPredictor:
         except Exception as e:
             logger.error(f"Error loading model: {str(e)}")
             self.model = None
+            self.pytorch_model = None
             self.scaler = None
             self.is_trained = False
     
@@ -892,14 +1152,24 @@ class MLPRiskPredictor:
         
         model_type = type(self.model).__name__ if self.model else 'Unknown'
         
-        return {
+        info = {
             'status': 'trained',
             'model_type': model_type,
             'feature_count': len(self.feature_names),
             'features': self.feature_names,
             'model_path': self.model_path,
-            'scaler_path': self.scaler_path
+            'scaler_path': self.scaler_path,
+            'gpu_available': torch.cuda.is_available(),
+            'gpu_enabled': self.use_gpu,
+            'has_pytorch_model': self.pytorch_model is not None,
+            'has_sklearn_model': self.model is not None
         }
+        
+        if torch.cuda.is_available():
+            info['gpu_name'] = torch.cuda.get_device_name()
+            info['gpu_memory'] = f"{torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB"
+        
+        return info
     
     def retrain_with_new_data(self, new_csv_path: str, target_column: str = 'risk_level') -> Dict[str, Any]:
         """

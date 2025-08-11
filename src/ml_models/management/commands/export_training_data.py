@@ -8,7 +8,7 @@ from ml_models.ml_predictor import MLPRiskPredictor
 
 
 class Command(BaseCommand):
-    help = 'Export database records to CSV format suitable for ML model training with 3-class risk levels (low/medium/high)'
+    help = 'Export database records to CSV format suitable for ML model training with 3-class risk levels (low/medium/high). Exports all 68 available features - feature selection should be performed during model training, not during export.'
     
     def add_arguments(self, parser):
         parser.add_argument(
@@ -106,12 +106,112 @@ class Command(BaseCommand):
             if not options['include_incomplete'] and not (has_dental and has_dietary):
                 continue
             
-            # Prepare features using the ML predictor
+            # Prepare ALL features comprehensively (no feature selection during export)
             try:
-                features = predictor.prepare_features(dental_data, dietary_data)
-                feature_dict = dict(zip(predictor.feature_names, features[0]))
+                # Create comprehensive feature dictionary with all 68 features
+                feature_dict = {}
                 
-                # Calculate risk level
+                # Data availability indicators
+                has_dental_data = dental_data is not None
+                has_dietary_data = dietary_data is not None
+                feature_dict['has_dental_data'] = 1 if has_dental_data else 0
+                feature_dict['has_dietary_data'] = 1 if has_dietary_data else 0
+
+                # Process dental data
+                if dental_data:
+                    # Binary dental fields
+                    dental_binary_fields = [
+                        'sa_citizen', 'special_needs', 'caregiver_treatment',
+                        'appliance', 'plaque', 'dry_mouth', 'enamel_defects',
+                        'fluoride_water', 'fluoride_toothpaste', 'topical_fluoride',
+                        'regular_checkups', 'sealed_pits', 'restorative_procedures',
+                        'enamel_change', 'dentin_discoloration', 'white_spot_lesions',
+                        'cavitated_lesions', 'multiple_restorations', 'missing_teeth'
+                    ]
+                    
+                    for field in dental_binary_fields:
+                        value = getattr(dental_data, field, 'no')
+                        feature_dict[field] = 1 if value == 'yes' else 0
+
+                    # DMFT score from teeth_data
+                    dmft_result = predictor.calculate_dmft_score(dental_data.teeth_data)
+                    feature_dict['total_dmft_score'] = dmft_result['dmft']
+                else:
+                    # Set all dental fields to 0 if no dental data
+                    dental_binary_fields = [
+                        'sa_citizen', 'special_needs', 'caregiver_treatment',
+                        'appliance', 'plaque', 'dry_mouth', 'enamel_defects',
+                        'fluoride_water', 'fluoride_toothpaste', 'topical_fluoride',
+                        'regular_checkups', 'sealed_pits', 'restorative_procedures',
+                        'enamel_change', 'dentin_discoloration', 'white_spot_lesions',
+                        'cavitated_lesions', 'multiple_restorations', 'missing_teeth'
+                    ]
+                    
+                    for field in dental_binary_fields:
+                        feature_dict[field] = 0
+                    feature_dict['total_dmft_score'] = 0
+
+                # Process dietary data
+                if dietary_data:
+                    # Yes/no dietary fields
+                    dietary_yes_no_fields = [
+                        'sweet_sugary_foods', 'sweet_sugary_foods_bedtime',
+                        'takeaways_processed_foods',
+                        'fresh_fruit', 'fresh_fruit_bedtime',
+                        'cold_drinks_juices', 'cold_drinks_juices_bedtime',
+                        'processed_fruit', 'processed_fruit_bedtime',
+                        'spreads', 'spreads_bedtime',
+                        'added_sugars', 'added_sugars_bedtime',
+                        'salty_snacks',
+                        'dairy_products',
+                        'vegetables',
+                        'water'
+                    ]
+                    
+                    for field in dietary_yes_no_fields:
+                        value = getattr(dietary_data, field, 'no')
+                        feature_dict[field] = 1 if value == 'yes' else 0
+                    
+                    # Text/quantity dietary fields
+                    dietary_text_fields = [
+                        'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly', 'sweet_sugary_foods_timing',
+                        'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
+                        'fresh_fruit_daily', 'fresh_fruit_weekly', 'fresh_fruit_timing',
+                        'cold_drinks_juices_daily', 'cold_drinks_juices_weekly', 'cold_drinks_juices_timing',
+                        'processed_fruit_daily', 'processed_fruit_weekly', 'processed_fruit_timing',
+                        'spreads_daily', 'spreads_weekly', 'spreads_timing',
+                        'added_sugars_daily', 'added_sugars_weekly', 'added_sugars_timing',
+                        'salty_snacks_daily', 'salty_snacks_weekly', 'salty_snacks_timing',
+                        'dairy_products_daily', 'dairy_products_weekly',
+                        'vegetables_daily', 'vegetables_weekly',
+                        'water_timing', 'water_glasses'
+                    ]
+                    
+                    for field in dietary_text_fields:
+                        value = getattr(dietary_data, field, None)
+                        feature_dict[field] = predictor._encode_frequency_quantity(value)
+                        
+                else:
+                    # Set all dietary fields to 0 if no dietary data
+                    dietary_all_fields = [
+                        'sweet_sugary_foods', 'sweet_sugary_foods_bedtime',
+                        'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly', 'sweet_sugary_foods_timing',
+                        'takeaways_processed_foods', 'takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly',
+                        'fresh_fruit', 'fresh_fruit_bedtime', 'fresh_fruit_daily', 'fresh_fruit_weekly', 'fresh_fruit_timing',
+                        'cold_drinks_juices', 'cold_drinks_juices_bedtime', 'cold_drinks_juices_daily', 'cold_drinks_juices_weekly', 'cold_drinks_juices_timing',
+                        'processed_fruit', 'processed_fruit_bedtime', 'processed_fruit_daily', 'processed_fruit_weekly', 'processed_fruit_timing',
+                        'spreads', 'spreads_bedtime', 'spreads_daily', 'spreads_weekly', 'spreads_timing',
+                        'added_sugars', 'added_sugars_bedtime', 'added_sugars_daily', 'added_sugars_weekly', 'added_sugars_timing',
+                        'salty_snacks', 'salty_snacks_daily', 'salty_snacks_weekly', 'salty_snacks_timing',
+                        'dairy_products', 'dairy_products_daily', 'dairy_products_weekly',
+                        'vegetables', 'vegetables_daily', 'vegetables_weekly',
+                        'water', 'water_timing', 'water_glasses'
+                    ]
+                    
+                    for field in dietary_all_fields:
+                        feature_dict[field] = 0
+
+                # Calculate risk level using comprehensive feature set
                 risk_level = self._calculate_risk_level(
                     feature_dict, 
                     options.get('min_dmft'),
@@ -181,7 +281,7 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS(f"\nTraining data exported to: {output_file}")
             )
-            self.stdout.write(f"Features: {len(predictor.feature_names)}")
+            self.stdout.write("Features: 68 (all available features)")
             self.stdout.write(f"Records: {len(training_records)}")
             
         except Exception as e:
@@ -246,17 +346,38 @@ class Command(BaseCommand):
             if feature_dict.get(factor, 0) == 1:
                 risk_score += 1
         
-        # High frequency consumption patterns
-        frequency_factors = [
-            'sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly',
-            'cold_drinks_juices_daily', 'cold_drinks_juices_weekly',
-            'processed_fruit_daily', 'processed_fruit_weekly'
+        # High frequency consumption patterns (handle categorical values)
+        high_frequency_patterns = [
+            ('sweet_sugary_foods_daily', ['3-4_day', '4-6_day']),
+            ('cold_drinks_juices_daily', ['3-4_day', '4-6_day']),
+            ('processed_fruit_daily', ['3-4_day', '4-6_day']),
+            ('takeaways_processed_foods_daily', ['3-4_day', '4-6_day']),
         ]
         
-        for factor in frequency_factors:
+        for factor, high_freq_values in high_frequency_patterns:
             freq_value = feature_dict.get(factor, 0)
-            if freq_value >= 3:  # High frequency
+            if freq_value in high_freq_values:
                 risk_score += 1
+        
+        # Additional dietary risk factors that were missing
+        additional_dietary_factors = [
+            'takeaways_processed_foods', 'fresh_fruit', 'salty_snacks',
+            'dairy_products', 'vegetables', 'water'
+        ]
+        
+        for factor in additional_dietary_factors:
+            if factor == 'water':
+                # Water is protective, not risky
+                if feature_dict.get(factor, 0) == 1:
+                    risk_score -= 1  # Water consumption is protective
+            elif factor in ['dairy_products', 'vegetables', 'fresh_fruit']:
+                # These are generally protective
+                if feature_dict.get(factor, 0) == 1:
+                    risk_score -= 0.5  # Mild protective effect
+            else:
+                # Takeaways and salty snacks are risk factors
+                if feature_dict.get(factor, 0) == 1:
+                    risk_score += 1
         
         # Social risk factors
         if feature_dict.get('special_needs', 0) == 1:
@@ -273,24 +394,29 @@ class Command(BaseCommand):
         has_dietary = feature_dict.get('has_dietary_data', 0)
         data_completeness = has_dental + has_dietary
         
-        # Use custom thresholds if provided, otherwise calculate based on data completeness
+        # Use custom thresholds if provided, otherwise use CAMBRA-inspired distribution
         if risk_threshold is not None:
             # For 3-class system, treat risk_threshold as the high threshold
             # Medium threshold is typically 60-70% of high threshold
             high_threshold = risk_threshold
             medium_threshold = risk_threshold * 0.65  # 65% of high threshold
         else:
-            # More conservative thresholds when data is incomplete
-            base_high_threshold = 8
-            if data_completeness == 2:  # Both assessments
-                high_threshold = base_high_threshold
-                medium_threshold = base_high_threshold * 0.65  # ~5.2
-            elif data_completeness == 1:  # Only one assessment
-                high_threshold = base_high_threshold - 2  # 6
-                medium_threshold = (base_high_threshold - 2) * 0.65  # ~3.9
+            # CAMBRA-inspired thresholds based on score range (-7.5 to 53 = 60.5 points)
+            # Low: 17.4% of range = 10.5 points (rounded down from 10.6)
+            # Medium: 17.4% of range = 10.5 points  
+            # High: 65.2% of range (combining high 43.5% + very high 21.7%)
+            
+            # Data completeness adjustment
+            if data_completeness == 2:  # Both assessments - use full thresholds
+                # Low: < 3.0, Medium: 3.0 to 13.5, High: 13.5+
+                medium_threshold = 3.0
+                high_threshold = 13.5
+            elif data_completeness == 1:  # Only one assessment - slightly more conservative
+                medium_threshold = 2.0
+                high_threshold = 12.0
             else:  # No assessments (shouldn't happen if validation works)
-                high_threshold = base_high_threshold - 4  # 4
-                medium_threshold = (base_high_threshold - 4) * 0.65  # ~2.6
+                medium_threshold = 1.0
+                high_threshold = 10.0
         
         # Return 3-class risk level
         if risk_score >= high_threshold:
