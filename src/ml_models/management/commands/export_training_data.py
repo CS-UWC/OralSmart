@@ -33,7 +33,7 @@ class Command(BaseCommand):
             '--risk-threshold',
             type=int,
             default=None,
-            help='Custom high-risk threshold for 3-class classification (medium threshold will be 65% of this value)'
+            help='Custom high-risk threshold for 3-class classification (medium threshold will be 65%% of this value)'
         )
         parser.add_argument(
             '--include-incomplete',
@@ -44,6 +44,11 @@ class Command(BaseCommand):
             '--dry-run',
             action='store_true',
             help='Show statistics without creating the file'
+        )
+        parser.add_argument(
+            '--no-encoding',
+            action='store_true',
+            help='Export CSV without specifying encoding (uses system default)'
         )
 
     def handle(self, *args, **options):
@@ -271,16 +276,29 @@ class Command(BaseCommand):
         
         # Write to CSV
         try:
-            with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-                if training_records:
-                    fieldnames = list(training_records[0].keys())
-                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                    writer.writeheader()
-                    writer.writerows(training_records)
+            # Choose encoding based on user preference
+            if options['no_encoding']:
+                # Use system default encoding (no explicit encoding specified)
+                with open(output_file, 'w', newline='') as csvfile:
+                    if training_records:
+                        fieldnames = list(training_records[0].keys())
+                        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                        writer.writeheader()
+                        writer.writerows(training_records)
+            else:
+                # Use UTF-8 encoding (default behavior)
+                with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+                    if training_records:
+                        fieldnames = list(training_records[0].keys())
+                        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                        writer.writeheader()
+                        writer.writerows(training_records)
             
+            encoding_info = "system default encoding" if options['no_encoding'] else "UTF-8 encoding"
             self.stdout.write(
                 self.style.SUCCESS(f"\nTraining data exported to: {output_file}")
             )
+            self.stdout.write(f"Encoding: {encoding_info}")
             self.stdout.write("Features: 68 (all available features)")
             self.stdout.write(f"Records: {len(training_records)}")
             
@@ -406,17 +424,23 @@ class Command(BaseCommand):
             # Medium: 17.4% of range = 10.5 points  
             # High: 65.2% of range (combining high 43.5% + very high 21.7%)
             
-            # Data completeness adjustment
+            # Domain-specific threshold adjustment based on missing data type
             if data_completeness == 2:  # Both assessments - use full thresholds
                 # Low: < 3.0, Medium: 3.0 to 13.5, High: 13.5+
                 medium_threshold = 3.0
                 high_threshold = 13.5
-            elif data_completeness == 1:  # Only one assessment - slightly more conservative
-                medium_threshold = 2.0
-                high_threshold = 12.0
-            else:  # No assessments (shouldn't happen if validation works)
-                medium_threshold = 1.0
-                high_threshold = 10.0
+            elif has_dental and not has_dietary:
+                # Missing dietary data - use dental-focused thresholds
+                # Score range when dietary missing: -5 to 37 (42 points total)
+                # Apply 17.4% distribution: Low(7.3pts), Medium(7.3pts), High(65.2%)
+                medium_threshold = 2.3   # 17.4% of range from minimum (-5 + 7.3)
+                high_threshold = 9.6     # 34.8% of range from minimum (-5 + 14.6)
+            else:  # has_dietary and not has_dental
+                # Missing dental data (more critical) - be more conservative
+                # Score range when dental missing: -2.5 to 19 (21.5 points total)
+                # Apply 17.4% distribution: Low(3.7pts), Medium(3.7pts), High(65.2%)
+                medium_threshold = 1.2   # 17.4% of range from minimum (-2.5 + 3.7)
+                high_threshold = 4.9     # 34.8% of range from minimum (-2.5 + 7.4)
         
         # Return 3-class risk level
         if risk_score >= high_threshold:

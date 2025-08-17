@@ -31,6 +31,14 @@ OralSmart is a Django web application for pediatric oral health risk assessment 
 
 ## 🧪 Quick Start & Testing
 
+### ⚠️ Data Management - IMPORTANT
+To clear patient data safely without deleting users:
+```bash
+cd src
+# RECOMMENDED: Clears patients only, keeps users safe
+python manage.py clear_patients
+```
+
 ### Model Training Commands
 ```bash
 # Navigate to Django project
@@ -48,8 +56,14 @@ python manage.py train_ml_model balanced_3class_training_data.csv --baseline
 # Test AI integration
 python manage.py test_ai_integration
 
-# Export training data
+# Export training data (UTF-8 encoding)
 python manage.py export_training_data
+
+# Export training data without encoding (system default)
+python manage.py export_training_data --no-encoding
+
+# Alternative plain CSV export (system default encoding)
+python manage.py export_plain_csv output.csv
 ```
 
 ### Advanced ML Training Options
@@ -131,20 +145,53 @@ python manage.py create_patients --count 500
 # Interactive mode (prompts for count)
 python manage.py create_patients
 
-# Force mode (skip confirmations)
+# Force mode (skip confirmations) - uses mixed assessments by default
 python manage.py create_patients --count 100 --force
 
-# Clean all data from database
-python manage.py create_patients --clean
-
-# Clean only patient data (keep users)
-python manage.py create_patients --clean-patients
+# Choose assessment pattern
+python manage.py create_patients --count 500 --assessment-pattern mixed      # 65% both, 20% dental, 15% dietary
+python manage.py create_patients --count 500 --assessment-pattern both       # All patients have both assessments
+python manage.py create_patients --count 500 --assessment-pattern dental-only    # All patients have dental only
+python manage.py create_patients --count 500 --assessment-pattern dietary-only   # All patients have dietary only
 
 # Or use the standalone script from project root
 cd ..
 python patient_manager.py --count 500
 python patient_manager.py --clean
 ```
+
+### Data Management & Cleanup Commands
+
+⚠️ **IMPORTANT**: Choose the right command to avoid accidentally deleting users!
+
+```bash
+cd src
+
+# 🔴 RECOMMENDED: Clear only patients & assessments (keeps users safe)
+python manage.py clear_patients
+
+# Skip confirmation prompt
+python manage.py clear_patients --confirm
+
+# 🟡 Alternative: Clear only patient data using create_patients command
+python manage.py create_patients --clean-patients
+
+# 🔴 DANGER: Clear ALL data including users (use with extreme caution!)
+python manage.py create_patients --clean
+
+# 📊 Check current patient data
+python manage.py check_patients
+
+# Skip confirmation for any cleaning command
+python manage.py create_patients --clean-patients --force
+```
+
+#### Command Comparison
+| Command | Deletes Patients | Deletes Assessments | Deletes Users | Use When |
+|---------|:----------------:|:------------------:|:-------------:|----------|
+| `clear_patients` | ✅ | ✅ | ❌ | **Recommended** - Safe cleanup |
+| `create_patients --clean-patients` | ✅ | ✅ | ❌ | Alternative cleanup |
+| `create_patients --clean` | ✅ | ✅ | ✅ | **DANGER** - Full reset only |
 
 ### Complete ML Training Workflow
 ```bash
@@ -295,11 +342,11 @@ python manage.py createsuperuser
 
 ### Model Training for Production
 ```bash
-# 1. Clean existing data
-python manage.py create_patients --clean --force
+# 1. Clean existing patient data (keeps users safe)
+python manage.py clear_patients --confirm
 
-# 2. Generate large, balanced dataset
-python manage.py create_patients --count 2000 --force
+# 2. Generate large, balanced dataset with mixed assessment patterns
+python manage.py create_patients --count 2000 --assessment-pattern mixed --force
 
 # 3. Export training data
 python manage.py export_training_data --output production_data.csv

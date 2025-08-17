@@ -1,7 +1,12 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.contrib.auth.models import User
-from patient.factory import PatientWithAssessmentsFactory
+from patient.factory import (
+    PatientWithMixedAssessmentsFactory,
+    PatientWithBothAssessmentsFactory, 
+    PatientWithDentalOnlyFactory,
+    PatientWithDietaryOnlyFactory
+)
 from patient.models import Patient
 from assessments.models import DentalScreening, DietaryScreening
 import sys
@@ -31,6 +36,12 @@ class Command(BaseCommand):
             type=int,
             default=100,
             help='Batch size for bulk creation (default: 100)',
+        )
+        parser.add_argument(
+            '--assessment-pattern',
+            choices=['mixed', 'both', 'dental-only', 'dietary-only'],
+            default='mixed',
+            help='Assessment pattern: mixed (65%% both, 20%% dental, 15%% dietary), both (all have both), dental-only, dietary-only (default: mixed)',
         )
         parser.add_argument(
             '--clean',
@@ -75,13 +86,22 @@ class Command(BaseCommand):
         
         # Create patients
         batch_size = options.get('batch_size', 100)
-        self.create_patients_in_batches(count, batch_size)
+        assessment_pattern = options.get('assessment_pattern', 'mixed')
+        self.create_patients_in_batches(count, batch_size, assessment_pattern)
         
         # Show final status
         self.stdout.write('\n' + '='*50)
         self.show_current_status()
+        
+        pattern_description = {
+            'mixed': 'mixed assessment patterns',
+            'both': 'both dental and dietary assessments',
+            'dental-only': 'dental assessments only',
+            'dietary-only': 'dietary assessments only'
+        }
+        
         self.stdout.write(
-            self.style.SUCCESS(f'✅ Successfully created {count} patients with assessments!')
+            self.style.SUCCESS(f'✅ Successfully created {count} patients with {pattern_description[assessment_pattern]}!')
         )
 
     def show_current_status(self):
@@ -142,12 +162,34 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING('\nOperation cancelled.'))
                 return False
 
-    def create_patients_in_batches(self, total_count, batch_size):
+    def create_patients_in_batches(self, total_count, batch_size, assessment_pattern='mixed'):
         """Create patients in batches with progress reporting"""
         created_count = 0
         batches = (total_count + batch_size - 1) // batch_size  # Ceiling division
         
-        self.stdout.write(f'🏭 Creating {total_count} patients in {batches} batches of {batch_size}...\n')
+        # Select the appropriate factory
+        factory_map = {
+            'mixed': PatientWithMixedAssessmentsFactory,
+            'both': PatientWithBothAssessmentsFactory,
+            'dental-only': PatientWithDentalOnlyFactory,
+            'dietary-only': PatientWithDietaryOnlyFactory
+        }
+        
+        selected_factory = factory_map[assessment_pattern]
+        
+        self.stdout.write(f'🏭 Creating {total_count} patients with "{assessment_pattern}" pattern in {batches} batches of {batch_size}...')
+        
+        # Show pattern details
+        if assessment_pattern == 'mixed':
+            self.stdout.write('   Pattern: 65% both assessments, 20% dental only, 15% dietary only')
+        elif assessment_pattern == 'both':
+            self.stdout.write('   Pattern: All patients will have both dental and dietary assessments')
+        elif assessment_pattern == 'dental-only':
+            self.stdout.write('   Pattern: All patients will have dental assessments only')
+        elif assessment_pattern == 'dietary-only':
+            self.stdout.write('   Pattern: All patients will have dietary assessments only')
+        
+        self.stdout.write('')
         
         try:
             for batch_num in range(batches):
@@ -159,7 +201,11 @@ class Command(BaseCommand):
                 
                 # Create patients with transaction for data integrity
                 with transaction.atomic():
-                    patients = PatientWithAssessmentsFactory.create_batch(current_batch_size)
+                    # Create patients using the selected factory
+                    patients = []
+                    for _ in range(current_batch_size):
+                        patient = selected_factory.create()
+                        patients.append(patient)
                     created_count += len(patients)
                 
                 self.stdout.write(self.style.SUCCESS(' ✅ Done'))
