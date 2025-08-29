@@ -73,4 +73,7 @@ urlpatterns = [
     #for ML models
     path('ml/', include('ml_models.urls')),
 
+    # Health check endpoint
+    path('health/', include('oralsmart.health_urls')),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

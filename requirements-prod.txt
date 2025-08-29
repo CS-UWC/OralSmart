@@ -1,0 +1,56 @@
+# Production Docker requirements - optimized for deployment
+# Core Django
+Django==5.2.4
+asgiref==3.8.1
+sqlparse==0.5.3
+tzdata==2025.2
+
+# Database drivers
+mysqlclient==2.2.7
+psutil==7.0.0
+
+# ML/AI Dependencies
+torch==2.7.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+torchvision==0.22.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+torchaudio==2.7.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+scikit-learn==1.7.0
+numpy==2.3.1
+pandas==2.3.1
+scipy==1.16.0
+joblib==1.5.1
+threadpoolctl==3.6.0
+
+# Image processing
+pillow==11.3.0
+
+# PDF generation
+reportlab==4.4.1
+
+# Utilities
+python-dateutil==2.9.0.post0
+python-dotenv==1.1.1
+pytz==2025.2
+six==1.17.0
+filelock==3.13.1
+fsspec==2024.6.1
+networkx==3.3
+sympy==1.13.3
+mpmath==1.3.0
+typing_extensions==4.12.2
+MarkupSafe==2.1.5
+Jinja2==3.1.4
+
+# Testing (for CI/CD)
+factory_boy==3.3.3
+Faker==37.4.0
+
+# Web server for production
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Monitoring and logging
+sentry-sdk==1.40.6
+
+# Redis for caching/sessions
+redis==5.0.1
+django-redis==5.4.0

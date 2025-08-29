@@ -44,25 +44,25 @@ class DentalFactory(factory.django.DjangoModelFactory):
     # Can be used standalone or with RelatedFactory
     patient = SubFactory('patient.factory.PatientFactory')
 
-    caregiver_treatment = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
+    caregiver_treatment = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.65) == 1 else "no")  # Increased for better care
     sa_citizen = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    special_needs = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.1) == 1 else "no")
-    plaque = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    dry_mouth = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.242) == 1 else "no") #Used distribution in Çiftçi and Aşantoğrol BMC Oral Health (2024) 24:430, variable = Dry Mouth
-    enamel_defects = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
+    special_needs = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.08) == 1 else "no")  # Slightly reduced
+    plaque = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.4) == 1 else "no")  # Reduced for better hygiene
+    dry_mouth = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.2) == 1 else "no")  # Reduced from 0.242
+    enamel_defects = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.4) == 1 else "no")  # Reduced
     appliance = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    fluoride_water = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    fluoride_toothpaste = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    topical_fluoride = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    regular_checkups = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    sealed_pits = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    restorative_procedures = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    enamel_change = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    dentin_discoloration = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    white_spot_lesions = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    cavitated_lesions = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    multiple_restorations = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
-    missing_teeth = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
+    fluoride_water = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.65) == 1 else "no")  # Increased protective factor
+    fluoride_toothpaste = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.8) == 1 else "no")  # Increased from 0.7
+    topical_fluoride = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.6) == 1 else "no")  # Increased protective factor
+    regular_checkups = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.7) == 1 else "no")  # Increased from 0.6
+    sealed_pits = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.6) == 1 else "no")  # Increased protective factor
+    restorative_procedures = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.4) == 1 else "no")  # Reduced
+    enamel_change = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.35) == 1 else "no")  # Reduced risk factor
+    dentin_discoloration = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.35) == 1 else "no")  # Reduced risk factor
+    white_spot_lesions = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.4) == 1 else "no")  # Reduced risk factor
+    cavitated_lesions = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.3) == 1 else "no")  # Significantly reduced major risk factor
+    multiple_restorations = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.3) == 1 else "no")  # Significantly reduced major risk factor
+    missing_teeth = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.3) == 1 else "no")  # Reduced from 0.45
     
     # Helper method to calculate tooth probabilities based on risk factors
     @classmethod
@@ -496,19 +496,19 @@ class DietaryFactory(factory.django.DjangoModelFactory):
 
     # Section 1: Sweet/Sugary Foods - age-appropriate for 0-6 years
     sweet_sugary_foods = LazyAttribute(lambda o: "yes" if np.random.binomial(1, 
-        p=DietaryFactory.get_age_adjusted_probability(0.50, o.patient.age, 
-        [(range(0, 2), 0.5), (range(2, 4), 0.8), (range(4, 7), 1.1)])) == 1 else "no")  # Lower baseline, increasing with age
+        p=DietaryFactory.get_age_adjusted_probability(0.40, o.patient.age,  # Reduced from 0.50
+        [(range(0, 2), 0.4), (range(2, 4), 0.7), (range(4, 7), 1.0)])) == 1 else "no")  # Reduced across all ages
     sweet_sugary_foods_daily = LazyAttribute(lambda o: DietaryFactory.get_realistic_frequency(o.patient.age, 'sweet_sugary_foods', 'daily') if o.sweet_sugary_foods == "yes" else None)
     sweet_sugary_foods_weekly = LazyAttribute(lambda o: DietaryFactory.get_realistic_frequency(o.patient.age, 'sweet_sugary_foods', 'weekly') if o.sweet_sugary_foods == "yes" else None)
     sweet_sugary_foods_timing = LazyAttribute(lambda o: DietaryFactory.get_realistic_timing(o.patient.age, 'sweet_sugary_foods') if o.sweet_sugary_foods == "yes" else None)
     sweet_sugary_foods_bedtime = LazyAttribute(lambda o: (
-        "yes" if np.random.binomial(1, p=0.5) == 1 else "no"
+        "yes" if np.random.binomial(1, p=0.35) == 1 else "no"  # Reduced from 0.5
     ) if o.sweet_sugary_foods == "yes" else None)
 
     # Section 2: Take-aways and Processed Foods - limited in young children
     takeaways_processed_foods = LazyAttribute(lambda o: "yes" if np.random.binomial(1, 
-        p=DietaryFactory.get_age_adjusted_probability(0.30, o.patient.age, 
-        [(range(0, 2), 0.3), (range(2, 4), 0.6), (range(4, 7), 0.9)])) == 1 else "no")  # Increasing with age as diet diversifies
+        p=DietaryFactory.get_age_adjusted_probability(0.25, o.patient.age,  # Reduced from 0.30
+        [(range(0, 2), 0.25), (range(2, 4), 0.5), (range(4, 7), 0.75)])) == 1 else "no")  # Reduced across all ages
     takeaways_processed_foods_daily = LazyAttribute(lambda o: fake.random_element(elements=["1-3_day", "3-4_day", "4-6_day"]) if o.takeaways_processed_foods == "yes" else None)
     takeaways_processed_foods_weekly = LazyAttribute(lambda o: fake.random_element(elements=["1-3_week", "3-4_week", "4-6_week"]) if o.takeaways_processed_foods == "yes" else None)
 
@@ -525,62 +525,62 @@ class DietaryFactory(factory.django.DjangoModelFactory):
 
     # Section 4: Cold Drinks, Juices - limited in infants, increasing with age
     cold_drinks_juices = LazyAttribute(lambda o: "yes" if np.random.binomial(1, 
-        p=DietaryFactory.get_age_adjusted_probability(0.40, o.patient.age, 
-        [(range(0, 1), 0.2), (range(1, 3), 0.6), (range(3, 7), 1.2)])) == 1 else "no")  # Very low in infants (mostly milk/water), increasing with age
+        p=DietaryFactory.get_age_adjusted_probability(0.30, o.patient.age,  # Reduced from 0.40
+        [(range(0, 1), 0.15), (range(1, 3), 0.45), (range(3, 7), 0.9)])) == 1 else "no")  # Reduced sugary drinks
     cold_drinks_juices_daily = LazyAttribute(lambda o: DietaryFactory.get_realistic_frequency(o.patient.age, 'cold_drinks_juices', 'daily') if o.cold_drinks_juices == "yes" else None)
     cold_drinks_juices_weekly = LazyAttribute(lambda o: DietaryFactory.get_realistic_frequency(o.patient.age, 'cold_drinks_juices', 'weekly') if o.cold_drinks_juices == "yes" else None)
     cold_drinks_juices_timing = LazyAttribute(lambda o: DietaryFactory.get_realistic_timing(o.patient.age, 'cold_drinks_juices') if o.cold_drinks_juices == "yes" else None)
     cold_drinks_juices_bedtime = LazyAttribute(lambda o: (
-        "yes" if np.random.binomial(1, p=0.5) == 1 else "no"
+        "yes" if np.random.binomial(1, p=0.35) == 1 else "no"  # Reduced from 0.5
     ) if o.cold_drinks_juices == "yes" else None)
 
     # Section 5: Processed Fruit
-    processed_fruit = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
+    processed_fruit = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.4) == 1 else "no")  # Reduced from 0.5
     processed_fruit_daily = LazyAttribute(lambda o: fake.random_element(elements=["1-3_day", "3-4_day", "4-6_day"]) if o.processed_fruit == "yes" else None)
     processed_fruit_weekly = LazyAttribute(lambda o: fake.random_element(elements=["1-3_week", "3-4_week", "4-6_week"]) if o.processed_fruit == "yes" else None)
     processed_fruit_timing = LazyAttribute(lambda o: fake.random_element(elements=["with_meals", "between_meals", "both"]) if o.processed_fruit == "yes" else None)
     processed_fruit_bedtime = LazyAttribute(lambda o: (
-        "yes" if np.random.binomial(1, p=0.5) == 1 else "no"
+        "yes" if np.random.binomial(1, p=0.35) == 1 else "no"  # Reduced from 0.5
     ) if o.processed_fruit == "yes" else None)
 
     # Section 6: Spreads
-    spreads = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.67) == 1 else "no")
+    spreads = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.6) == 1 else "no")  # Reduced from 0.67
     spreads_daily = LazyAttribute(lambda o: fake.random_element(elements=["1-3_day", "3-4_day", "4-6_day"]) if o.spreads == "yes" else None)
     spreads_weekly = LazyAttribute(lambda o: fake.random_element(elements=["1-3_week", "3-4_week", "4-6_week"]) if o.spreads == "yes" else None)
     spreads_timing = LazyAttribute(lambda o: fake.random_element(elements=["with_meals", "between_meals", "both"]) if o.spreads == "yes" else None)
     spreads_bedtime = LazyAttribute(lambda o: (
-        "yes" if np.random.binomial(1, p=0.5) == 1 else "no"
+        "yes" if np.random.binomial(1, p=0.35) == 1 else "no"  # Reduced from 0.5
     ) if o.spreads == "yes" else None)
 
     # Section 7: Added Sugars
-    added_sugars = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.73) == 1 else "no")
+    added_sugars = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.65) == 1 else "no")  # Reduced from 0.73
     added_sugars_daily = LazyAttribute(lambda o: fake.random_element(elements=["1-3_day", "3-4_day", "4-6_day"]) if o.added_sugars == "yes" else None)
     added_sugars_weekly = LazyAttribute(lambda o: fake.random_element(elements=["1-3_week", "3-4_week", "4-6_week"]) if o.added_sugars == "yes" else None)
     added_sugars_timing = LazyAttribute(lambda o: fake.random_element(elements=["with_meals", "between_meals", "both"]) if o.added_sugars == "yes" else None)
     added_sugars_bedtime = LazyAttribute(lambda o: (
-        "yes" if np.random.binomial(1, p=0.5) == 1 else "no"
+        "yes" if np.random.binomial(1, p=0.35) == 1 else "no"  # Reduced from 0.5
     ) if o.added_sugars == "yes" else None)
 
     # Section 8: Salty Snacks
-    salty_snacks = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.5) == 1 else "no")
+    salty_snacks = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.4) == 1 else "no")  # Reduced from 0.5
     salty_snacks_daily = LazyAttribute(lambda o: fake.random_element(elements=["1-3_day", "3-4_day", "4-6_day"]) if o.salty_snacks == "yes" else None)
     salty_snacks_weekly = LazyAttribute(lambda o: fake.random_element(elements=["1-3_week", "3-4_week", "4-6_week"]) if o.salty_snacks == "yes" else None)
     salty_snacks_timing = LazyAttribute(lambda o: fake.random_element(elements=["with_meals", "between_meals", "both"]) if o.salty_snacks == "yes" else None)
 
     # Section 9: Dairy Products
-    dairy_products = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.60) == 1 else "no")
+    dairy_products = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.75) == 1 else "no")  # Increased from 0.60 (protective)
     dairy_products_daily = LazyAttribute(lambda o: fake.random_element(elements=["1-3_day", "3-4_day", "4-6_day"]) if o.dairy_products == "yes" else None)
     dairy_products_weekly = LazyAttribute(lambda o: fake.random_element(elements=["1-3_week", "3-4_week", "4-6_week"]) if o.dairy_products == "yes" else None)
 
     # Section 10: Vegetables - challenging in young children, gradual introduction
     vegetables = LazyAttribute(lambda o: "yes" if np.random.binomial(1, 
-        p=DietaryFactory.get_age_adjusted_probability(0.45, o.patient.age, 
-        [(range(0, 1), 0.4), (range(1, 3), 0.6), (range(3, 5), 0.7), (range(5, 7), 0.9)])) == 1 else "no")  # Gradual acceptance, still challenging in preschoolers
+        p=DietaryFactory.get_age_adjusted_probability(0.55, o.patient.age,  # Increased from 0.45 (protective)
+        [(range(0, 1), 0.5), (range(1, 3), 0.7), (range(3, 5), 0.8), (range(5, 7), 1.0)])) == 1 else "no")  # Better vegetable acceptance
     vegetables_daily = LazyAttribute(lambda o: DietaryFactory.get_realistic_frequency(o.patient.age, 'vegetables', 'daily') if o.vegetables == "yes" else None)
     vegetables_weekly = LazyAttribute(lambda o: DietaryFactory.get_realistic_frequency(o.patient.age, 'vegetables', 'weekly') if o.vegetables == "yes" else None)
 
     # Section 11: Water
-    water = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.95) == 1 else "no")
+    water = LazyFunction(lambda: "yes" if np.random.binomial(1, p=0.98) == 1 else "no")  # Increased from 0.95 (highly protective)
     water_timing = LazyAttribute(lambda o: fake.random_element(elements=["with_meals", "between_meals", "after_sweets", "before_bedtime"]) if o.water == "yes" else None)
     water_glasses = LazyAttribute(lambda o: fake.random_element(elements=["<2", "2-4", "5+"]) if o.water == "yes" else None)
     

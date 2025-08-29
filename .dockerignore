@@ -1,0 +1,109 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CLINICAL_GUIDE.md
+ML_TRAINING_GUIDE.md
+*.md
+
+# Environment files
+.env
+.env.local
+.env.example
+.env.prod
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+.pytest_cache/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Deployment
+deploy.sh
+deploy.bat
+backups/
+logs/
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Test files
+test_*.py
+*_test.py
+tests/
+.tox/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Virtual environments
+Scripts/
+pyvenv.cfg
+Lib/
+Include/
+
+# Large datasets (but keep small sample files)
+*.csv
+!sample_*.csv
+!test_*.csv
+
+# Media files during development
+media/
+!media/images/default/
+
+# Static files (will be collected in container)
+staticfiles/
+!static/

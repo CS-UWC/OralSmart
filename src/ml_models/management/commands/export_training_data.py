@@ -1,5 +1,6 @@
 import csv
 import os
+import logging
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from assessments.models import DentalScreening, DietaryScreening
@@ -52,8 +53,17 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        # Initialize ML predictor to get feature names
-        predictor = MLPRiskPredictor()
+        # Suppress ML model logging messages during export
+        ml_logger = logging.getLogger('ml_models.ml_predictor')
+        original_level = ml_logger.level
+        ml_logger.setLevel(logging.CRITICAL)
+        
+        try:
+            # Initialize ML predictor to get feature names
+            predictor = MLPRiskPredictor()
+        finally:
+            # Restore original logging level
+            ml_logger.setLevel(original_level)
         
         # Determine output path
         if options['path']:

@@ -1,0 +1,66 @@
+# Production Dockerfile for Django ML app
+FROM python:3.11-slim AS base
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    g++ \
+    gcc \
+    libmariadb-dev \
+    libpq-dev \
+    pkg-config \
+    wget \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --shell /bin/bash --uid 1000 app
+
+# Set work directory
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
+
+# Copy application code
+COPY src/ .
+
+# Create necessary directories and set permissions
+RUN mkdir -p /app/ml_models/saved_models \
+    /app/media \
+    /app/staticfiles \
+    /app/logs \
+    && chown -R app:app /app
+
+# Copy ML models
+COPY --chown=app:app src/ml_models/saved_models/ /app/ml_models/saved_models/
+
+# Switch to non-root user
+USER app
+
+# Collect static files and create gunicorn configuration
+RUN python manage.py collectstatic --noinput --clear && \
+    echo 'bind = "0.0.0.0:8000"' > gunicorn.conf.py && \
+    echo 'workers = 4' >> gunicorn.conf.py && \
+    echo 'worker_class = "sync"' >> gunicorn.conf.py && \
+    echo 'worker_connections = 1000' >> gunicorn.conf.py && \
+    echo 'max_requests = 1000' >> gunicorn.conf.py && \
+    echo 'max_requests_jitter = 100' >> gunicorn.conf.py && \
+    echo 'timeout = 60' >> gunicorn.conf.py && \
+    echo 'keepalive = 2' >> gunicorn.conf.py && \
+    echo 'preload_app = True' >> gunicorn.conf.py
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Production command
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "oralsmart.wsgi:application"]
