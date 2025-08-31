@@ -49,9 +49,6 @@ class DietaryScreeningForm(forms.ModelForm):
             
             # Water
             'water', 'water_timing', 'water_glasses',
-            
-            # Xylitol Products
-            'xylitol_products', 'xylitol_products_daily', 'xylitol_products_weekly'
         ]
         widgets = {
             'sweet_sugary_foods': forms.RadioSelect(choices=[('yes', 'Yes'), ('no', 'No')]),
@@ -65,5 +62,4 @@ class DietaryScreeningForm(forms.ModelForm):
             'dairy_products': forms.RadioSelect(choices=[('yes', 'Yes'), ('no', 'No')]),
             'vegetables': forms.RadioSelect(choices=[('yes', 'Yes'), ('no', 'No')]),
             'water': forms.RadioSelect(choices=[('yes', 'Yes'), ('no', 'No')]),
-            'xylitol_products': forms.RadioSelect(choices=[('yes', 'Yes'), ('no', 'No')]),
         }

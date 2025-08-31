@@ -7,36 +7,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
-@login_required
-def create_patient_view(request):
-    """
-    This returns the "create_patient" template that allows the user to create a patient object. 
-    """
-
-    form = PatientForm(request.POST or None)
-
-    if form.is_valid():
-        form.save()
-        form = PatientForm()
-
-    context = {
-        'form': form,
-        'show_navbar': True,
-    }
-
-    return render(request, "patient/create_patient.html", context)
-
-def patient_detail_view(request):
-
-    obj = Patient.objects.get(id=1) #contains the patient object and all it's variables
-
-    context = {
-        'object': obj,
-        'show_navbar': True,
-    }
-
-    return render(request, "patient/patient_detail.html", context)
-
 
 @login_required
 def create_patient(request):

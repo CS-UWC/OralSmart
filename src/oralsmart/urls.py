@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from patient.views import patient_detail_view, create_patient, patient_list_view
+from patient.views import create_patient, patient_list_view
 from userauth.views import login_user, logout_user,register_user, home_view, landing
 from userprofile.views import profile_view, get_professions
 from assessments.views import dental_screening, dietary_screening
@@ -36,7 +36,6 @@ urlpatterns = [
     path('home/', home_view, name='home'),
 
     #for patient
-    path('patient_detail/', patient_detail_view),
     path('create_patient/', create_patient, name='create_patient'),
     path('patient_list/', patient_list_view, name='patient_list'),
 

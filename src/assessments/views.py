@@ -132,11 +132,17 @@ def dietary_screening(request, patient_id):
         try:
             # Define main questions and their associated frequency questions
             question_groups = {
-                'sweet_sugary_foods': ['sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly'],
-                'cold_drinks_juices': ['cold_drinks_juices_daily', 'cold_drinks_juices_weekly'],
+                'sweet_sugary_foods': ['sweet_sugary_foods_daily', 'sweet_sugary_foods_weekly', 'sweet_sugary_foods_timing', 'sweet_sugary_foods_bedtime'],
                 'takeaways_processed_foods': ['takeaways_processed_foods_daily', 'takeaways_processed_foods_weekly'],
-                'salty_snacks': ['salty_snacks_daily', 'salty_snacks_weekly'],
-                'spreads': ['spreads_daily', 'spreads_weekly']
+                'fresh_fruit': ['fresh_fruit_daily', 'fresh_fruit_weekly', 'fresh_fruit_timing', 'fresh_fruit_bedtime'],
+                'cold_drinks_juices': ['cold_drinks_juices_daily', 'cold_drinks_juices_weekly', 'cold_drinks_juices_timing', 'cold_drinks_juices_bedtime'],
+                'processed_fruit': ['processed_fruit_daily', 'processed_fruit_weekly', 'processed_fruit_timing', 'processed_fruit_bedtime'],
+                'spreads': ['spreads_daily', 'spreads_weekly', 'spreads_timing', 'spreads_bedtime'],
+                'added_sugars': ['added_sugars_daily', 'added_sugars_weekly', 'added_sugars_timing', 'added_sugars_bedtime'],
+                'salty_snacks': ['salty_snacks_daily', 'salty_snacks_weekly', 'salty_snacks_timing'],
+                'dairy_products': ['dairy_products_daily', 'dairy_products_weekly'],
+                'vegetables': ['vegetables_daily', 'vegetables_weekly'],
+                'water': ['water_timing', 'water_glasses'],
             }
             
             missing = []
