@@ -190,7 +190,7 @@ def register_user(request):
 def change_password(request):
     user = request.user
     if request.method == 'POST':
-        form = CustomPasswordResetForm(user, request.POST)
+        form = CustomSetPasswordForm(user, request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, "Your password was successfully updated!")
