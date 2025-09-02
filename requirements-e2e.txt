@@ -1,0 +1,5 @@
+# Add E2E testing dependencies
+pytest==8.4.1
+pytest-playwright==0.7.0
+pytest-django==4.9.0
+pillow==11.3.0
