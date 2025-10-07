@@ -28,7 +28,7 @@
             <ol class="breadcrumb mb-0">
                     <form action="{% url 'logout' %}" method="POST"> 
                         {% csrf_token %}
-                        <button onclick="history.back()" type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-primary ms-1">Back</button>
+                        <button onclick="history.back()" type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-primary ms-1"><i class="fas fa-arrow-left"></i> Back</button>
                     </form>
             </ol>
             </nav>

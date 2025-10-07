@@ -14,9 +14,8 @@
                 <a href="{% url 'profile' %}" class="d-inline-block">
                     <div class="position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#profilePictureModal">
                         <img src="{{ request.user.profile.profile_picture_url }}" 
-                             class="rounded-circle img-fluid" 
+                             class="rounded-circle img-fluid profile-avatar" 
                              alt="avatar" 
-                             loading="lazy" 
                              style="width: 200px; height: 200px; object-fit: cover;">
                     </div>
                 </a>

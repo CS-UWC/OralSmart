@@ -6,7 +6,14 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container">
+    <!-- Back button example (typically goes to landing page) -->
+    <div class="mb-4">
+        <a href="{{ back_url }}" class="btn btn-outline-primary ms-1">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-warning alert-dismissible fade show auto-dismiss-alert" role="alert">
@@ -18,7 +25,7 @@
 
     <!-- Welcome Section -->
     <div class="row justify-content-center">
-        <div class="col-md-10">
+        <div>
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h3 class="mb-0">Welcome to OralSmart</h3>
@@ -62,12 +69,12 @@
     <div class="row justify-content-center mt-4">
         <div class="col-md-10">
             <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                <a href="{% url 'create_patient' %}" class="btn btn-success btn-lg me-md-2">
+                <a href="{% url 'create_patient' %}" class="btn btn-outline-primary btn-lg me-md-2">
                     <i class="fas fa-user-plus"></i> Create New Patient
                 </a>
-                <a href="{% url 'profile' %}" class="btn btn-info btn-lg">
+                <!-- <a href="{% url 'profile' %}" class="btn btn-info btn-lg">
                     <i class="fas fa-user-cog"></i> View Profile
-                </a>
+                </a> -->
             </div>
         </div>
     </div>
@@ -75,7 +82,7 @@
     <!-- Quick Instructions -->
     <div class="row justify-content-center mt-4">
         <div class="col-md-10">
-            <div class="alert alert-info">
+            <div class="alert alert-primary">
                 <h6><i class="fas fa-info-circle"></i> Quick Instructions:</h6>
                 <p class="mb-0">
                     <strong>1.</strong> Start by creating a new patient profile using the "Create New Patient" button above.<br>

@@ -1,5 +1,25 @@
 {% load static %}
 
+<style>
+.profile-avatar {
+    background-color: #f8f9fa;
+    border: 2px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+.profile-avatar:hover {
+    border-color: #007bff;
+    transform: scale(1.05);
+}
+
+/* Placeholder while image loads */
+.profile-avatar[src=""], .profile-avatar:not([src]) {
+    background-image: url('{% static "images/default/default_profile_pic.jpg" %}');
+    background-size: cover;
+    background-position: center;
+}
+</style>
+
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
@@ -37,9 +57,8 @@
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center" data-bs-toggle="offcanvas" data-bs-target="#offcanvasProfile" aria-controls="offcanvasProfile">
                     <img src="{{ request.user.profile.profile_picture_url }}" 
-                         class="rounded-circle igm-fluid" 
+                         class="rounded-circle img-fluid profile-avatar" 
                          alt="avatar" 
-                         loading="lazy"
                          style="width: 70px; height: 70px; object-fit: cover;" />
                 </a>
             </div>
@@ -49,3 +68,29 @@
 
 <!-- Include Profile Drawer -->
 {% include "profile_drawer.html" %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle profile picture loading errors
+    const profileAvatars = document.querySelectorAll('.profile-avatar');
+    const defaultImageUrl = '{% static "images/default/default_profile_pic.jpg" %}';
+    
+    profileAvatars.forEach(function(img) {
+        img.addEventListener('error', function() {
+            this.src = defaultImageUrl;
+        });
+        
+        // Preload the image for faster loading
+        if (img.src && img.src !== defaultImageUrl) {
+            const preloadImg = new Image();
+            preloadImg.onload = function() {
+                // Image loaded successfully
+            };
+            preloadImg.onerror = function() {
+                img.src = defaultImageUrl;
+            };
+            preloadImg.src = img.src;
+        }
+    });
+});
+</script>

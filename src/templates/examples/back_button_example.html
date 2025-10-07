@@ -1,0 +1,50 @@
+<!-- Example template showing how to use the back button -->
+{% extends 'base.html' %}
+
+{% block title %}Example Page with Back Button{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Simple Back Button -->
+            <div class="mb-3">
+                <a href="{{ back_url }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+            
+            <!-- Alternative Back Button Styles -->
+            <div class="mb-3">
+                <!-- As a form button -->
+                <form method="get" action="{{ back_url }}" style="display: inline;">
+                    <button type="submit" class="btn btn-link p-0">
+                        ← Return to Previous Page
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Back button with Bootstrap styling -->
+            <div class="mb-3">
+                <a href="{{ back_url }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-left-circle"></i> Go Back
+                </a>
+            </div>
+            
+            <!-- Breadcrumb style back button -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ back_url }}">← Previous Page</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Current Page</li>
+                </ol>
+            </nav>
+            
+            <h1>Your Page Content</h1>
+            <p>This is an example of how to use the back button in your templates.</p>
+            <p>The <code>back_url</code> variable is automatically available in all templates thanks to the context processor.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

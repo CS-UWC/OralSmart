@@ -66,7 +66,7 @@ class Profile(models.Model):
         """
         Returns profile picture URL or default if none exists
         """
-        if self.profile_pic and os.path.exists(self.profile_pic.path):
+        if self.profile_pic:
             return self.profile_pic.url
         return f"{settings.MEDIA_URL}images/default/default_profile_pic.jpg"
     
