@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pickle
+import joblib
 import os
 import logging
 from typing import Optional, Dict, Any, Tuple
@@ -86,7 +87,7 @@ class MLPRiskPredictor:
         self.use_gpu = torch.cuda.is_available()
         self.device = device
         self.model_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'risk_predictor.pkl')
-        self.pytorch_model_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'pytorch_model.pth')
+        self.pytorch_model_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'risk_predictor.pth')
         self.scaler_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'scaler.pkl')
         
         # Define field categories as class attributes for reuse
@@ -964,7 +965,7 @@ class MLPRiskPredictor:
             Dict containing prediction results
         """
         try:
-            if not self.is_trained or self.model is None:
+            if not self.is_trained or (self.model is None and self.pytorch_model is None):
                 raise ValueError("Model is not trained. Please train the model first.")
             
             # Check that at least one type of data is provided
@@ -990,42 +991,47 @@ class MLPRiskPredictor:
                     prediction_proba = torch.softmax(outputs, dim=1).cpu().numpy()[0]
                     prediction = prediction_proba.argmax()
                 logger.info("🚀 Using GPU PyTorch model for prediction")
-            else:
+            elif self.model is not None:
                 # Use CPU sklearn model
                 prediction = self.model.predict(features_scaled)[0]
                 prediction_proba = self.model.predict_proba(features_scaled)[0]
                 logger.info("Using CPU sklearn model for prediction")
+            else:
+                raise ValueError("No prediction model available")
             
             # Get feature importance (different approaches for different models)
             feature_importance = {}
             top_features = []
             
             # Check model type and use appropriate method
-            model_type = self.model.__class__.__name__
-            
-            if model_type == 'MLPClassifier':
-                # MLP: Use first layer weights as proxy for feature importance
-                try:
-                    # Use getattr to safely access coefs_ attribute
-                    coefs = getattr(self.model, 'coefs_', None)
-                    if coefs is not None and len(coefs) > 0:
-                        # Get weights from input layer to first hidden layer
-                        first_layer_weights = coefs[0]
-                        # Calculate mean absolute weight for each feature
-                        feature_importance_scores = np.mean(np.abs(first_layer_weights), axis=1)
-                        feature_importance = dict(zip(self.feature_names, feature_importance_scores))
-                        top_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)[:5]
-                        logger.info("Using first layer weights as feature importance proxy")
-                    else:
-                        top_features = [("Feature importance not available", 0.0)]
-                except Exception as e:
-                    logger.warning(f"Could not calculate feature importance proxy: {str(e)}")
-                    top_features = [("Feature importance calculation failed", 0.0)]
-            
+            if self.model is not None:
+                model_type = self.model.__class__.__name__
+                
+                if model_type == 'MLPClassifier':
+                    # MLP: Use first layer weights as proxy for feature importance
+                    try:
+                        # Use getattr to safely access coefs_ attribute
+                        coefs = getattr(self.model, 'coefs_', None)
+                        if coefs is not None and len(coefs) > 0:
+                            # Get weights from input layer to first hidden layer
+                            first_layer_weights = coefs[0]
+                            # Calculate mean absolute weight for each feature
+                            feature_importance_scores = np.mean(np.abs(first_layer_weights), axis=1)
+                            feature_importance = dict(zip(self.feature_names, feature_importance_scores))
+                            top_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)[:5]
+                            logger.info("Using first layer weights as feature importance proxy")
+                        else:
+                            top_features = [("Feature importance not available", 0.0)]
+                    except Exception as e:
+                        logger.warning(f"Could not calculate feature importance proxy: {str(e)}")
+                        top_features = [("Feature importance calculation failed", 0.0)]
+                else:
+                    # Other models
+                    logger.info("Model type doesn't provide feature importance scores")
+                    top_features = [("Feature importance not available for this model type", 0.0)]
             else:
-                # Other models
-                logger.info("Model type doesn't provide feature importance scores")
-                top_features = [("Feature importance not available for this model type", 0.0)]
+                # PyTorch model - for now, just indicate not available
+                top_features = [("Feature importance not available for PyTorch model", 0.0)]
             
             # Map prediction back to risk level
             risk_levels = ['low', 'medium', 'high']
@@ -1096,47 +1102,143 @@ class MLPRiskPredictor:
             feature_names_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'feature_names.pkl')
             metadata_path = os.path.join(settings.BASE_DIR, 'ml_models', 'saved_models', 'model_metadata.pkl')
             
-            if os.path.exists(self.model_path) and os.path.exists(self.scaler_path):
-                # Load sklearn model
-                with open(self.model_path, 'rb') as f:
-                    self.model = pickle.load(f)
-                
-                # Load scaler
-                with open(self.scaler_path, 'rb') as f:
-                    self.scaler = pickle.load(f)
-                
-                # Load feature names if available
-                if os.path.exists(feature_names_path):
-                    with open(feature_names_path, 'rb') as f:
-                        self.feature_names = pickle.load(f)
-                    logger.info(f"Loaded {len(self.feature_names)} features from saved model")
-                
-                # Load PyTorch model if available and GPU is enabled
-                if self.use_gpu and os.path.exists(self.pytorch_model_path):
+            # Try to load sklearn model first
+            sklearn_loaded = False
+            if os.path.exists(self.model_path):
+                try:
+                    with open(self.model_path, 'rb') as f:
+                        loaded_data = pickle.load(f)
+                    
+                    # Check if it's a sklearn model or a PyTorch checkpoint
+                    if hasattr(loaded_data, 'predict'):
+                        # It's a proper sklearn model
+                        self.model = loaded_data
+                        sklearn_loaded = True
+                        logger.info("Sklearn model loaded successfully")
+                    elif isinstance(loaded_data, dict) and 'model_state_dict' in loaded_data:
+                        # It's a PyTorch checkpoint saved as .pkl - ignore it here
+                        logger.warning("Found PyTorch checkpoint in .pkl file - will load from .pth file instead")
+                        self.model = None
+                    else:
+                        logger.warning(f"Unknown model format in .pkl file: {type(loaded_data)}")
+                        self.model = None
+                except Exception as e:
+                    logger.warning(f"Could not load sklearn model: {e}")
+                    self.model = None
+            
+            # Try to load scaler
+            scaler_loaded = False
+            if os.path.exists(self.scaler_path):
+                try:
+                    # Try pickle first
+                    with open(self.scaler_path, 'rb') as f:
+                        self.scaler = pickle.load(f)
+                    scaler_loaded = True
+                    logger.info("Scaler loaded successfully with pickle")
+                except Exception as e:
+                    logger.warning(f"Could not load scaler with pickle: {e}")
                     try:
-                        # Create model architecture (we need to know the architecture)
-                        # For now, use default architecture - in production, save architecture too
-                        input_size = len(self.feature_names)
-                        hidden_sizes = [128, 64, 32]  # Default architecture
-                        self.pytorch_model = MLPNet(input_size, hidden_sizes).to(self.device)
-                        self.pytorch_model.load_state_dict(torch.load(self.pytorch_model_path, map_location=self.device))
-                        self.pytorch_model.eval()
-                        logger.info("PyTorch GPU model loaded successfully")
-                    except Exception as e:
-                        logger.warning(f"Could not load PyTorch model: {e}")
-                        self.pytorch_model = None
-                
-                # Load metadata if available
-                if os.path.exists(metadata_path):
+                        # Try joblib
+                        self.scaler = joblib.load(self.scaler_path)
+                        scaler_loaded = True
+                        logger.info("Scaler loaded successfully with joblib")
+                    except Exception as e2:
+                        logger.warning(f"Could not load scaler with joblib: {e2}")
+                        self.scaler = None
+            
+            # Load feature names if available
+            if os.path.exists(feature_names_path):
+                with open(feature_names_path, 'rb') as f:
+                    self.feature_names = pickle.load(f)
+                logger.info(f"Loaded {len(self.feature_names)} features from saved model")
+            
+            # Try to load PyTorch model
+            pytorch_loaded = False
+            if os.path.exists(self.pytorch_model_path):
+                try:
+                    # Load checkpoint to inspect structure
+                    checkpoint = torch.load(self.pytorch_model_path, map_location=self.device)
+                    
+                    if 'model_state_dict' in checkpoint and 'params' in checkpoint:
+                        # This is a checkpoint format with metadata
+                        model_state_dict = checkpoint['model_state_dict']
+                        params = checkpoint['params']
+                        
+                        # Check if feature count matches
+                        first_layer_key = '0.weight'
+                        if first_layer_key in model_state_dict:
+                            expected_features = model_state_dict[first_layer_key].shape[1]
+                            current_features = len(self.feature_names)
+                            
+                            if expected_features == current_features:
+                                # Feature count matches - load normally
+                                hidden_sizes = params.get('hidden_sizes', [64])
+                                self.pytorch_model = MLPNet(current_features, hidden_sizes).to(self.device)
+                                
+                                # Remap keys if needed
+                                first_key = list(model_state_dict.keys())[0]
+                                if not first_key.startswith('network.'):
+                                    new_state_dict = {}
+                                    for old_key, value in model_state_dict.items():
+                                        new_key = f'network.{old_key}'
+                                        new_state_dict[new_key] = value
+                                    model_state_dict = new_state_dict
+                                
+                                self.pytorch_model.load_state_dict(model_state_dict)
+                                self.pytorch_model.eval()
+                                pytorch_loaded = True
+                                logger.info(f"PyTorch model loaded successfully with {current_features} features")
+                            else:
+                                logger.warning(f"Feature mismatch: model expects {expected_features}, but we have {current_features}")
+                                # For now, skip loading the mismatched model
+                                self.pytorch_model = None
+                        
+                        if pytorch_loaded and 'test_metrics' in checkpoint:
+                            metrics = checkpoint['test_metrics']
+                            logger.info(f"Model accuracy: {metrics.get('accuracy', 'N/A')}")
+                    else:
+                        # Legacy format - direct state dict
+                        first_key = list(checkpoint.keys())[0]
+                        if first_key.startswith('network.'):
+                            # Extract input size from the first layer
+                            first_layer_weight = None
+                            for key, value in checkpoint.items():
+                                if key.endswith('.weight') and len(value.shape) == 2:
+                                    first_layer_weight = value
+                                    break
+                            
+                            if first_layer_weight is not None:
+                                expected_features = first_layer_weight.shape[1]
+                                current_features = len(self.feature_names)
+                                
+                                if expected_features == current_features:
+                                    hidden_sizes = [128, 64, 32]  # Default architecture
+                                    self.pytorch_model = MLPNet(current_features, hidden_sizes).to(self.device)
+                                    self.pytorch_model.load_state_dict(checkpoint)
+                                    self.pytorch_model.eval()
+                                    pytorch_loaded = True
+                                    logger.info("PyTorch model loaded successfully (legacy format)")
+                        
+                except Exception as e:
+                    logger.warning(f"Could not load PyTorch model: {e}")
+                    self.pytorch_model = None
+            
+            # Load metadata if available
+            if os.path.exists(metadata_path):
+                try:
                     with open(metadata_path, 'rb') as f:
                         metadata = pickle.load(f)
                         logger.info(f"Model metadata: {metadata}")
-                
+                except Exception as e:
+                    logger.warning(f"Could not load metadata: {e}")
+            
+            # Mark as trained if we have at least one model and scaler
+            if (sklearn_loaded or pytorch_loaded) and scaler_loaded:
                 self.is_trained = True
                 logger.info("Model loaded successfully from disk")
-                
             else:
-                logger.info("No saved model found. Model needs to be trained.")
+                logger.info("No complete model found. Model needs to be trained.")
+                self.is_trained = False
                 
         except Exception as e:
             logger.error(f"Error loading model: {str(e)}")
