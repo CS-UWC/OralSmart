@@ -39,49 +39,10 @@ cd src
 python manage.py clear_patients
 ```
 
-### Model Training Commands
-```bash
-# Navigate to Django project
-cd src
-
-# Basic enhanced training (recommended for production)
-python manage.py train_ml_model balanced_3class_training_data.csv
-
-# Fast training (feature selection only - for development)
-python manage.py train_ml_model balanced_3class_training_data.csv --fast
-
-# Baseline training (no enhancements - for quick testing)
-python manage.py train_ml_model balanced_3class_training_data.csv --baseline
-
-# Test AI integration
-python manage.py test_ai_integration
-
-# Export training data (UTF-8 encoding)
-python manage.py export_training_data
-
-# Export training data without encoding (system default)
-python manage.py export_training_data --no-encoding
-
-# Alternative plain CSV export (system default encoding)
-python manage.py export_plain_csv output.csv
-```
-
 ### Advanced ML Training Options
 ```bash
-# Feature selection methods
-python manage.py train_ml_model data.csv --feature-selection-method importance --n-features 40
-python manage.py train_ml_model data.csv --feature-selection-method kbest --n-features 30
-python manage.py train_ml_model data.csv --feature-selection-method rfe --n-features 35
-
-# Disable specific features
-python manage.py train_ml_model data.csv --no-hyperparameter-tuning
-python manage.py train_ml_model data.csv --no-feature-selection
-
 # Custom output
 python manage.py export_training_data --output custom_data.csv
-
-# Get help
-python manage.py train_ml_model --help
 ```
 
 ## Tech Stack & Setup
