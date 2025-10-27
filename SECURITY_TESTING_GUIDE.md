@@ -1,8 +1,8 @@
-# 🔐 Security Testing Guide for OralSmart
+# Security Testing Guide for OralSmart
 
 This document outlines comprehensive security tests that can be implemented for your Django OralSmart application. The tests are organized by security domain and include both automated E2E tests and manual testing procedures.
 
-## 📋 **Security Test Categories**
+## **Security Test Categories**
 
 ### **1. Authentication & Session Security**
 **File**: `test_security_auth.py`
@@ -71,7 +71,7 @@ This document outlines comprehensive security tests that can be implemented for 
 
 ---
 
-## 🚀 **Running the Security Tests**
+## **Running the Security Tests**
 
 ### **Prerequisites**
 ```bash
@@ -106,7 +106,7 @@ pytest tests/e2e/test_security_*.py --cov=src --cov-report=html
 
 ---
 
-## ⚠️ **Additional Security Tests to Consider**
+## **Additional Security Tests to Consider**
 
 ### **6. Infrastructure Security Tests**
 
@@ -151,7 +151,7 @@ def test_malicious_file_upload_prevention():
 
 ---
 
-## 🛡️ **Security Configuration Recommendations**
+## **Security Configuration Recommendations**
 
 ### **Django Settings Security Checklist**
 
@@ -206,7 +206,7 @@ MIDDLEWARE = [
 
 ---
 
-## 📊 **Security Test Metrics**
+## **Security Test Metrics**
 
 ### **Coverage Goals**
 - **Authentication**: 95%+ coverage of auth flows
@@ -221,7 +221,7 @@ MIDDLEWARE = [
 
 ---
 
-## 🔍 **Manual Security Testing**
+## **Manual Security Testing**
 
 ### **Penetration Testing Tools**
 - **OWASP ZAP**: Automated security scanner
@@ -238,7 +238,7 @@ MIDDLEWARE = [
 
 ---
 
-## 📝 **Security Test Maintenance**
+## **Security Test Maintenance**
 
 ### **Regular Updates**
 1. **Monthly**: Review and update test data

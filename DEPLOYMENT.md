@@ -1,15 +1,15 @@
-# 🚀 OralSmart Docker Deployment Guide
+# OralSmart Docker Deployment Guide
 
 This guide covers deploying the OralSmart Django ML application using Docker containers with PyTorch model support.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Docker Desktop (Windows/Mac) or Docker Engine (Linux)
 - Docker Compose v2.0+
 - At least 4GB RAM available for containers
 - 2GB free disk space
 
-## 🏗️ Deployment Architecture
+## Deployment Architecture
 
 ```
 ┌─────────────┐    ┌──────────────┐    ┌─────────────┐
@@ -25,7 +25,7 @@ This guide covers deploying the OralSmart Django ML application using Docker con
    └────────┘                             └────────┘    └────────┘
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. **Setup Environment**
 
@@ -69,10 +69,10 @@ docker-compose exec web python manage.py createsuperuser
 
 ### 3. **Access Application**
 
-- 🌐 **Web App**: http://localhost:8000
-- 👤 **Admin**: http://localhost:8000/admin
-- 🔍 **Health**: http://localhost:8000/health/
-- 🤖 **ML API**: http://localhost:8000/ml/
+- **Web App**: http://localhost:8000
+- **Admin**: http://localhost:8000/admin
+- **Health**: http://localhost:8000/health/
+- **ML API**: http://localhost:8000/ml/
 
 ## 📁 File Structure
 
@@ -81,18 +81,18 @@ oralsmart/
 ├── 🐳 Dockerfile.prod          # Production container
 ├── 🐳 docker-compose.yml       # Development setup
 ├── 🐳 docker-compose.prod.yml  # Production setup
-├── 📝 requirements-prod.txt    # Production dependencies
-├── 🔧 .env.example            # Environment template
-├── 🚀 deploy.sh               # Linux/Mac deployment
-├── 🚀 deploy.bat              # Windows deployment
-├── 📄 .dockerignore           # Docker build exclusions
+├── requirements-prod.txt    # Production dependencies
+├── .env.example            # Environment template
+├── deploy.sh               # Linux/Mac deployment
+├── deploy.bat              # Windows deployment
+├── .dockerignore           # Docker build exclusions
 └── docker/
     ├── nginx/
     │   └── nginx.conf         # Reverse proxy config
     └── ssl/                   # SSL certificates
 ```
 
-## ⚙️ Configuration Files
+## Configuration Files
 
 ### **Environment Variables (.env)**
 
@@ -119,13 +119,13 @@ REDIS_URL=redis://redis:6379/0
 
 ### **Key Features**
 
-✅ **GPU Support**: PyTorch models with CUDA acceleration  
-✅ **Auto Scaling**: Gunicorn with multiple workers  
-✅ **Load Balancing**: Nginx reverse proxy  
-✅ **Health Checks**: Built-in monitoring endpoints  
-✅ **Static Files**: Optimized serving with caching  
-✅ **Database**: MySQL with persistent storage  
-✅ **Security**: Non-root containers, rate limiting  
+**GPU Support**: PyTorch models with CUDA acceleration  
+**Auto Scaling**: Gunicorn with multiple workers  
+**Load Balancing**: Nginx reverse proxy  
+**Health Checks**: Built-in monitoring endpoints  
+**Static Files**: Optimized serving with caching  
+**Database**: MySQL with persistent storage  
+**Security**: Non-root containers, rate limiting  
 
 ## 🎯 Deployment Options
 
@@ -149,7 +149,7 @@ docker-compose -f docker-compose.prod.yml up -d
 - SSL/TLS ready
 - Performance optimized
 
-## 🔧 Management Commands
+## Management Commands
 
 ### **Service Management**
 ```bash
@@ -239,7 +239,7 @@ docker stats
 docker-compose ps
 ```
 
-## 🔒 Security Considerations
+## Security Considerations
 
 ### **SSL/TLS Setup**
 1. Generate SSL certificates:
@@ -262,7 +262,7 @@ The nginx configuration includes:
 - X-XSS-Protection: 1; mode=block
 - Rate limiting on API endpoints
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### **Common Issues**
 
@@ -324,7 +324,7 @@ docker-compose logs nginx
 docker-compose logs -f --tail=100
 ```
 
-## 🚀 Production Deployment
+## Production Deployment
 
 ### **Cloud Deployment (AWS/Azure/GCP)**
 
@@ -348,7 +348,7 @@ services:
           memory: 2G
 ```
 
-## 📊 Monitoring
+## Monitoring
 
 ### **Container Monitoring**
 - Built-in health checks
@@ -360,7 +360,7 @@ services:
 - ML model performance metrics
 - API response times
 
-## 🔄 CI/CD Integration
+## CI/CD Integration
 
 Example GitHub Actions workflow:
 ```yaml
@@ -388,4 +388,4 @@ For issues with deployment:
 
 ---
 
-**🎉 Your OralSmart ML application is now ready for production deployment!**
+**Your OralSmart ML application is now ready for production deployment!**

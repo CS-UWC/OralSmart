@@ -13,25 +13,25 @@ cd src  # Navigate to Django project directory
 ```bash
 python manage.py train_ml_model balanced_3class_training_data.csv
 ```
-- ✅ Feature selection (Random Forest importance)
-- ✅ Hyperparameter tuning (GridSearchCV)
-- ✅ 5-fold cross-validation
-- ⏱️ 10-30 minutes
+- Feature selection (Random Forest importance)
+- Hyperparameter tuning (GridSearchCV)
+- 5-fold cross-validation
+- 10-30 minutes
 
 #### Fast Development Mode
 ```bash
 python manage.py train_ml_model balanced_3class_training_data.csv --fast
 ```
-- ✅ Feature selection only
-- ❌ No hyperparameter tuning
-- ⏱️ 2-5 minutes
+- Feature selection only
+- No hyperparameter tuning
+- 2-5 minutes
 
 #### Quick Testing
 ```bash
 python manage.py train_ml_model balanced_3class_training_data.csv --baseline
 ```
-- ❌ No enhancements
-- ⏱️ 1-2 minutes
+- No enhancements
+- 1-2 minutes
 
 ## Advanced Options
 

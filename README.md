@@ -1,8 +1,8 @@
-# 🦷 OralSmart
+# OralSmart
 
 OralSmart is a Django web application for pediatric oral health risk assessment with AI-powered predictions. It provides comprehensive dental and dietary screening with machine learning-based risk classification for healthcare professionals.
 
-## 🚀 Key Features
+## Key Features
 
 - **Patient Management**: Registration and demographic tracking
 - **Comprehensive Screening**: Dental and dietary assessments
@@ -12,12 +12,12 @@ OralSmart is a Django web application for pediatric oral health risk assessment 
 - **Factory Data Generation**: Realistic test data for ML training
 - **Clinical Decision Support**: Evidence-based recommendations
 
-## 🎯 AI Risk Assessment System
+## AI Risk Assessment System
 
 ### Risk Classification
-- **🟢 Low Risk**: Continue preventive care, regular check-ups
-- **🟡 Medium Risk**: Regular monitoring, follow-up in 3-6 months  
-- **🔴 High Risk**: Immediate dental intervention recommended
+- **Low Risk**: Continue preventive care, regular check-ups
+- **Medium Risk**: Regular monitoring, follow-up in 3-6 months  
+- **High Risk**: Immediate dental intervention recommended
 
 ### Dual Report System
 - **Patient Reports**: Clean, privacy-focused versions without AI risk data
@@ -29,9 +29,9 @@ OralSmart is a Django web application for pediatric oral health risk assessment 
 - **Cross-Validation**: 5-fold validation for robust performance
 - **Enhanced Training**: Terminal-based training with comprehensive reporting
 
-## 🧪 Quick Start & Testing
+## Quick Start & Testing
 
-### ⚠️ Data Management - IMPORTANT
+### Data Management - IMPORTANT
 To clear patient data safely without deleting users:
 ```bash
 cd src
@@ -84,7 +84,7 @@ python manage.py export_training_data --output custom_data.csv
 python manage.py train_ml_model --help
 ```
 
-## 🛠️ Tech Stack & Setup
+## Tech Stack & Setup
 
 ### Technology Stack
 - **Backend**: Python 3.11.0, Django 3.2.25
@@ -119,7 +119,7 @@ python manage.py runserver
 
 Visit http://127.0.0.1:8000 to access the application.
 
-## 🏭 Data Generation & ML Training
+## Data Generation & ML Training
 
 ### Factory System for Test Data
 Generate realistic patient data for ML training:
@@ -162,24 +162,24 @@ python patient_manager.py --clean
 
 ### Data Management & Cleanup Commands
 
-⚠️ **IMPORTANT**: Choose the right command to avoid accidentally deleting users!
+**IMPORTANT**: Choose the right command to avoid accidentally deleting users!
 
 ```bash
 cd src
 
-# 🔴 RECOMMENDED: Clear only patients & assessments (keeps users safe)
+# RECOMMENDED: Clear only patients & assessments (keeps users safe)
 python manage.py clear_patients
 
 # Skip confirmation prompt
 python manage.py clear_patients --confirm
 
-# 🟡 Alternative: Clear only patient data using create_patients command
+# Alternative: Clear only patient data using create_patients command
 python manage.py create_patients --clean-patients
 
-# 🔴 DANGER: Clear ALL data including users (use with extreme caution!)
+# DANGER: Clear ALL data including users (use with extreme caution!)
 python manage.py create_patients --clean
 
-# 📊 Check current patient data
+# Check current patient data
 python manage.py check_patients
 
 # Skip confirmation for any cleaning command
@@ -189,9 +189,9 @@ python manage.py create_patients --clean-patients --force
 #### Command Comparison
 | Command | Deletes Patients | Deletes Assessments | Deletes Users | Use When |
 |---------|:----------------:|:------------------:|:-------------:|----------|
-| `clear_patients` | ✅ | ✅ | ❌ | **Recommended** - Safe cleanup |
-| `create_patients --clean-patients` | ✅ | ✅ | ❌ | Alternative cleanup |
-| `create_patients --clean` | ✅ | ✅ | ✅ | **DANGER** - Full reset only |
+| `clear_patients` | YES | YES | NO | **Recommended** - Safe cleanup |
+| `create_patients --clean-patients` | YES | YES | NO | Alternative cleanup |
+| `create_patients --clean` | YES | YES | YES | **DANGER** - Full reset only |
 
 ### Complete ML Training Workflow
 ```bash
@@ -212,7 +212,7 @@ python manage.py test_ai_integration
 python manage.py train_ml_model balanced_3class_training_data.csv
 ```
 
-## 📊 Clinical Algorithm Overview
+## Clinical Algorithm Overview
 
 The risk assessment uses evidence-based scoring:
 
@@ -235,7 +235,7 @@ The risk assessment uses evidence-based scoring:
 
 *Thresholds adjust based on data completeness for conservative assessment*
 
-## 🔧 Development & Testing
+## Development & Testing
 
 ### Available Test Scripts
 ```bash
@@ -265,7 +265,7 @@ class TestPatientViews(TestCase):
         self.assertTrue(self.patient.dietary_screenings.exists())
 ```
 
-## 🎯 Complete ML Workflow
+## Complete ML Workflow
 
 ### Step 1: Environment Setup
 ```bash
@@ -331,7 +331,7 @@ python manage.py createsuperuser
 # Access application at http://127.0.0.1:8000
 ```
 
-## 🚀 Production Deployment Checklist
+## Production Deployment Checklist
 
 ### Pre-Deployment
 - [ ] Train model with full enhancement mode
@@ -374,7 +374,7 @@ python manage.py train_ml_model data.csv \
     --n-features 20
 ```
 
-## 📈 Performance & Features
+## Performance & Features
 
 ### ML Model Performance
 | Training Mode | Time | Test Accuracy | Features | Use Case |
@@ -391,15 +391,15 @@ python manage.py train_ml_model data.csv \
 - **3-Class Prediction**: Low/Medium/High risk levels with confidence scores
 
 ### Key Capabilities
-- ✅ **3-Class Risk Prediction** with confidence scores
-- ✅ **Dual Report System** for patient privacy
-- ✅ **Advanced ML Features** (feature selection, hyperparameter tuning)
-- ✅ **Factory Data Generation** for realistic test data
-- ✅ **Evidence-Based Scoring** following clinical guidelines
-- ✅ **Django Integration** with management commands
-- ✅ **Cross-Validation** for robust model evaluation
+- **3-Class Risk Prediction** with confidence scores
+- **Dual Report System** for patient privacy
+- **Advanced ML Features** (feature selection, hyperparameter tuning)
+- **Factory Data Generation** for realistic test data
+- **Evidence-Based Scoring** following clinical guidelines
+- **Django Integration** with management commands
+- **Cross-Validation** for robust model evaluation
 
-## 📊 ML Training Guide
+## ML Training Guide
 
 ### Prerequisites
 ```bash
@@ -412,15 +412,15 @@ cd c:\Users\vhuta\dev\oralsmart\src
 
 ### Training Modes Explained
 
-#### 🚀 Production Mode (Full Enhancement)
+#### Production Mode (Full Enhancement)
 ```bash
 python manage.py train_ml_model balanced_3class_training_data.csv
 ```
 **Features:**
-- ✅ Random Forest feature importance selection
-- ✅ GridSearchCV hyperparameter optimization
-- ✅ 5-fold cross-validation
-- ✅ Comprehensive performance metrics
+- Random Forest feature importance selection
+- GridSearchCV hyperparameter optimization
+- 5-fold cross-validation
+- Comprehensive performance metrics
 
 **Best for:** Final model deployment, maximum accuracy
 
@@ -429,9 +429,9 @@ python manage.py train_ml_model balanced_3class_training_data.csv
 python manage.py train_ml_model balanced_3class_training_data.csv --fast
 ```
 **Features:**
-- ✅ Feature selection only
-- ❌ No hyperparameter tuning (uses defaults)
-- ✅ Quick validation
+- Feature selection only
+- No hyperparameter tuning (uses defaults)
+- Quick validation
 
 **Best for:** Iterative development, testing changes
 
@@ -440,9 +440,9 @@ python manage.py train_ml_model balanced_3class_training_data.csv --fast
 python manage.py train_ml_model balanced_3class_training_data.csv --baseline
 ```
 **Features:**
-- ❌ No feature selection
-- ❌ No hyperparameter tuning
-- ✅ Uses all 68 features
+- No feature selection
+- No hyperparameter tuning
+- Uses all 68 features
 
 **Best for:** Quick testing, baseline comparisons
 
@@ -557,10 +557,10 @@ python manage.py train_ml_model data.csv --n-features 25 --no-hyperparameter-tun
 ### Expected Training Output
 
 ```
-🚀 Starting Enhanced ML Training Pipeline
-📊 Dataset: balanced_3class_training_data.csv (2000 samples, 68 features)
+Starting Enhanced ML Training Pipeline
+Dataset: balanced_3class_training_data.csv (2000 samples, 68 features)
 
-🔍 Feature Selection (Random Forest Importance)
+Feature Selection (Random Forest Importance)
    → Selected 40 best features (59% of original)
    → Top features: cavitated_lesions, multiple_restorations, white_spot_lesions
 
@@ -568,17 +568,17 @@ python manage.py train_ml_model data.csv --n-features 25 --no-hyperparameter-tun
    → Testing 24 parameter combinations
    → Best params: {'hidden_layer_sizes': (100, 50), 'alpha': 0.001}
 
-📈 Cross-Validation Results:
+Cross-Validation Results:
    → Accuracy: 87.3% (±2.1%)
    → Precision: 86.8%
    → Recall: 87.1%
    → F1-Score: 86.9%
 
 💾 Model saved to: ml_models/saved_models/
-✅ Training completed successfully in 15.2 minutes
+Training completed successfully in 15.2 minutes
 ```
 
-## 🚀 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -586,10 +586,10 @@ python manage.py train_ml_model data.csv --n-features 25 --no-hyperparameter-tun
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-**OralSmart** - AI-Powered Pediatric Oral Health Risk Assessment 🦷🤖
+**OralSmart** - AI-Powered Pediatric Oral Health Risk Assessment
